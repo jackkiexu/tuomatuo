@@ -11,5 +11,13 @@
 
     <artifactId>tuomatuo_core</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.ailami.tuomatuo</groupId>
+            <artifactId>tuomatuo_utils</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+
 
 </project>
