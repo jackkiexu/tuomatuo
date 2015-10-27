@@ -12,6 +12,8 @@
         <module>tuomatuo_utils</module>
         <module>tuomatuo_core</module>
         <module>tuomatuo_web</module>
+        <module>tuomatuo_utils</module>
+        <module>tuomatuo_core</module>
     </modules>
     <packaging>pom</packaging>
 </project>

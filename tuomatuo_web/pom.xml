@@ -308,17 +308,6 @@
             <version>1.6.12</version>
         </dependency>
 
-        <!--tuoamtuo jar -->
-        <dependency>
-            <groupId>com.ailami.tuomatuo</groupId>
-            <artifactId>tuomatuo_utils</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>com.ailami.tuomatuo</groupId>
-            <artifactId>tuomatuo_core</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
 
     </dependencies>
 
