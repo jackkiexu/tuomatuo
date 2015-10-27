@@ -9,8 +9,6 @@
     <version>1.0-SNAPSHOT</version>
 
     <modules>
-        <module>tuomatuo_utils</module>
-        <module>tuomatuo_core</module>
         <module>tuomatuo_web</module>
         <module>tuomatuo_utils</module>
         <module>tuomatuo_core</module>
