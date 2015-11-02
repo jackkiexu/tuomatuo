@@ -2,16 +2,16 @@ package com.lami.tuomatuo.model;
 
 import java.util.Date;
 
-//import javax.persistence.Entity;
-//import javax.persistence.GeneratedValue;
-//import javax.persistence.GenerationType;
-//import javax.persistence.Id;
-//import javax.persistence.Table;
-//import javax.persistence.Transient;
-//
-//
-//@Entity
-//@Table(name = "user")
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+
+
+@Entity
+@Table(name = "user")
 public class User implements java.io.Serializable {
 
 	// Fields
@@ -61,13 +61,13 @@ public class User implements java.io.Serializable {
 	}
 
 	// Property accessors
-//	@Id
-//	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	public Integer getId() {
 		return this.id;
 	}
 
-//	@Transient
+	@Transient
 	public String getEndTimeDes() {
 		return endTimeDes;
 	}
@@ -108,7 +108,7 @@ public class User implements java.io.Serializable {
 		return sendSecretTime;
 	}
 
-//	@Transient
+	@Transient
 	public String getLastLoginTimeDes() {
 		return lastLoginTimeDes;
 	}

@@ -9,9 +9,9 @@
     <version>1.0-SNAPSHOT</version>
 
     <modules>
-        <module>tuomatuo_web</module>
-        <module>tuomatuo_utils</module>
-        <module>tuomatuo_core</module>
+        <module>tuomatuo-web</module>
+        <module>tuomatuo-utils</module>
+        <module>tuomatuo-core</module>
     </modules>
     <packaging>pom</packaging>
 </project>
