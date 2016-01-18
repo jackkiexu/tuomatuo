@@ -18,4 +18,26 @@
               </aop:aspect>
        </aop:config>
 
+       <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+              <property name="ignoreAcceptHeader" value="true"/>
+              <property name="defaultContentType" value="text/html"/>
+              <property name="mediaTypes">
+                     <map>
+                            <entry key="atom" value="application/atom+xml"/>
+                            <entry key="html" value="text/html"/>
+                            <entry key="json" value="application/json"/>
+                            <entry key="rest" value="application/json"/>
+                            <entry key="report" value="application/pdf"/>
+                     </map>
+              </property>
+              <property name="favorParameter" value="false"/>
+              <property name="defaultViews">
+                     <list>
+                            <bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView"/>
+                     </list>
+              </property>
+       </bean>
+
+       <mvc:annotation-driven/>
+
 </beans>

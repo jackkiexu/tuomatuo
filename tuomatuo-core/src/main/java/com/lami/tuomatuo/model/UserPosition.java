@@ -1,7 +1,6 @@
 package com.lami.tuomatuo.model;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.Date;
 
 /**
@@ -23,6 +22,8 @@ public class UserPosition implements java.io.Serializable {
         return serialVersionUID;
     }
 
+    @Id
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
     public Long getId() {
         return id;
     }

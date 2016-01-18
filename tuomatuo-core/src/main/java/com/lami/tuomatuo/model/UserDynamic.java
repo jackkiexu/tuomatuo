@@ -1,7 +1,6 @@
 package com.lami.tuomatuo.model;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * Created by xujiankang on 2016/1/18.
@@ -20,6 +19,8 @@ public class UserDynamic implements java.io.Serializable {
     private Integer storagePolicy; // 存储的策略
     private Long dynamicContentId; // 用户动态内容的id
 
+    @Id
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
     public Long getId() {
         return id;
     }

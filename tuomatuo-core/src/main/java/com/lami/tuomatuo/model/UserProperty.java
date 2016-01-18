@@ -1,7 +1,6 @@
 package com.lami.tuomatuo.model;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * Created by xujiankang on 2016/1/18.
@@ -21,6 +20,8 @@ public class UserProperty implements java.io.Serializable {
     private Long dynamicSeeTotal;
     private Long loveTotal;
 
+    @Id
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
     public Long getId() {
         return id;
     }

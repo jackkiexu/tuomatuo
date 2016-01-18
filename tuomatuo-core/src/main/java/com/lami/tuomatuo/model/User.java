@@ -31,6 +31,8 @@ public class User implements java.io.Serializable {
 		return serialVersionUID;
 	}
 
+	@Id
+	@GeneratedValue(strategy= GenerationType.IDENTITY)
 	public Long getId() {
 		return id;
 	}

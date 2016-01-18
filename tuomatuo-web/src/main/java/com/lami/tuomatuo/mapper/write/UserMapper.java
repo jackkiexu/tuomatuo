@@ -1,6 +1,6 @@
 package com.lami.tuomatuo.mapper.write;
 
-import com.lami.tuomatuo.model.User;
+import com.lami.tuomatuo.model.mybatis.User;
 
 /**
  * Created by xjk on 10/21/15.

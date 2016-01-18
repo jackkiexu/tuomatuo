@@ -5,7 +5,7 @@
 
 <mapper namespace="com.lami.tuomatuo.mapper.write.UserMapper">
 
-    <select id="getUserById" resultType="com.lami.tuomatuo.model.User">
+    <select id="getUserById" resultType="com.lami.tuomatuo.model.mybatis.User">
         select * from user where id = #{id}
     </select>
 

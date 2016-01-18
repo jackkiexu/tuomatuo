@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 /**
  * Created by xujiankang on 2016/1/18.
  */
-@Repository("qQAccountDaoInterface")
+@Repository("qqAccountDaoInterface")
 public class QQAccountDaoImpl extends BaseDaoMysqlImpl<QQAccount, Long> implements QQAccountDaoInterface {
     public QQAccountDaoImpl(){
         super(QQAccount.class);

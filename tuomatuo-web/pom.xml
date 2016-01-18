@@ -15,6 +15,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <version.spring>3.1.4.RELEASE</version.spring>
         <version.servlet>2.5</version.servlet>
+        <jackson.version>2.5.1</jackson.version>
     </properties>
     <dependencies>
         <dependency>
@@ -308,6 +309,34 @@
             <version>1.6.12</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.5.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.5.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.5.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk7</artifactId>
+            <version>2.5.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.12.6</version>
+        </dependency>
+
+
         <!-- 七牛 -->
         <dependency>
             <groupId>com.qiniu</groupId>
@@ -315,6 +344,16 @@
             <version>[7.0.0, 7.0.99]</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.ailami.tuomatuo</groupId>
+            <artifactId>tuomatuo_core</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ailami.tuomatuo</groupId>
+            <artifactId>tuomatuo_utils</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
 
     </dependencies>
 

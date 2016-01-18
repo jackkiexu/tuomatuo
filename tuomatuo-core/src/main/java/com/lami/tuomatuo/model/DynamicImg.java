@@ -1,7 +1,6 @@
 package com.lami.tuomatuo.model;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * Created by xujiankang on 2016/1/18.
@@ -17,6 +16,8 @@ public class DynamicImg  implements java.io.Serializable {
     private Integer quantity;
     private String url;
 
+    @Id
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
     public Long getId() {
         return id;
     }
