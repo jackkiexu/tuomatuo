@@ -1,6 +1,7 @@
 # Gradle work
 .gradle
 build
+classes
 
 # Maven work
 target
