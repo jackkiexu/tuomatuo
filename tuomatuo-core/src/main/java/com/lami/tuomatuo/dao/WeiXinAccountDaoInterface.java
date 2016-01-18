@@ -7,5 +7,5 @@ import com.lami.tuomatuo.model.WeiXinAccount;
 /**
  * Created by xujiankang on 2016/1/18.
  */
-public interface WeiXinDaoInterface extends BaseDao<WeiXinAccount, Integer> {
+public interface WeiXinAccountDaoInterface extends BaseDao<WeiXinAccount, Long> {
 }

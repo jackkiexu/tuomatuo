@@ -6,5 +6,5 @@ import com.lami.tuomatuo.model.User;
 /**
  * Created by xjk on 11/2/15.
  */
-public interface UserDaoInterface extends BaseDao<User, Integer> {
+public interface UserDaoInterface extends BaseDao<User, Long> {
 }

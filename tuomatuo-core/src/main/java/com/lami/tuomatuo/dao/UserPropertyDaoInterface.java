@@ -7,5 +7,5 @@ import com.lami.tuomatuo.model.UserProperty;
 /**
  * Created by xujiankang on 2016/1/18.
  */
-public interface UserPropertyDaoInterface extends BaseDao<UserProperty, Integer> {
+public interface UserPropertyDaoInterface extends BaseDao<UserProperty, Long> {
 }

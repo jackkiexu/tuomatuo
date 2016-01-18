@@ -7,5 +7,5 @@ import com.lami.tuomatuo.model.UserPosition;
 /**
  * Created by xujiankang on 2016/1/18.
  */
-public interface UserPositionDaoInterface extends BaseDao<UserPosition, Integer> {
+public interface UserPositionDaoInterface extends BaseDao<UserPosition, Long> {
 }

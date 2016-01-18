@@ -7,5 +7,5 @@ import com.lami.tuomatuo.model.UserDynamicLove;
 /**
  * Created by xujiankang on 2016/1/18.
  */
-public interface UserDynamicLoveDaoInterface extends BaseDao<UserDynamicLove, Integer> {
+public interface UserDynamicLoveDaoInterface extends BaseDao<UserDynamicLove, Long> {
 }

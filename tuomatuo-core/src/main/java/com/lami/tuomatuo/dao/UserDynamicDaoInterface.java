@@ -7,5 +7,5 @@ import com.lami.tuomatuo.model.UserDynamic;
 /**
  * Created by xujiankang on 2016/1/18.
  */
-public interface UserDynamicDaoInterface extends BaseDao<UserDynamic, Integer> {
+public interface UserDynamicDaoInterface extends BaseDao<UserDynamic, Long> {
 }
