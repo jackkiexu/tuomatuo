@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
  * Created by xujiankang on 2016/1/18.
  */
 @Service("weiXinAccountService")
-public class WeiXinAccountService extends BaseService<WeiXinAccount, Integer> {
+public class WeiXinAccountService extends BaseService<WeiXinAccount, Long> {
 
     @Autowired
     private WeiXinAccountDaoInterface weiXinAccountDaoInterface;

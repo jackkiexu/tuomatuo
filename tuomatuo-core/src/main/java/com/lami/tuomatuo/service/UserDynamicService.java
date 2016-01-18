@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
  * Created by xujiankang on 2016/1/18.
  */
 @Service("userDynamicService")
-public class UserDynamicService extends BaseService<UserDynamic, Integer> {
+public class UserDynamicService extends BaseService<UserDynamic, Long> {
 
     @Autowired
     private UserDynamicDaoInterface userDynamicDaoInterface;

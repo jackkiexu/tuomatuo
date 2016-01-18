@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
  * Created by xujiankang on 2016/1/18.
  */
 @Service("userDynamicLoveService")
-public class UserDynamicLoveService  extends BaseService<UserDynamicLove, Integer> {
+public class UserDynamicLoveService  extends BaseService<UserDynamicLove, Long> {
 
     @Autowired
     private UserDynamicLoveDaoInterface userDynamicLoveDaoInterface;

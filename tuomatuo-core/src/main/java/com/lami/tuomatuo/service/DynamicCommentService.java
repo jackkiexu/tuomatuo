@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
  * Created by xujiankang on 2016/1/18.
  */
 @Service("dynamicCommentService")
-public class DynamicCommentService extends BaseService<DynamicComment, Integer> {
+public class DynamicCommentService extends BaseService<DynamicComment, Long> {
 
     @Autowired
     private DynamicCommentDaoInterface dynamicCommentDaoInterface;

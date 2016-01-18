@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
  * Created by xjk on 11/2/15.
  */
 @Service("userService")
-public class UserService extends BaseService<User, Integer> {
+public class UserService extends BaseService<User, Long> {
 
     @Autowired
     private UserDaoInterface userDaoInterface;

@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
  * Created by xujiankang on 2016/1/18.
  */
 @Service("qqAccountService")
-public class QQAccountService extends BaseService<QQAccount, Integer> {
+public class QQAccountService extends BaseService<QQAccount, Long> {
 
     @Autowired
     private QQAccountDaoInterface qqAccountDaoInterface;

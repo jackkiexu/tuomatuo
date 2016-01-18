@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
  * Created by xujiankang on 2016/1/18.
  */
 @Service("dynamicImgService")
-public class DynamicImgService extends BaseService<DynamicImg, Integer> {
+public class DynamicImgService extends BaseService<DynamicImg, Long> {
 
     @Autowired
     private DynamicImgDaoInterface dynamicImgDaoInterface;
