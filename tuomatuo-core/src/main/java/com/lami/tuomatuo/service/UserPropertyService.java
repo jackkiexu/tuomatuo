@@ -19,7 +19,7 @@ public class UserPropertyService extends BaseService<UserProperty, Long> {
     @Autowired
     private UserPropertyDaoInterface userPropertyDaoInterface;
 
-    public UserProperty getUserProperty(Long userId){
+    public UserProperty getUserPropertyByUserId(Long userId){
         UserProperty userProperty = new UserProperty();
         userProperty.setUserId(userId);
         List<UserProperty> userPropertyList = userPropertyDaoInterface.search(userProperty);

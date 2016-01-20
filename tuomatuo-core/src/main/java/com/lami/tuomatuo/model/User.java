@@ -19,12 +19,12 @@ public class User implements java.io.Serializable {
 	private String name;
 	private String mobile;
 	private String mail;
-	private Integer accountType;
+	private Integer accountType; // 0, 默认创建的用户, 1 微信登录创建的用户, 2 QQ登录创建的用户
 	private Integer status;
 	private Date createTime;
 	private Date updateTime;
 	private Date lastLoginTime;
-	private Long thirdAccountId;
+	private Long thirdAccountId; // 用户第三发账户的id (这个id可能存在于多张表中)
 	private Date lastSynMemTime; // 上次同步到内存的时间
 
 	public static long getSerialVersionUID() {

@@ -14,6 +14,16 @@ import java.util.HashMap;
 
 public class GeoHash {
 
+    private GeoHash(){}
+
+    private static class inner {
+        private static GeoHash instance = new GeoHash();
+    }
+
+    public static GeoHash geInstance(){
+        return inner.instance;
+    }
+
     private static int numbits = 6 * 5;
     final static char[] digits = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
             '9', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'm', 'n', 'p',
