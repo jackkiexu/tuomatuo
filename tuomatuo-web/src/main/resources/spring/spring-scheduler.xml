@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+       <bean id="updateUserDynamicScheduler" class="com.lami.tuomatuo.scheduler.UpdateUserDynamicScheduler"></bean>
+
+       <bean id="updateUserDynamicSchedulerTask" class="org.springframework.scheduling.timer.ScheduledTimerTask">
+              <property name="timerTask">
+                     <ref bean="updateUserDynamicScheduler"/>
+              </property>
+              <property name="period">
+                     <value>10000</value>
+              </property>
+              <property name="delay">
+                     <value>5000</value>
+              </property>
+       </bean>
+       <bean id="timerBean" class="org.springframework.scheduling.timer.TimerFactoryBean">
+              <property name="scheduledTimerTasks">
+                     <list>
+                            <ref bean="updateUserDynamicSchedulerTask"/>
+                     </list>
+              </property>
+       </bean>
+
+</beans>

@@ -1,6 +1,7 @@
 package com.lami.tuomatuo.model;
 
 import javax.persistence.*;
+import java.util.Date;
 
 /**
  * Created by xujiankang on 2016/1/18.
@@ -18,6 +19,11 @@ public class UserDynamic implements java.io.Serializable {
     private String latitude; // 纬度
     private Integer storagePolicy; // 存储的策略
     private Long dynamicContentId; // 用户动态内容的id
+    private Long dynamicSeeSum; // 用户的动态被查看的次数
+    private Long dynamicRecommend; // 用户动态转发 推荐次数
+    private Date createTime;
+    private Date updateTime;
+    private Long hotValue;
 
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
@@ -93,6 +99,46 @@ public class UserDynamic implements java.io.Serializable {
         this.dynamicContentId = dynamicContentId;
     }
 
+    public Long getDynamicSeeSum() {
+        return dynamicSeeSum;
+    }
+
+    public void setDynamicSeeSum(Long dynamicSeeSum) {
+        this.dynamicSeeSum = dynamicSeeSum;
+    }
+
+    public Long getDynamicRecommend() {
+        return dynamicRecommend;
+    }
+
+    public void setDynamicRecommend(Long dynamicRecommend) {
+        this.dynamicRecommend = dynamicRecommend;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
+    public Date getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Date updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public Long getHotValue() {
+        return hotValue;
+    }
+
+    public void setHotValue(Long hotValue) {
+        this.hotValue = hotValue;
+    }
+
     @Override
     public String toString() {
         return "UserDynamic{" +
@@ -105,6 +151,11 @@ public class UserDynamic implements java.io.Serializable {
                 ", latitude='" + latitude + '\'' +
                 ", storagePolicy=" + storagePolicy +
                 ", dynamicContentId=" + dynamicContentId +
+                ", dynamicSeeSum=" + dynamicSeeSum +
+                ", dynamicRecommend=" + dynamicRecommend +
+                ", createTime=" + createTime +
+                ", updateTime=" + updateTime +
+                ", hotValue=" + hotValue +
                 '}';
     }
 }

@@ -178,12 +178,6 @@ public class DateUtils {
 		return formatter.format(aDate);
 	}
 
-	public static Date chageDat2NoHMS(Date aDate) {
-		formatter = new SimpleDateFormat("yyyyMMdd");
-		String fomatString = formatter.format(aDate);
-		return getDateFull(fomatString);
-	}
-
 	public static String shortMailDate(Date aDate) {
 		formatter = new SimpleDateFormat("yyyyMMdd");
 		return formatter.format(aDate);
@@ -229,47 +223,6 @@ public class DateUtils {
 	public static String formatDate(Date aDate, String formatStr) {
 		formatter = new SimpleDateFormat(formatStr);
 		return formatter.format(aDate);
-	}
-
-	
-	//  真心不建议这么写法
-//	public static Date getDate(String yyyymmdd) {
-//		if ((null == yyyymmdd) || (yyyymmdd.trim().length() == 0))
-//			return null;
-//		try {
-//			int year = Integer.parseInt(yyyymmdd.substring(0,
-//					yyyymmdd.indexOf("-")));
-//			int month = Integer.parseInt(yyyymmdd.substring(
-//					yyyymmdd.indexOf("-") + 1, yyyymmdd.lastIndexOf("-")));
-//			int day = Integer.parseInt(yyyymmdd.substring(yyyymmdd
-//					.lastIndexOf("-") + 1));
-//			Calendar cal = Calendar.getInstance();
-//			cal.set(year, month - 1, day);
-//			return cal.getTime();
-//		} catch (Exception e) {
-//			return null;
-//		}
-//
-//	}
-
-	public static Date getDateFull(String yyyymmdd) {
-
-		if ((null == yyyymmdd) || (yyyymmdd.trim().length() == 0))
-			return null;
-		try {
-			int year = Integer.parseInt(yyyymmdd.substring(0,
-					yyyymmdd.indexOf("-")));
-			int month = Integer.parseInt(yyyymmdd.substring(
-					yyyymmdd.indexOf("-") + 1, yyyymmdd.lastIndexOf("-")));
-			int day = Integer.parseInt(yyyymmdd.substring(yyyymmdd
-					.lastIndexOf("-") + 1));
-			Calendar cal = Calendar.getInstance();
-			cal.set(year, month - 1, day, 24, 60, 60);
-			return cal.getTime();
-		} catch (Exception e) {
-			return null;
-		}
-
 	}
 
 	// yyyy-MM-dd HH:mm:ss
@@ -337,48 +290,6 @@ public class DateUtils {
 	}
 	
 	
-	
-	/**
-	 * get Date with only date num. baoxy add
-	 * 
-	 * @param yyyymmdd
-	 * @return
-	 */
-//	public static Date getDateOnly(String yyyymmdd) {
-//		if ((null == yyyymmdd) || (yyyymmdd.trim().length() == 0))
-//			return null;
-//		try {
-//			int year = Integer.parseInt(yyyymmdd.substring(0,
-//					yyyymmdd.indexOf("-")));
-//			int month = Integer.parseInt(yyyymmdd.substring(
-//					yyyymmdd.indexOf("-") + 1, yyyymmdd.lastIndexOf("-")));
-//			int day = Integer.parseInt(yyyymmdd.substring(yyyymmdd
-//					.lastIndexOf("-") + 1));
-//			Calendar cal = Calendar.getInstance();
-//			cal.set(year, month - 1, day, 0, 0, 0);
-//			return cal.getTime();
-//		} catch (Exception e) {
-//			return null;
-//		}
-//	}
-
-//	public static Date addMonth(Date myDate, int amount) {
-//		GregorianCalendar cal = new GregorianCalendar();
-//		cal.setTime(myDate);
-//		boolean isEndDayOfMonth_old = cal
-//				.getActualMaximum(GregorianCalendar.DAY_OF_MONTH) == cal
-//				.get(GregorianCalendar.DAY_OF_MONTH);
-//		cal.add(GregorianCalendar.MONTH, amount);
-//		boolean isEndDayOfMonth_new = cal
-//				.getActualMaximum(GregorianCalendar.DAY_OF_MONTH) == cal
-//				.get(GregorianCalendar.DAY_OF_MONTH);
-//		if (isEndDayOfMonth_old && !isEndDayOfMonth_new) {
-//			cal.set(GregorianCalendar.DATE,
-//					cal.getActualMaximum(GregorianCalendar.DAY_OF_MONTH));
-//		}
-//		return cal.getTime();
-//	}
-	
 	//  !!!!
 	public static Date addDay(Date myDate, int amount) {
 		Calendar cal = Calendar.getInstance();
@@ -403,23 +314,6 @@ public class DateUtils {
 		cal.add(Calendar.DAY_OF_MONTH, -amount);
 		return cal.getTime();
 	}
-
-//	public static Date addYear(Date myDate, int amount) {
-//		GregorianCalendar cal = new GregorianCalendar();
-//		cal.setTime(myDate);
-//		boolean isEndDayOfMonth_old = cal
-//				.getActualMaximum(GregorianCalendar.DAY_OF_MONTH) == cal
-//				.get(GregorianCalendar.DAY_OF_MONTH);
-//		cal.add(GregorianCalendar.YEAR, amount);
-//		boolean isEndDayOfMonth_new = cal
-//				.getActualMaximum(GregorianCalendar.DAY_OF_MONTH) == cal
-//				.get(GregorianCalendar.DAY_OF_MONTH);
-//		if (isEndDayOfMonth_old && !isEndDayOfMonth_new) {
-//			cal.set(GregorianCalendar.DATE,
-//					cal.getActualMaximum(GregorianCalendar.DAY_OF_MONTH));
-//		}
-//		return cal.getTime();
-//	}
 
 	public static Date getFirstDay(Date date) {
 		Calendar cale = Calendar.getInstance();
@@ -708,6 +602,13 @@ public class DateUtils {
 		return String.valueOf(calendar.get(Calendar.MONTH) + 1);
 		
 	}
+
+
+	public static Long getDifferHour(Date date){
+		Date now = new Date();
+		return (now.getTime() - date.getTime())/(1000 * 60 * 60);
+	}
+
 	public static void main(String[] args) {
 		boolean aa = new DateUtils().isFirstDayForThisMonth();
 		System.out.println(aa);
