@@ -5,22 +5,26 @@
 
        <bean id="updateUserDynamicScheduler" class="com.lami.tuomatuo.scheduler.UpdateUserDynamicScheduler"></bean>
 
-       <bean id="updateUserDynamicSchedulerTask" class="org.springframework.scheduling.timer.ScheduledTimerTask">
-              <property name="timerTask">
-                     <ref bean="updateUserDynamicScheduler"/>
-              </property>
-              <property name="period">
-                     <value>10000</value>
-              </property>
-              <property name="delay">
-                     <value>5000</value>
+       <!-- 执行任务 -->
+       <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean" autowire="no">
+              <property name="triggers">
+                     <list>
+                            <ref bean="housePublishAuditTask_Trigger" />
+                     </list>
               </property>
        </bean>
-       <bean id="timerBean" class="org.springframework.scheduling.timer.TimerFactoryBean">
-              <property name="scheduledTimerTasks">
-                     <list>
-                            <ref bean="updateUserDynamicSchedulerTask"/>
-                     </list>
+
+       <!--=============================定时调度发布房源审核 ======================================-->
+       <bean id="updateUserDynamicTask_Job_Detail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+              <property name="targetObject" ref="updateUserDynamicScheduler" />
+              <property name="targetMethod" value="run" />
+              <property name="concurrent" value="false" />
+       </bean>
+       <bean id="housePublishAuditTask_Trigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+              <property name="jobDetail" ref="updateUserDynamicTask_Job_Detail" />
+              <!--  10分钟执行一次 [秒] [分] [小时] [日] [月] [周] [年] -->
+              <property name="cronExpression">
+                     <value> 0/5 * * * * ?</value>
               </property>
        </bean>
 

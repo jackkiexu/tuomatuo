@@ -15,7 +15,7 @@ import java.util.TimerTask;
 /** 更新所用用户动态的 hot 值
  * Created by xujiankang on 2016/1/21.
  */
-public class UpdateUserDynamicScheduler extends TimerTask{
+public class UpdateUserDynamicScheduler{
 
     @Autowired
     private UserDynamicService userDynamicService;
@@ -25,7 +25,6 @@ public class UpdateUserDynamicScheduler extends TimerTask{
     private static final Logger logger = Logger.getLogger(UpdateUserDynamicScheduler.class);
     private static final Double i = 0.6d;
 
-    @Override
     public void run() {
         try {
             updateUserDynamicHotValue();
