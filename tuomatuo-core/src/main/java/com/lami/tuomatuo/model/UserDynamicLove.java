@@ -7,7 +7,7 @@ import java.util.Date;
  * Created by xujiankang on 2016/1/18.
  */
 @Entity
-@Table(name = "dynamiclove")
+@Table(name = "dynamic_love")
 public class UserDynamicLove implements java.io.Serializable {
     private Long id;
     private Long dyId;

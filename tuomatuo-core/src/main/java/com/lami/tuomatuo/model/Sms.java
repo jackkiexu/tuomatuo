@@ -1,39 +1,31 @@
 package com.lami.tuomatuo.model;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.Date;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xujiankang on 2016/1/25.
  */
 @Entity
-@Table(name = "dynamic_comment")
-public class DynamicComment implements java.io.Serializable {
-    private Long id;
-    private Long dyId;
+@Table(name = "sms")
+public class Sms implements java.io.Serializable {
+    private Integer id;
     private Long userId;
     private String content;
+    private Integer type;
     private Date createTime;
-    private Date updateTime;
-    private Long approve;
-    private Long oppose;
+    private  Date updateTime;
+    private String mobile;
 
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
-    }
-
-    public Long getDyId() {
-        return dyId;
-    }
-
-    public void setDyId(Long dyId) {
-        this.dyId = dyId;
     }
 
     public Long getUserId() {
@@ -52,6 +44,14 @@ public class DynamicComment implements java.io.Serializable {
         this.content = content;
     }
 
+    public Integer getType() {
+        return type;
+    }
+
+    public void setType(Integer type) {
+        this.type = type;
+    }
+
     public Date getCreateTime() {
         return createTime;
     }
@@ -68,33 +68,24 @@ public class DynamicComment implements java.io.Serializable {
         this.updateTime = updateTime;
     }
 
-    public Long getApprove() {
-        return approve;
+    public String getMobile() {
+        return mobile;
     }
 
-    public void setApprove(Long approve) {
-        this.approve = approve;
-    }
-
-    public Long getOppose() {
-        return oppose;
-    }
-
-    public void setOppose(Long oppose) {
-        this.oppose = oppose;
+    public void setMobile(String mobile) {
+        this.mobile = mobile;
     }
 
     @Override
     public String toString() {
-        return "DynamicComment{" +
+        return "Sms{" +
                 "id=" + id +
-                ", dyId=" + dyId +
                 ", userId=" + userId +
                 ", content='" + content + '\'' +
+                ", type=" + type +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
-                ", approve=" + approve +
-                ", oppose=" + oppose +
+                ", mobile='" + mobile + '\'' +
                 '}';
     }
 }

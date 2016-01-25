@@ -7,7 +7,7 @@ import java.util.Date;
  * Created by xujiankang on 2016/1/18.
  */
 @Entity
-@Table(name = "userposition")
+@Table(name = "user_position")
 public class UserPosition implements java.io.Serializable {
 
     private static final long serialVersionUID = -661516726683325252L;

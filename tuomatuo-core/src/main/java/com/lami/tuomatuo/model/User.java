@@ -26,10 +26,10 @@ public class User implements java.io.Serializable {
 	private Date lastLoginTime;
 	private Long thirdAccountId; // 用户第三发账户的id (这个id可能存在于多张表中)
 	private Date lastSynMemTime; // 上次同步到内存的时间
+	private String code; // 验证码
+	private Date sendCodeTime; // 验证码发送时间
+	private String sign; // 用户签名, 每次登陆都会改变
 
-	public static long getSerialVersionUID() {
-		return serialVersionUID;
-	}
 
 	@Id
 	@GeneratedValue(strategy= GenerationType.IDENTITY)
@@ -121,6 +121,30 @@ public class User implements java.io.Serializable {
 		this.lastSynMemTime = lastSynMemTime;
 	}
 
+	public String getCode() {
+		return code;
+	}
+
+	public void setCode(String code) {
+		this.code = code;
+	}
+
+	public Date getSendCodeTime() {
+		return sendCodeTime;
+	}
+
+	public void setSendCodeTime(Date sendCodeTime) {
+		this.sendCodeTime = sendCodeTime;
+	}
+
+	public String getSign() {
+		return sign;
+	}
+
+	public void setSign(String sign) {
+		this.sign = sign;
+	}
+
 	@Override
 	public String toString() {
 		return "User{" +
@@ -135,6 +159,9 @@ public class User implements java.io.Serializable {
 				", lastLoginTime=" + lastLoginTime +
 				", thirdAccountId=" + thirdAccountId +
 				", lastSynMemTime=" + lastSynMemTime +
+				", code='" + code + '\'' +
+				", sendCodeTime=" + sendCodeTime +
+				", sign='" + sign + '\'' +
 				'}';
 	}
 }

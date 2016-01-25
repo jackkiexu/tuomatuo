@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.controller.app1;
+package com.lami.tuomatuo.controller.app1.me;
 
 import com.lami.tuomatuo.controller.BaseController;
 import com.lami.tuomatuo.model.User;

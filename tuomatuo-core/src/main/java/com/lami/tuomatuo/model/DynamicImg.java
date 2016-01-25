@@ -6,7 +6,7 @@ import javax.persistence.*;
  * Created by xujiankang on 2016/1/18.
  */
 @Entity
-@Table(name = "dynamicimg")
+@Table(name = "dynamic_img")
 public class DynamicImg  implements java.io.Serializable {
 
     private Long id;

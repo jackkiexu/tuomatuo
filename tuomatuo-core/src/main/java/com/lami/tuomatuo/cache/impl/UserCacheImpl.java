@@ -4,6 +4,7 @@ import com.lami.tuomatuo.cache.UserCache;
 import com.lami.tuomatuo.model.co.UserCo;
 import com.lami.tuomatuo.utils.GsonUtils;
 import com.lami.tuomatuo.utils.constant.RedisConstant;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.ShardedJedis;
@@ -20,6 +21,8 @@ import java.util.Set;
  */
 @Component( value = "userCache")
 public class UserCacheImpl implements UserCache {
+
+    private static final Logger logger = Logger.getLogger(UserCacheImpl.class);
 
     @Autowired
     private ShardedJedisPool readPool;
@@ -129,5 +132,27 @@ public class UserCacheImpl implements UserCache {
             writePool.returnResource(redis);
         }
         return userList;
+    }
+
+    public Integer userVerifyCodeFailCount(Long userId, Integer count) {
+        if(userId == null || count == null) return 0;
+        ShardedJedis redis = null;
+        Integer nowCount = 0;
+        try {
+            redis = writePool.getResource();
+            String json = redis.hget(RedisConstant.USER_MOBILE_VERIFY_CODE_FAIL_HSET, userId+"");
+            if(json != null) nowCount = Integer.parseInt(json);
+            logger.info("userVerifyCodeFailCount userId:"+userId +", count:"+count+", nowCount:"+nowCount);
+            nowCount += count;
+            redis.hset(RedisConstant.USER_MOBILE_VERIFY_CODE_FAIL_HSET, userId+"", nowCount+"");
+            return nowCount;
+        } catch (RuntimeException e) {
+            logger.info(e.getMessage());
+            return nowCount;
+        }finally{
+            if(redis != null){
+                writePool.returnResource(redis);
+            }
+        }
     }
 }

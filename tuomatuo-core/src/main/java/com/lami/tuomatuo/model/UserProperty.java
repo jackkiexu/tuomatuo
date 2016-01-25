@@ -6,7 +6,7 @@ import javax.persistence.*;
  * Created by xujiankang on 2016/1/18.
  */
 @Entity
-@Table(name = "userproperty")
+@Table(name = "user_property")
 public class UserProperty implements java.io.Serializable {
 
     private Long id;

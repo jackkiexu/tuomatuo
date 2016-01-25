@@ -103,12 +103,18 @@ public class YuPian {
      * @throws IOException
      */
 
-    public static String sendSms(String apikey, String text, String mobile) throws IOException {
-        Map<String, String> params = new HashMap<String, String>();
-        params.put("apikey", apikey);
-        params.put("text", text);
-        params.put("mobile", mobile);
-        return post(URI_SEND_SMS, params);
+    public static String sendSms(String apikey, String text, String mobile) {
+        try {
+            Map<String, String> params = new HashMap<String, String>();
+            params.put("apikey", apikey);
+            params.put("text", text);
+            params.put("mobile", mobile);
+            return post(URI_SEND_SMS, params);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+        }
+        return null;
     }
 
     /**

@@ -7,7 +7,7 @@ import java.util.Date;
  * Created by xujiankang on 2016/1/18.
  */
 @Entity
-@Table(name = "userdynamic")
+@Table(name = "user_dynamic")
 public class UserDynamic implements java.io.Serializable {
 
     private Long id;
@@ -17,8 +17,9 @@ public class UserDynamic implements java.io.Serializable {
     private Integer fromType;
     private String longitude; // 经度
     private String latitude; // 纬度
+    private String geoHash; // geoHash 值
     private Integer storagePolicy; // 存储的策略
-    private Long dynamicContentId; // 用户动态内容的id
+    private Long dynamicContentId; // 用户动态评论的 ID
     private Long dynamicSeeSum; // 用户的动态被查看的次数
     private Long dynamicRecommend; // 用户动态转发 推荐次数
     private Date createTime;
@@ -81,6 +82,14 @@ public class UserDynamic implements java.io.Serializable {
 
     public void setLatitude(String latitude) {
         this.latitude = latitude;
+    }
+
+    public String getGeoHash() {
+        return geoHash;
+    }
+
+    public void setGeoHash(String geoHash) {
+        this.geoHash = geoHash;
     }
 
     public Integer getStoragePolicy() {
@@ -149,6 +158,7 @@ public class UserDynamic implements java.io.Serializable {
                 ", fromType=" + fromType +
                 ", longitude='" + longitude + '\'' +
                 ", latitude='" + latitude + '\'' +
+                ", geoHash='" + geoHash + '\'' +
                 ", storagePolicy=" + storagePolicy +
                 ", dynamicContentId=" + dynamicContentId +
                 ", dynamicSeeSum=" + dynamicSeeSum +

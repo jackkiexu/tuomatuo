@@ -18,4 +18,12 @@ public interface UserCache {
     void addUserIdToGeoHashCollection(String geoHash, Long userId);
 
     Set<String> getGeoHashCollection(String geoHash);
+
+    /**
+     * 用户验证码失败次数
+     * @param userId
+     * @param count
+     * @return
+     */
+    Integer userVerifyCodeFailCount(Long userId, Integer count);
 }
