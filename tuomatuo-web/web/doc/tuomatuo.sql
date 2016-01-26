@@ -17,29 +17,29 @@ CREATE DATABASE /*!32312 IF NOT EXISTS*/`tuomatuo` /*!40100 DEFAULT CHARACTER SE
 
 USE `tuomatuo`;
 
-/*Table structure for table `dynamiccomment` */
+/*Table structure for table `dynamic_comment` */
 
-DROP TABLE IF EXISTS `dynamiccomment`;
+DROP TABLE IF EXISTS `dynamic_comment`;
 
-CREATE TABLE `dynamiccomment` (
+CREATE TABLE `dynamic_comment` (
   `id` bigint(23) NOT NULL AUTO_INCREMENT,
   `dyId` bigint(23) DEFAULT NULL,
   `userId` bigint(23) DEFAULT NULL,
   `content` varchar(256) DEFAULT NULL COMMENT '内容',
   `createTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `approve` int(11) DEFAULT NULL COMMENT '赞同数',
-  `oppose` int(11) DEFAULT NULL COMMENT '不赞同数',
+  `approve` int(11) DEFAULT '0' COMMENT '赞同数',
+  `oppose` int(11) DEFAULT '0' COMMENT '不赞同数',
   `updateTime` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-/*Data for the table `dynamiccomment` */
+/*Data for the table `dynamic_comment` */
 
-/*Table structure for table `dynamicimg` */
+/*Table structure for table `dynamic_img` */
 
-DROP TABLE IF EXISTS `dynamicimg`;
+DROP TABLE IF EXISTS `dynamic_img`;
 
-CREATE TABLE `dynamicimg` (
+CREATE TABLE `dynamic_img` (
   `id` bigint(23) NOT NULL AUTO_INCREMENT,
   `userId` bigint(23) DEFAULT NULL,
   `height` int(11) DEFAULT NULL,
@@ -49,13 +49,13 @@ CREATE TABLE `dynamicimg` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-/*Data for the table `dynamicimg` */
+/*Data for the table `dynamic_img` */
 
-/*Table structure for table `dynamiclove` */
+/*Table structure for table `dynamic_love` */
 
-DROP TABLE IF EXISTS `dynamiclove`;
+DROP TABLE IF EXISTS `dynamic_love`;
 
-CREATE TABLE `dynamiclove` (
+CREATE TABLE `dynamic_love` (
   `id` bigint(23) NOT NULL AUTO_INCREMENT,
   `dyId` bigint(23) DEFAULT NULL COMMENT '用户动态id',
   `loveId` bigint(23) DEFAULT NULL COMMENT '点赞人的id',
@@ -63,7 +63,7 @@ CREATE TABLE `dynamiclove` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-/*Data for the table `dynamiclove` */
+/*Data for the table `dynamic_love` */
 
 /*Table structure for table `friend` */
 
@@ -81,11 +81,26 @@ CREATE TABLE `friend` (
 
 /*Data for the table `friend` */
 
-/*Table structure for table `qqaccount` */
+/*Table structure for table `mobile_account` */
 
-DROP TABLE IF EXISTS `qqaccount`;
+DROP TABLE IF EXISTS `mobile_account`;
 
-CREATE TABLE `qqaccount` (
+CREATE TABLE `mobile_account` (
+  `id` bigint(23) NOT NULL AUTO_INCREMENT,
+  `nick` varchar(64) DEFAULT NULL COMMENT '用户昵称',
+  `imgUrl` varchar(256) DEFAULT NULL COMMENT '用户头像的 url',
+  `createTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updateTime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+/*Data for the table `mobile_account` */
+
+/*Table structure for table `qq_account` */
+
+DROP TABLE IF EXISTS `qq_account`;
+
+CREATE TABLE `qq_account` (
   `id` bigint(23) NOT NULL AUTO_INCREMENT,
   `qqId` varchar(256) NOT NULL COMMENT 'qq账号唯一id',
   `qqImgUrl` varchar(256) DEFAULT NULL,
@@ -94,7 +109,24 @@ CREATE TABLE `qqaccount` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-/*Data for the table `qqaccount` */
+/*Data for the table `qq_account` */
+
+/*Table structure for table `sms` */
+
+DROP TABLE IF EXISTS `sms`;
+
+CREATE TABLE `sms` (
+  `id` bigint(23) NOT NULL AUTO_INCREMENT,
+  `userId` bigint(23) DEFAULT NULL COMMENT '用户 id',
+  `content` varchar(256) DEFAULT NULL COMMENT '发送的内容',
+  `type` tinyint(3) DEFAULT '0' COMMENT '短信的类型 0 验证码',
+  `createTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updateTime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `mobile` varchar(64) DEFAULT NULL COMMENT '发送信息的手机号码',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+/*Data for the table `sms` */
 
 /*Table structure for table `user` */
 
@@ -105,22 +137,25 @@ CREATE TABLE `user` (
   `name` varchar(128) DEFAULT NULL,
   `mobile` varchar(64) DEFAULT NULL,
   `email` varchar(64) DEFAULT NULL,
-  `accountType` tinyint(3) DEFAULT NULL COMMENT '账户类型, 0 普通账户, 1 微信, 2 QQ',
+  `accountType` tinyint(3) DEFAULT '0' COMMENT '账户类型, 0 普通账户, 1 微信, 2 QQ',
   `createTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `updateTime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `thirdAccountId` bigint(20) DEFAULT NULL COMMENT '第三方账户的id',
+  `thirdAccountId` bigint(23) DEFAULT NULL COMMENT '第三方账户的id',
   `lastSynMemTime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT '上次同步数据到内存的时间',
-  `status` tinyint(3) DEFAULT NULL COMMENT '用户状态 1 OK， 2 拉黑',
+  `status` tinyint(3) DEFAULT NULL COMMENT '用户状态 0 初始化账户, 1 OK， 2 拉黑',
+  `code` varchar(16) DEFAULT NULL COMMENT '验证码 (一般是 4位数字)',
+  `sendCodeTime` timestamp NULL DEFAULT NULL COMMENT '发送验证码的时间',
+  `sign` varchar(64) DEFAULT NULL COMMENT '账户的签名',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 /*Data for the table `user` */
 
-/*Table structure for table `userdynamic` */
+/*Table structure for table `user_dynamic` */
 
-DROP TABLE IF EXISTS `userdynamic`;
+DROP TABLE IF EXISTS `user_dynamic`;
 
-CREATE TABLE `userdynamic` (
+CREATE TABLE `user_dynamic` (
   `id` bigint(23) NOT NULL AUTO_INCREMENT,
   `userId` bigint(23) DEFAULT NULL,
   `type` tinyint(3) DEFAULT NULL COMMENT '动态的类别 0 图片, 1, 语音, 2 视频',
@@ -129,22 +164,24 @@ CREATE TABLE `userdynamic` (
   `longitude` varchar(256) DEFAULT NULL COMMENT '经度',
   `latitude` varchar(256) DEFAULT NULL COMMENT '纬度',
   `storagePolicy` tinyint(3) DEFAULT NULL COMMENT '存储策略 0 七牛, 1 又拍云',
-  `dynamicContentId` bigint(23) DEFAULT NULL COMMENT '用户动态内容的id',
+  `dynamicCommentId` bigint(23) DEFAULT NULL COMMENT '用户动态内容的id',
   `dynamicSeeSum` bigint(23) DEFAULT NULL COMMENT '用户动态被观看的次数',
   `dynamicRecommend` bigint(23) DEFAULT NULL COMMENT '用户动态转发推荐次数',
   `createTime` timestamp NULL DEFAULT NULL,
   `updateTime` timestamp NULL DEFAULT NULL,
   `hotValue` bigint(20) DEFAULT NULL COMMENT '用户动态的热力值',
+  `geoHash` varchar(64) DEFAULT NULL COMMENT '发布动态时的 geohash',
+  `title` varchar(128) DEFAULT NULL COMMENT '动态的标题',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-/*Data for the table `userdynamic` */
+/*Data for the table `user_dynamic` */
 
-/*Table structure for table `userposition` */
+/*Table structure for table `user_position` */
 
-DROP TABLE IF EXISTS `userposition`;
+DROP TABLE IF EXISTS `user_position`;
 
-CREATE TABLE `userposition` (
+CREATE TABLE `user_position` (
   `id` bigint(23) NOT NULL AUTO_INCREMENT,
   `userId` bigint(23) NOT NULL,
   `longitude` varchar(64) DEFAULT NULL COMMENT '经度',
@@ -154,13 +191,13 @@ CREATE TABLE `userposition` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-/*Data for the table `userposition` */
+/*Data for the table `user_position` */
 
-/*Table structure for table `userproperty` */
+/*Table structure for table `user_property` */
 
-DROP TABLE IF EXISTS `userproperty`;
+DROP TABLE IF EXISTS `user_property`;
 
-CREATE TABLE `userproperty` (
+CREATE TABLE `user_property` (
   `id` bigint(23) NOT NULL AUTO_INCREMENT,
   `userId` bigint(23) DEFAULT NULL,
   `sex` tinyint(3) DEFAULT NULL COMMENT ' 性别, 0 女, 1 男',
@@ -174,13 +211,13 @@ CREATE TABLE `userproperty` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-/*Data for the table `userproperty` */
+/*Data for the table `user_property` */
 
-/*Table structure for table `weixinaccount` */
+/*Table structure for table `weixin_account` */
 
-DROP TABLE IF EXISTS `weixinaccount`;
+DROP TABLE IF EXISTS `weixin_account`;
 
-CREATE TABLE `weixinaccount` (
+CREATE TABLE `weixin_account` (
   `id` bigint(23) NOT NULL AUTO_INCREMENT,
   `weiXinId` varchar(256) DEFAULT NULL COMMENT '微信账户的唯一id',
   `weiXinImgUrl` varchar(256) DEFAULT NULL COMMENT 'qq账户的唯一id',
@@ -189,7 +226,7 @@ CREATE TABLE `weixinaccount` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-/*Data for the table `weixinaccount` */
+/*Data for the table `weixin_account` */
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
