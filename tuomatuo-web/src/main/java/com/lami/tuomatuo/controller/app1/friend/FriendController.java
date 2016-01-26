@@ -1,7 +1,10 @@
-package com.lami.tuomatuo.controller.app1;
+package com.lami.tuomatuo.controller.app1.friend;
 
 import com.lami.tuomatuo.controller.BaseController;
 import com.lami.tuomatuo.model.Friend;
+import com.lami.tuomatuo.model.User;
+import com.lami.tuomatuo.model.base.Result;
+import com.lami.tuomatuo.model.po.AddFriend;
 import com.lami.tuomatuo.model.po.GetFriendParam;
 import com.lami.tuomatuo.model.po.GetNearbyFriends;
 import com.lami.tuomatuo.model.po.LoginParam;
@@ -47,27 +50,46 @@ public class FriendController  extends BaseController {
     }
 
     /**
-     * 获取推荐系统推荐给用户的朋友信息
+     * 根据关键字查询朋友
      * @param httpServletRequest
      * @param httpServletResponse
      * @param getFriendParam
      * @return
      */
-    @RequestMapping(value = "/getRecommendedFriends.form")
+    @RequestMapping(value = "/getSearchFriends.form")
     @ResponseBody
     public List<FriendVo> getRecommendedFriends(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @RequestBody GetFriendParam getFriendParam){
-        return friendService.getFriendsByUserId(getFriendParam.getUserId());
+        return friendService.searchFriend(getFriendParam.getContent(), getFriendParam.getOffset(), getFriendParam.getPageSize());
     }
 
-    /**
+    /** 添加朋友
      * @param httpServletRequest
      * @param httpServletResponse
      * @param getFriendParam
      * @return
      */
-    @RequestMapping(value = "/getNearbyFriends.form")
+    @RequestMapping(value = "/followFriend.form")
     @ResponseBody
-    public List<FriendVo> getNearbyFriends(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @RequestBody GetNearbyFriends getNearbyFriends){
-        return friendService.getFriendsByUserId(getNearbyFriends.getUserId());
+    public Result followFriend(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @RequestBody AddFriend addFriend){
+        Result result = execute(addFriend);
+        if (Result.SUCCESS != result.getStatus()) return result;
+        User user = (User)result.getValue();
+        return new Result(Result.SUCCESS).setValue(friendService.followFriend(user.getId(), addFriend.getFriendList()));
+    }
+
+    /** 删除朋友
+     * @param httpServletRequest
+     * @param httpServletResponse
+     * @param getFriendParam
+     * @return
+     */
+    @RequestMapping(value = "/unfollowFriend.form")
+    @ResponseBody
+    public Result unfollowFriend(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @RequestBody AddFriend addFriend){
+        Result result = execute(addFriend);
+        if (Result.SUCCESS != result.getStatus()) return result;
+        User user = (User)result.getValue();
+        friendService.unFollowFriend(user.getId(), addFriend.getFriendId());
+        return new Result(Result.SUCCESS);
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -23,8 +24,27 @@ public class DynamicCommentService extends BaseService<DynamicComment, Long> {
     public Long getUserDynamicCommentCount(Long dyId){
         List<Object> paramaters = new ArrayList<Object>();
         paramaters.add(dyId);
-        String sql = "select count(*) from dynamiccomment where dyId = ?";
+        String sql = "select count(*) from dynamic_comment where dyId = ?";
         return dynamicCommentDaoInterface.getLong(sql, paramaters);
+    }
+
+    public List<DynamicComment> getUserDynamicCommentById(Long dyId, Integer offset, Integer pageSize){
+        List<Object> paramaters = new ArrayList<Object>();
+        paramaters.add(dyId);
+        paramaters.add(offset);
+        paramaters.add(pageSize);
+        String sql = "select * from dynamic_comment where dyId = ? order by id desc limit ?,?";
+        return dynamicCommentDaoInterface.search(sql, paramaters);
+    }
+
+    public void addUserDynamicComment(Long userId, Long dyId, String content){
+        DynamicComment dynamicComment = new DynamicComment();
+        dynamicComment.setContent(content);
+        dynamicComment.setDyId(dyId);
+        dynamicComment.setUserId(userId);
+        dynamicComment.setCreateTime(new Date());
+        dynamicComment.setUpdateTime(new Date());
+        dynamicCommentDaoInterface.save(dynamicComment);
     }
 
 }

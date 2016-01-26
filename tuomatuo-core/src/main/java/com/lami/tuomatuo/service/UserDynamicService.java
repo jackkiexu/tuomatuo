@@ -77,4 +77,14 @@ public class UserDynamicService extends BaseService<UserDynamic, Long> {
         String sql = "select * from userdynamic where geoHash like %? order by id desc limit ?, ?";
         return userDynamicDaoInterface.search(sql, parameters);
     }
+
+
+    public List<UserDynamic> searchDynamic(String keyWord, Integer offset, Integer row){
+        List<Object> parameters = new ArrayList<Object>();
+        parameters.add(keyWord);
+        parameters.add(offset);
+        parameters.add(row);
+        String sql = "select * from userdynamic where title like %"+keyWord+"% order by id desc limit ?, ?";
+        return userDynamicDaoInterface.search(sql, parameters);
+    }
 }

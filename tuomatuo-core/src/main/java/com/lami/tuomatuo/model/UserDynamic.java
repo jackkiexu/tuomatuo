@@ -19,12 +19,13 @@ public class UserDynamic implements java.io.Serializable {
     private String latitude; // 纬度
     private String geoHash; // geoHash 值
     private Integer storagePolicy; // 存储的策略
-    private Long dynamicContentId; // 用户动态评论的 ID
+    private Long dynamicCommentId; // 用户动态评论的 ID
     private Long dynamicSeeSum; // 用户的动态被查看的次数
     private Long dynamicRecommend; // 用户动态转发 推荐次数
     private Date createTime;
     private Date updateTime;
     private Long hotValue;
+    private String title; // 用户动态的标题
 
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
@@ -100,12 +101,12 @@ public class UserDynamic implements java.io.Serializable {
         this.storagePolicy = storagePolicy;
     }
 
-    public Long getDynamicContentId() {
-        return dynamicContentId;
+    public Long getDynamicCommentId() {
+        return dynamicCommentId;
     }
 
-    public void setDynamicContentId(Long dynamicContentId) {
-        this.dynamicContentId = dynamicContentId;
+    public void setDynamicCommentId(Long dynamicCommentId) {
+        this.dynamicCommentId = dynamicCommentId;
     }
 
     public Long getDynamicSeeSum() {
@@ -148,6 +149,14 @@ public class UserDynamic implements java.io.Serializable {
         this.hotValue = hotValue;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     @Override
     public String toString() {
         return "UserDynamic{" +
@@ -160,12 +169,13 @@ public class UserDynamic implements java.io.Serializable {
                 ", latitude='" + latitude + '\'' +
                 ", geoHash='" + geoHash + '\'' +
                 ", storagePolicy=" + storagePolicy +
-                ", dynamicContentId=" + dynamicContentId +
+                ", dynamicCommentId=" + dynamicCommentId +
                 ", dynamicSeeSum=" + dynamicSeeSum +
                 ", dynamicRecommend=" + dynamicRecommend +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 ", hotValue=" + hotValue +
+                ", title='" + title + '\'' +
                 '}';
     }
 }

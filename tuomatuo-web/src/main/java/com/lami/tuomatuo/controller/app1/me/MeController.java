@@ -4,15 +4,14 @@ import com.lami.tuomatuo.controller.BaseController;
 import com.lami.tuomatuo.model.User;
 import com.lami.tuomatuo.model.UserDynamic;
 import com.lami.tuomatuo.model.UserProperty;
+import com.lami.tuomatuo.model.base.Result;
 import com.lami.tuomatuo.model.po.LoginParam;
+import com.lami.tuomatuo.model.po.UpdateUserInfoParam;
 import com.lami.tuomatuo.model.po.UploadUserPosition;
 import com.lami.tuomatuo.model.vo.UserDynamicVo;
 import com.lami.tuomatuo.model.vo.UserInfoVo;
 import com.lami.tuomatuo.model.vo.UserPositionVo;
-import com.lami.tuomatuo.service.UserDynamicService;
-import com.lami.tuomatuo.service.UserPositionService;
-import com.lami.tuomatuo.service.UserPropertyService;
-import com.lami.tuomatuo.service.UserService;
+import com.lami.tuomatuo.service.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -40,6 +39,8 @@ public class MeController extends BaseController {
     private UserPropertyService userPropertyService;
     @Autowired
     private UserPositionService userPositionService;
+    @Autowired
+    private MobileAccountService mobileAccountService;
 
     @Override
     protected boolean checkAuth() {
@@ -48,7 +49,6 @@ public class MeController extends BaseController {
 
     /**
      * get user informations by userId
-     *
      * @param httpServletRequest
      * @param httpServletResponse
      * @param loginParam
@@ -60,10 +60,8 @@ public class MeController extends BaseController {
         User user = userService.get(loginParam.getUserId());
         UserProperty userProperty = userPropertyService.getUserPropertyByUserId(loginParam.getUserId());
         List<UserDynamic> userDynamicList = userDynamicService.getUserDynamicByUserId(loginParam.getUserId());
-        List<UserDynamicVo> userDynamicVoList = new ArrayList<UserDynamicVo>();
-        for(UserDynamic userDynamic : userDynamicList){
-            userDynamicVoList.add(new UserDynamicVo(userDynamic));
-        }
+        List<UserDynamicVo> userDynamicVoList = userDynamicService.getUserDynamicVoByUserDynamic(userDynamicList);
+
         UserInfoVo userInfoVo = new UserInfoVo(user, userProperty);
         userInfoVo.setUserDynamicVoList(userDynamicVoList);
         return userInfoVo;
@@ -91,5 +89,22 @@ public class MeController extends BaseController {
     public void uploadUserPositionToMem(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @RequestBody UploadUserPosition uploadUserPosition){
         UserPositionVo userPositionVo = new UserPositionVo(uploadUserPosition.getUserId(), uploadUserPosition.getLongitude(), uploadUserPosition.getLatitude());
         userPositionService.uploadUserPositionToMem(userPositionVo);
+    }
+
+    /**
+     * 用户更新自己的信息
+     * @param httpServletRequest
+     * @param httpServletResponse
+     * @param uploadUserPosition
+     */
+    @RequestMapping(value="/updateUserInfo.form")
+    public Result updateUserInfo(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @RequestBody UpdateUserInfoParam updateUserInfoParam){
+        Result result = execute(updateUserInfoParam);
+        if (Result.SUCCESS != result.getStatus()) return result;
+
+        User user = (User)result.getValue();
+
+        mobileAccountService.updateMobileAccount(user.getThirdAccountId(),updateUserInfoParam.getNick(), updateUserInfoParam.getImgUrl(), updateUserInfoParam.getAge(), updateUserInfoParam.getSex(), user.getId());
+        return new Result(Result.SUCCESS);
     }
 }

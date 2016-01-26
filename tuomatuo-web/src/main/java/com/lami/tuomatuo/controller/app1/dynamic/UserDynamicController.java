@@ -61,7 +61,7 @@ public class UserDynamicController extends BaseController {
         if (Result.SUCCESS != result.getStatus()) return result;
 
         List<UserDynamic> userDynamicList = userDynamicService.getHotDynamic(getUserDynamicParam.getOffset(), getUserDynamicParam.getPageSize());
-        return new Result(Result.SUCCESS).setValue(userDynamicList);
+        return new Result(Result.SUCCESS).setValue(userDynamicService.getUserDynamicVoByUserDynamic(userDynamicList));
     }
 
     /**
@@ -87,6 +87,6 @@ public class UserDynamicController extends BaseController {
 
         String geoHash = GeoHash.geInstance().encode(latitude, longitude);
         List<UserDynamic> userDynamicList = userDynamicService.getUserNearbyDynamic(geoHash, getUserDynamicParam.getOffset(), getUserDynamicParam.getPageSize());
-        return new Result(Result.SUCCESS).setValue(userDynamicList);
+        return new Result(Result.SUCCESS).setValue(userDynamicService.getUserDynamicVoByUserDynamic(userDynamicList));
     }
 }

@@ -1,7 +1,6 @@
 package com.lami.tuomatuo.model;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.Date;
 
 /**
@@ -10,17 +9,19 @@ import java.util.Date;
 @Entity
 @Table(name = "mobile_account")
 public class MobileAccount implements java.io.Serializable{
-    private Integer id;
+    private Long id;
     private String nick;
     private String imgUrl;
     private Date createTime;
     private Date updateTime;
 
-    public Integer getId() {
+    @Id
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

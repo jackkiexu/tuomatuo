@@ -29,6 +29,6 @@ public abstract class BaseController {
         if (!user.getSign().equals(baseParam.getSign())){
             return new Result(Result.ACCOUNT_ILLEGAL);
         }
-        return new Result(Result.SUCCESS);
+        return new Result(Result.SUCCESS).setValue(user);
     }
 }

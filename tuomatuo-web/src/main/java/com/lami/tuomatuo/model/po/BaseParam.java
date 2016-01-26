@@ -13,7 +13,7 @@ public abstract class BaseParam {
     protected String mobile; // 用户手机号码
     protected String sign; // 用户的签名
     protected Integer pageIndex = 1;
-    protected Integer pageSize = 10;
+    protected Integer pageSize = 20;
 
     public Integer getOffset(){
         return (pageIndex - 1)*pageSize;

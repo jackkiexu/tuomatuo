@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.controller.app1;
+package com.lami.tuomatuo.controller.app1.login;
 
 import com.lami.sms.pipe.yupian.SendResult;
 import com.lami.sms.pipe.yupian.YuPian;
@@ -127,27 +127,4 @@ public class AppLoginController extends BaseController{
         }
         return new Result(Result.SUCCESS).setValue(user);
     }
-
-
-
-    @RequestMapping(value = "/login.form")
-    public void login(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @RequestBody LoginParam loginParam){
-        try {
-            logger.info("loginResult:"+loginParam);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-        }
-    }
-
-    @RequestMapping(value = "/lgout.form")
-    public void lgout(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
-        try {
-            logger.info("loginResult:");
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-        }
-    }
-
 }

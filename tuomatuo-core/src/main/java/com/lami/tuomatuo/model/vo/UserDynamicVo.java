@@ -24,6 +24,7 @@ public class UserDynamicVo {
     private String longitude; // 经度
     private String latitude; // 纬度
     private Long dynamicContentId; // 用户动态内容的id
+    private String title; // 用户动态的标题
 
     public UserDynamicVo(){}
     public UserDynamicVo(UserDynamic userDynamic, UserProperty userProperty, MobileAccount mobileAccount){
@@ -32,8 +33,9 @@ public class UserDynamicVo {
         this.fromType = userDynamic.getFromType();
         this.longitude = userDynamic.getLongitude();
         this.latitude = userDynamic.getLatitude();
-        this.dynamicContentId = userDynamic.getDynamicContentId();
+        this.dynamicContentId = userDynamic.getDynamicCommentId();
         this.dynamicSeeSum = userDynamic.getDynamicSeeSum();
+        this.title = userDynamic.getTitle();
 
         this.userId = userDynamic.getUserId();
         this.nick = mobileAccount.getNick();
