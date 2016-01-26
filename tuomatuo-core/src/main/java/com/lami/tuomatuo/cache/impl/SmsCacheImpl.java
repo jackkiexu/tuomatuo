@@ -13,7 +13,7 @@ import redis.clients.jedis.ShardedJedisPool;
 /**
  * Created by xujiankang on 2016/1/25.
  */
-@Component( value = "userCache")
+@Component( value = "smsCache")
 public class SmsCacheImpl implements SmsCache {
 
     private static final Logger logger = Logger.getLogger(SmsCacheImpl.class);

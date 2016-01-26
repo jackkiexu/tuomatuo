@@ -12,7 +12,7 @@
             <param-name>contextConfigLocation</param-name>
             <param-value>
                 classpath*:/spring/spring-context.xml,
-                classpath*:/spring/spring-mybatis.xml,
+                classpath*:/spring/spring-database.xml,
                 classpath*:/spring/spring-mvc.xml,
                 classpath*:/spring/redis-context.xml,
                 classpath*:/spring/spring-scheduler.xml

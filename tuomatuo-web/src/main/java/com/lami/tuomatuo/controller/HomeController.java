@@ -1,8 +1,5 @@
 package com.lami.tuomatuo.controller;
 
-import com.lami.tuomatuo.mapper.write.UserMapper;
-import com.lami.tuomatuo.model.mybatis.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -16,8 +13,6 @@ import java.io.IOException;
 @Controller
 public class HomeController extends BaseController {
 
-    @Autowired
-    private UserMapper userMapper;
 
     @Override
     protected boolean checkAuth() {
@@ -26,13 +21,6 @@ public class HomeController extends BaseController {
 
     @RequestMapping(value = "/isLive.form")
     public void isLive(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
-        try {
-            httpServletResponse.getOutputStream().write("OK".getBytes("UTF-8"));
-            User user = userMapper.getUserById(9);
-            logger.info(user);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-        }
+
     }
 }

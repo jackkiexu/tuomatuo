@@ -37,7 +37,7 @@ public class UpdateUserDynamicScheduler{
         Date now = new Date();
         logger.info("执行订单定时任务开始"+ DateUtils.formatDate(now, "yyyy-MM-dd HH:mm:ss"));
         Long total = userDynamicService.getCount();
-        for (long i=0; i <= total; i+=100){
+        for (int i=0; i <= total; i+=100){
             List<UserDynamic> userDynamicList = userDynamicService.getUserDynamic(i, 100);
             calculateHotValue(userDynamicList);
             try {

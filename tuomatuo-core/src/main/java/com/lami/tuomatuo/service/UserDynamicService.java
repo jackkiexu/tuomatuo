@@ -49,7 +49,7 @@ public class UserDynamicService extends BaseService<UserDynamic, Long> {
      * @return
      */
     public Long getCount(){
-        String sql = "select count(*) from userdynamic";
+        String sql = "select count(*) from user_dynamic";
         return userDynamicDaoInterface.getLong(sql, new ArrayList<Object>());
     }
 
@@ -57,7 +57,7 @@ public class UserDynamicService extends BaseService<UserDynamic, Long> {
         List<Object> parameters = new ArrayList<Object>();
         parameters.add(offset);
         parameters.add(row);
-        String sql = "select * from userdynamic order by id desc limit ?, ?";
+        String sql = "select * from user_dynamic order by id desc limit ?, ?";
         return userDynamicDaoInterface.search(sql, parameters);
     }
 
@@ -65,7 +65,7 @@ public class UserDynamicService extends BaseService<UserDynamic, Long> {
         List<Object> parameters = new ArrayList<Object>();
         parameters.add(offset);
         parameters.add(row);
-        String sql = "select * from userdynamic order by hotValue desc limit ?, ?";
+        String sql = "select * from user_dynamic order by hotValue desc limit ?, ?";
         return userDynamicDaoInterface.search(sql, parameters);
     }
 
@@ -74,7 +74,7 @@ public class UserDynamicService extends BaseService<UserDynamic, Long> {
         parameters.add(geoHash.substring(0, 6));
         parameters.add(offset);
         parameters.add(row);
-        String sql = "select * from userdynamic where geoHash like %? order by id desc limit ?, ?";
+        String sql = "select * from user_dynamic where geoHash like \'%?\' order by id desc limit ?, ?";
         return userDynamicDaoInterface.search(sql, parameters);
     }
 
@@ -84,7 +84,7 @@ public class UserDynamicService extends BaseService<UserDynamic, Long> {
         parameters.add(keyWord);
         parameters.add(offset);
         parameters.add(row);
-        String sql = "select * from userdynamic where title like %"+keyWord+"% order by id desc limit ?, ?";
+        String sql = "select * from user_dynamic where title like \'%"+keyWord+"%\' order by id desc limit ?, ?";
         return userDynamicDaoInterface.search(sql, parameters);
     }
 }

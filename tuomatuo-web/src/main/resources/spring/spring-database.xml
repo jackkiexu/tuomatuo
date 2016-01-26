@@ -21,16 +21,4 @@
               </property>
        </bean>
 
-       <!--&lt;!&ndash; sqlSessionFactory &ndash;&gt;-->
-       <!--<bean id="writeSqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">-->
-              <!--<property name="dataSource" ref="writeDataSource"/>-->
-              <!--<property name="configLocation" value="classpath:mybatis/mybatis-config.xml"/>-->
-              <!--<property name="mapperLocations" value="classpath:mybatis/mapper/write/*.xml"/>-->
-       <!--</bean>-->
-
-       <!--<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">-->
-              <!--<property name="basePackage" value="com.lami.tuomatuo.mapper"></property>-->
-              <!--<property name="sqlSessionFactoryBeanName" value="writeSqlSessionFactory"></property>-->
-       <!--</bean>-->
-
 </beans>
