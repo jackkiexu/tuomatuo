@@ -6,6 +6,7 @@ import com.qiniu.storage.BucketManager;
 import com.qiniu.storage.UploadManager;
 import com.qiniu.util.Auth;
 import com.qiniu.util.StringMap;
+import lombok.Data;
 import org.apache.log4j.Logger;
 
 /**
@@ -34,18 +35,27 @@ public class QiuNiuUtils {
         upload();
     }
 
-
+    /******************************** 通过上传策略生成上传凭证 *********************************************/
     // 简单上传，使用默认策略
     private static String getUpToken0(){
-        return auth.uploadToken("bucket");
+        return auth.uploadToken("tuomatuo");
     }
 
     // 覆盖上传
     private String getUpToken1(){
-        return auth.uploadToken("bucket", "key");
+        return auth.uploadToken("tuomatuo", "key");
     }
 
-    // 设置指定上传策略
+    /**
+     * 生成上传token
+     *
+     * @param bucket  空间名
+     * @param key     key，可为 null
+     * @param expires 有效时长，单位秒。默认3600s
+     * @param policy  上传策略的其它参数，如 new StringMap().put("endUser", "uid").putNotEmpty("returnBody", "") scope通过 bucket、key间接设置，deadline 通过 expires 间接设置
+     * @param strict  是否去除非限定的策略字段，默认true
+     * @return 生成的上传token
+     */
     private String getUpToken2(){
         return auth.uploadToken("bucket", null, 3600, new StringMap()
                 .put("callbackUrl", "call back url").putNotEmpty("callbackHost", "")
@@ -74,14 +84,16 @@ public class QiuNiuUtils {
         return null;
     }
 
+
+    /***************************** 上传 *********************************************/
+
     private static void upload() {
         try {
-            Response res = uploadManager.put("C:\\Users\\Administrator\\Desktop\\down\\12.jpg", "12.jpg", getUpToken());
+            Response res = uploadManager.put("C:\\Users\\Administrator\\Desktop\\down\\test.png", "test12.png", getUpToken());
             MyRet ret = res.jsonToObject(MyRet.class);
-            log.info("res.toString():"+res.toString());
-            log.info("res.bodyString():"+res.bodyString());
-            System.out.println("res.toString():" + res.toString());
-            System.out.println("res.bodyString():"+res.bodyString());
+            log.info("res.toString():"+ret);
+            log.info("res.bodyString():" + ret);
+
         } catch (QiniuException e) {
             Response r = e.response;
             // 请求失败时简单状态信息
@@ -95,35 +107,19 @@ public class QiuNiuUtils {
         }
     }
 
-
-
-
+    @Data
     class MyRet {
         public long fsize;
         public String key;
         public String hash;
         public int width;
         public int height;
-
-        @Override
-        public String toString() {
-            return "MyRet{" +
-                    "fsize=" + fsize +
-                    ", key='" + key + '\'' +
-                    ", hash='" + hash + '\'' +
-                    ", width=" + width +
-                    ", height=" + height +
-                    '}';
-        }
     }
-
-
-
-
 
     private static String getUpToken(){
         return auth.uploadToken("tuomatuo", null, 3600, new StringMap()
-                .putNotEmpty("returnBody", "{\"key\": $(key), \"hash\": $(etag), \"width\": $(imageInfo.width), \"height\": $(imageInfo.height)}"));
+                .put("callbackUrl", "http://<IP>/app1/qiniu/callbackUrl.form").putNotEmpty("callbackHost", "<IP>")
+                .put("callbackBody", "key=$(key)&hash=$(etag)&width=$(imageInfo.width)&height=$(imageInfo.height)&uuid=$(uuid)&imageInfo=$(imageInfo)&fsize=$(fsize)&bucket=$(bucket)&location=$(x:location)&price=$(x:price)"));
     }
 }
 
