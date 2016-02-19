@@ -44,7 +44,7 @@ public class MeController extends BaseController {
 
     @Override
     protected boolean checkAuth() {
-        return false;
+        return true;
     }
 
     /**
@@ -68,7 +68,7 @@ public class MeController extends BaseController {
     }
 
     /**
-     * 用户上传自己地理位置的信息
+     * user update self position to database
      * @param httpServletRequest
      * @param httpServletResponse
      * @param uploadUserPosition
@@ -80,7 +80,7 @@ public class MeController extends BaseController {
     }
 
     /**
-     * 用户上传自己地理位置的信息 -> redis
+     * user update self position to redis
      * @param httpServletRequest
      * @param httpServletResponse
      * @param uploadUserPosition
@@ -92,7 +92,7 @@ public class MeController extends BaseController {
     }
 
     /**
-     * 用户更新自己的信息
+     * user update self properties
      * @param httpServletRequest
      * @param httpServletResponse
      * @param uploadUserPosition
@@ -101,10 +101,10 @@ public class MeController extends BaseController {
     public Result updateUserInfo(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, @RequestBody UpdateUserInfoParam updateUserInfoParam){
         Result result = execute(updateUserInfoParam);
         if (Result.SUCCESS != result.getStatus()) return result;
-
         User user = (User)result.getValue();
 
         mobileAccountService.updateMobileAccount(user.getThirdAccountId(),updateUserInfoParam.getNick(), updateUserInfoParam.getImgUrl(), updateUserInfoParam.getAge(), updateUserInfoParam.getSex(), user.getId());
         return new Result(Result.SUCCESS);
     }
+
 }
