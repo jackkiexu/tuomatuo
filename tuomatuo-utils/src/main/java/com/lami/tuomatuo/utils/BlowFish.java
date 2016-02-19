@@ -55,6 +55,36 @@ public class BlowFish {
         return cipher.doFinal(bt);
     }
 
+    /**
+     * 将两个ASCII字符合成一个字节； 如："EF"--> 0xEF
+     *
+     * @param src0 byte
+     * @param src1 byte
+     * @return byte
+     */
+    private static byte uniteBytes(byte src0, byte src1) {
+        byte _b0 = Byte.decode("0x" + new String(new byte[]{src0})).byteValue();
+        _b0 = (byte) (_b0 << 4);
+        byte _b1 = Byte.decode("0x" + new String(new byte[]{src1})).byteValue();
+        byte ret = (byte) (_b0 ^ _b1);
+        return ret;
+    }
+
+    /**
+     * 将指定字符串src，以每两个字符分割转换为16进制形式 如："2B44EFD9" --> byte[]{0x2B, 0x44, 0xEF,
+     * 0xD9}
+     *
+     * @param src String
+     * @return byte[]
+     */
+    private static byte[] hexString2Bytes(String src) {
+        byte[] tmp = src.getBytes();
+        byte[] ret = new byte[tmp.length / 2];
+        for(int i = 0; i < ret.length; i++) {
+            ret[i] = uniteBytes(tmp[i * 2], tmp[i * 2 + 1]);
+        }
+        return ret;
+    }
 
 
     /**
@@ -64,7 +94,7 @@ public class BlowFish {
     public static void main(String[] args) throws Exception  {
         SecretKey secret_key = new SecretKeySpec(KEY.getBytes(), ALGORITM);
 
-        String src = "hp5U223DaeowVXJHI+4D0PMjmNLK4AkA8IFQNoHr";
+        String src = "MT0VT5EN1FAP7SGA840OBW4DUFJUAB";
         byte[] target = encrypt(secret_key, src);
 
         System.out.println("密文： " + Base64.encode(target));
