@@ -51,7 +51,7 @@ public class CrawlerUtils {
      * @return
      * @throws Exception
      */
-    private static Map<String, String> getCookies(String url) throws Exception{
+    public static Map<String, String> getCookies(String url) throws Exception{
         Connection.Response res;
         Map<String, String> cookies = null;
         try {
