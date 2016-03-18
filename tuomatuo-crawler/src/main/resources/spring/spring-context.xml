@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd">
+
+       <aop:aspectj-autoproxy expose-proxy="true"></aop:aspectj-autoproxy>
+       <!-- 注解方式配置事务 -->
+       <tx:annotation-driven></tx:annotation-driven>
+       <!-- 支持注解 -->
+       <context:annotation-config></context:annotation-config>
+       <!-- 解析配置 -->
+       <context:property-placeholder location="classpath:jdbc.properties,classpath:config.properties"></context:property-placeholder>
+       <!-- 扫描指定包 -->
+       <context:component-scan base-package="com.lami.tuomatuo.controller"/>
+       <context:component-scan base-package="com.lami.tuomatuo.dao"/>
+       <context:component-scan base-package="com.lami.tuomatuo.service"/>
+       <context:component-scan base-package="com.lami.tuomatuo.cache"/>
+
+
+       <!-- 写 DataSource -->
+       <bean class="org.springframework.jdbc.datasource.DataSourceTransactionManager" id="transactionManager">
+              <property name="dataSource" ref="writeDataSource"></property>
+       </bean>
+
+       <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+              <property name="dataSource" ref="writeDataSource">
+              </property>
+       </bean>
+
+</beans>

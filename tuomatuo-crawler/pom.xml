@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>tuomatuo_web</artifactId>
+    <artifactId>tuomatuo-crawler</artifactId>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -358,7 +358,13 @@
             <artifactId>qiniu-java-sdk</artifactId>
             <version>[7.0.0, 7.0.99]</version>
         </dependency>
+
+        <!-- jsoup -->
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.8.3</version>
+        </dependency>
     </dependencies>
 
-    <packaging>jar</packaging>
 </project>

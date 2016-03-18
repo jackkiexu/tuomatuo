@@ -1,12 +1,9 @@
 package com.lami.tuomatuo.utils;
 
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
+import java.util.*;
 
 public class DateUtils {
 	
@@ -32,17 +29,15 @@ public class DateUtils {
 		c.set(Calendar.MINUTE, 0);
 		return c.getTime();
 	}
-	
-
-//	public static void main(String[] args) {
-//		Date date = new Date(1426831902984l);
-//		System.out.println(date);
-//		System.out.println(getNextMinutesTime(new Date(), 20));
-//	}
 
 
-	
-	
+	public static String getGMTDate(){
+		Date d=new Date();
+		DateFormat format=new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+		format.setTimeZone(TimeZone.getTimeZone("GMT"));
+		return format.format(d);
+	}
+
 	public static Date getOffsetDate(Date date, int offset) {
 		Calendar c = Calendar.getInstance();
 		c.setTime(date);
