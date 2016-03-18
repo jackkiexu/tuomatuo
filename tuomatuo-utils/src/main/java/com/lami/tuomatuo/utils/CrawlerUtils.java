@@ -228,8 +228,9 @@ public class CrawlerUtils {
     public static void main(String[] args) {
         try {
             Document doc = buildConnection("http://i.ui.cn/ucenter/143208.html", getCookies("http://i.ui.cn/ucenter/143208.html"), "http://www.baidu.com").get();
-            Element user_avatar_hideE = doc.getElementById("user-avatar-hide");
-            Elements us_nameE = doc.getElementsByClass("us-name");
+            Element user_avatar_hideE = doc.getElementById("user-avatar-hide"); //avatar URL
+            Elements us_nameE = doc.getElementsByClass("us-name"); // user Name and sign
+            Elements us_infoE = doc.getElementsByClass("us-info"); // user property
 
             String user_avatar_hide = user_avatar_hideE.attr("src");
 
@@ -243,6 +244,24 @@ public class CrawlerUtils {
                 for(Element element2 : elementSignature){
                     System.out.println("element2.data():"+element2.text());
                 }
+            }
+
+            System.out.println("**********************************************************");
+            for(Element element : us_infoE){
+                Elements elements = element.getElementsByClass("ul");
+
+                for(Element elementSub : us_infoE){
+                    Elements elementNames = elementSub.getElementsByClass("us-i-l");
+                    for(Element elementSubs: us_infoE){
+                        Elements elements1 = elementSubs.getElementsByTag("span");
+                        for(Element elementSubss: elements1){
+                            System.out.println("elementSubss.text():"+elementSubss.text());
+                        }
+                    }
+                }
+
+
+
             }
 
 
