@@ -35,7 +35,7 @@ public class UpdateUserDynamicScheduler{
 
     private  void updateUserDynamicHotValue(){
         Date now = new Date();
-        logger.info("执行订单定时任务开始"+ DateUtils.formatDate(now, "yyyy-MM-dd HH:mm:ss"));
+       /* logger.info("执行订单定时任务开始"+ DateUtils.formatDate(now, "yyyy-MM-dd HH:mm:ss"));
         Long total = userDynamicService.getCount();
         for (int i=0; i <= total; i+=100){
             List<UserDynamic> userDynamicList = userDynamicService.getUserDynamic(i, 100);
@@ -45,7 +45,7 @@ public class UpdateUserDynamicScheduler{
             } catch (InterruptedException e) {
             }
         }
-        logger.info("执行订单定时任务结束"+ DateUtils.formatDate(now, "yyyy-MM-dd HH:mm:ss"));
+        logger.info("执行订单定时任务结束"+ DateUtils.formatDate(now, "yyyy-MM-dd HH:mm:ss"));*/
     }
 
     private void calculateHotValue(List<UserDynamic> userDynamicList){

@@ -119,7 +119,7 @@ public abstract class BaseDaoMysqlImpl<T,ID extends Serializable> extends JdbcDa
 	public List<T> search(String sql,List<Object> values){
 		if(StringUtils.isEmpty(sql))return new ArrayList<T>();
 		if(values==null)values=new ArrayList<Object>();
-		logger.info("sql : "+sql+" values:"+ values);
+//		logger.info("sql : "+sql+" values:"+ values);
 		List<T> list = this.getJdbcTemplate().query(sql, transactSQLInjection(values).toArray(),new BeanPropertyRowMapper<T>(this.persistentClass));
 		return list==null?new ArrayList<T>():list;
 	}

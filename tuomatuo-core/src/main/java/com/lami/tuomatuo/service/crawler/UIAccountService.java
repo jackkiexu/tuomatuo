@@ -67,7 +67,7 @@ public class UIAccountService extends BaseService<UIAccount, Long> {
                 uiAccountDaoInterface.batchSave(accountList);
 
                 try {
-                    Thread.sleep(5100);
+                    Thread.sleep(1100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
