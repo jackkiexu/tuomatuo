@@ -45,7 +45,7 @@ public class UIAccountService extends BaseService<UIAccount, Long> {
                 URL = "http://i.ui.cn/ucenter/"+iInit+".html";
                 referer = "http://i.ui.cn/ucenter/"+iInit+".html";
                 account =  CrawlerHelper.getInstance().crawlerUIAccount(URL, referer, iInit);
-                logger.info("account:"+account+", and i = " + iInit);
+                logger.info("index = " + iInit +", account:"+account);
                 if(account == null){
                     nullCount += 1l;
                     continue;
@@ -64,11 +64,10 @@ public class UIAccountService extends BaseService<UIAccount, Long> {
 
                 List<UIAccount> accountList = new ArrayList<UIAccount>();
                 accountList.add(uiAccount);
-                logger.info("uiAccount:"+accountList);
                 uiAccountDaoInterface.batchSave(accountList);
 
                 try {
-                    Thread.sleep(150);
+                    Thread.sleep(5100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

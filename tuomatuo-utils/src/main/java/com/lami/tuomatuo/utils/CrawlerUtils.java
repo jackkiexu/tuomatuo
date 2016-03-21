@@ -220,7 +220,7 @@ public class CrawlerUtils {
                 .header("If-Modified-Since", DateUtils.getGMTDate())
                 .header("Referer", referer)
                 .header("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36")
-                .cookies(cookies).timeout(1000 * 60);
+                .cookies(cookies).timeout(1000 * 60 * 20 );
         return connection;
     }
 
