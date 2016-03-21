@@ -226,6 +226,21 @@ CREATE TABLE `weixin_account` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE `crawler_ui_account` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `avatarURL` varchar(256) DEFAULT NULL,
+  `name` varchar(64) DEFAULT NULL,
+  `signature` varchar(128) DEFAULT NULL,
+  `age` varchar(32) DEFAULT NULL,
+  `qq` varchar(32) DEFAULT NULL,
+  `email` varchar(64) DEFAULT NULL,
+  `net` varchar(128) DEFAULT NULL,
+  `sina` varchar(128) DEFAULT NULL,
+  `weiChat` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+
+
 /*Data for the table `weixin_account` */
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

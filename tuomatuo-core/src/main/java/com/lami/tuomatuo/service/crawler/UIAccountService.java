@@ -36,36 +36,43 @@ public class UIAccountService extends BaseService<UIAccount, Long> {
         if(maxId != null) iMax = maxId;
 
         UIAccountVO account = new UIAccountVO();
-        List<UIAccount> accountList = new ArrayList<UIAccount>();
 
         Long nullCount = 0l;
         String URL = null;
         String referer = null;
-        for(;nullCount <= 100 && iInit <= iMax;iInit++){
-            URL = "http://i.ui.cn/ucenter/"+iInit+".html";
-            referer = "http://i.ui.cn/ucenter/"+iInit+".html";
-            account =  CrawlerHelper.getInstance().crawlerUIAccount(URL, referer, iInit);
-            if(account == null){
-                logger.info("account == null, and i = " + iInit);
-                nullCount += 1l;
-                continue;
-            }else {
-                nullCount = 0l;
-            }
+        for(;nullCount <= 1000 && iInit <= iMax;iInit++){
+            try {
+                URL = "http://i.ui.cn/ucenter/"+iInit+".html";
+                referer = "http://i.ui.cn/ucenter/"+iInit+".html";
+                account =  CrawlerHelper.getInstance().crawlerUIAccount(URL, referer, iInit);
+                logger.info("account:"+account+", and i = " + iInit);
+                if(account == null){
+                    nullCount += 1l;
+                    continue;
+                }else {
+                    nullCount = 0l;
+                }
 
-            UIAccount uiAccount = new UIAccount();
-            try {
-                BeanUtils.copyProperties(uiAccount, account);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            }
-            accountList.add(uiAccount);
-            logger.info("accountList:"+accountList);
-            try {
-                Thread.sleep(150);
-            } catch (InterruptedException e) {
+                UIAccount uiAccount = new UIAccount();
+                try {
+                    BeanUtils.copyProperties(uiAccount, account);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+
+                List<UIAccount> accountList = new ArrayList<UIAccount>();
+                accountList.add(uiAccount);
+                logger.info("uiAccount:"+accountList);
+                uiAccountDaoInterface.batchSave(accountList);
+
+                try {
+                    Thread.sleep(150);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }

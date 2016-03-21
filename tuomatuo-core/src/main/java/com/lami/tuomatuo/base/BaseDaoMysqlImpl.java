@@ -353,9 +353,10 @@ public abstract class BaseDaoMysqlImpl<T,ID extends Serializable> extends JdbcDa
 	public int[] batchAdd(String sql,List<List<Object>> values){
 		if(StringUtils.isEmpty(sql))return new int[0];
 		if(values==null)values=new ArrayList<List<Object>>();
-		if(log.isDebugEnabled()){
+		log.info("sql : "+sql+" values:"+values);
+		/*if(log.isDebugEnabled()){
 			log.debug("sql : "+sql+" values:"+values);
-		}
+		}*/
 		List<Object[]> batchArgs=new ArrayList<Object[]>();
 		for(List<Object> ol:values){
 			batchArgs.add(transactSQLInjection(ol).toArray());

@@ -171,6 +171,7 @@ public class CrawlerHelper {
             logger.info("account:" + account);
         } catch (Exception e) {
             e.printStackTrace();
+            account = null;
         }
         return account;
     }
