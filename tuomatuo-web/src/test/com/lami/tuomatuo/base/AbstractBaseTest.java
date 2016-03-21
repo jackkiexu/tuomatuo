@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Created by xujiankang on 2016/1/21.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration({"/spring/spring-context.xml","/spring/spring-mvc.xml","/spring/spring-mybatis.xml","/spring/spring-scheduler.xml","/spring/redis-context.xml"})
+@ContextConfiguration({"/spring/spring-context.xml","/spring/spring-mvc.xml","/spring/spring-database.xml","/spring/spring-scheduler.xml","/spring/redis-context.xml"})
 public class AbstractBaseTest {
     protected   Logger logger = Logger.getLogger(getClass());
 }

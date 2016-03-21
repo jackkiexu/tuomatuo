@@ -66,7 +66,7 @@ public class CrawlerHelper {
         return accountList;
     }
 
-    private UIAccountVO crawlerUIAccount(String URL, String referer, Long index) {
+    public UIAccountVO crawlerUIAccount(String URL, String referer, Long index) {
 
         UIAccountVO account = new UIAccountVO(index);
 

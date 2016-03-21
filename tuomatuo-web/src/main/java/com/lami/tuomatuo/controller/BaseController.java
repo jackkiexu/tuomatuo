@@ -24,10 +24,11 @@ public abstract class BaseController {
     @Autowired
     private UserService userService;
 
-    protected static final Logger logger = Logger.getLogger(BaseController.class);
+    protected  final Logger logger = Logger.getLogger(getClass());
     protected abstract boolean checkAuth();
 
     protected  Result execute(BaseParam baseParam){
+        logger.info("baseParam:"+baseParam);
         if (!checkAuth()) return new Result(Result.SUCCESS);
         if(!StringUtil.isMobile(baseParam.getMobile()) || StringUtil.isEmpty(baseParam.getSign())) return new Result(Result.PARAMCHECKERROR);
         User user = userService.getUserByMobile(baseParam.getMobile());
