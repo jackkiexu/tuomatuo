@@ -26,13 +26,13 @@
         <url-pattern>*.form</url-pattern>
     </servlet-mapping>
 
-    <!--&lt;!&ndash; login servlet &ndash;&gt;
+    <!-- login servlet -->
     <servlet>
         <servlet-name>LoginServlet</servlet-name>
-        <servlet-class>com.lami.tuomatuo.servlet.LoginServlet</servlet-class>
+        <servlet-class>com.lami.tuomatuo.crawler.servlet.LoginServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/login</url-pattern>
-    </servlet-mapping>-->
+    </servlet-mapping>
 </web-app>

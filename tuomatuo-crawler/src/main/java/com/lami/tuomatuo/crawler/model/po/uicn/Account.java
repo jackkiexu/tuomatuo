@@ -7,6 +7,7 @@ import lombok.Data;
  */
 @Data
 public class Account {
+    private Long id;
     private String avatarURL;
     private String name;
     private String signature;
@@ -16,4 +17,9 @@ public class Account {
     private String net;
     private String sina;
     private String weiChat;
+
+    public Account(){}
+    public Account(Long id) {
+        this.id = id;
+    }
 }

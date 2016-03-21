@@ -8,6 +8,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,22 +18,73 @@ public class CrawlerHelper {
 
     private static final Logger logger = Logger.getLogger(CrawlerHelper.class);
 
-
-    public static List<Account> crawlerUICN(){
-        return null;
+    private  CrawlerHelper() {}
+    static class  InnerClass{
+        private static CrawlerHelper instance = new CrawlerHelper();
+    }
+    public static CrawlerHelper getInstance(){
+        return InnerClass.instance;
     }
 
-
-
     public static void main(String[] args) {
+        List<Account> accountList = CrawlerHelper.getInstance().crawlerUICN(1l, 100l);
+        logger.info("accountList:"+accountList);
+    }
+
+    public List<Account> crawlerUICN(Long minId, Long maxId){
+
+        Long iInit = 1l;
+        Long iMax = 10l;
+        if(minId != null) iInit = minId;
+        if(maxId != null) iMax = maxId;
 
         Account account = new Account();
+        List<Account> accountList = new ArrayList<Account>();
+
+        Long nullCount = 0l;
+        String URL = null;
+        String referer = null;
+        for(;nullCount <= 100 && iInit < iMax;iInit++){
+            URL = "http://i.ui.cn/ucenter/"+iInit+".html";
+            referer = "http://i.ui.cn/ucenter/"+iInit+".html";
+            account = crawlerUIAccount(URL, referer, iInit);
+            if(account == null){
+                logger.info("account == null, and i = " + iInit);
+                nullCount += 1l;
+                continue;
+            }else {
+                nullCount = 0l;
+            }
+
+            accountList.add(account);
+            try {
+                Thread.sleep(150);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return accountList;
+    }
+
+    private Account crawlerUIAccount(String URL, String referer, Long index) {
+
+        Account account = new Account(index);
 
         try {
-            Document doc = CrawlerUtils.buildConnection("http://i.ui.cn/ucenter/84039.html", CrawlerUtils.getCookies("http://i.ui.cn/ucenter/143208.html"), "http://www.baidu.com").get();
-            Element user_avatar_hideE = doc.getElementById("user-avatar-hide"); //avatar URL
-            Elements us_nameE = doc.getElementsByClass("us-name"); // user Name and sign
-            Elements us_infoE = doc.getElementsByClass("us-info"); // user property
+            Document doc = CrawlerUtils.buildConnection(URL, CrawlerUtils.getCookies(URL), referer).get();
+            if(doc == null) return null;
+            Element user_avatar_hideE = null; //avatar URL
+            Elements us_nameE = null; // user Name and sign
+            Elements us_infoE = null; // user property
+            try {
+                user_avatar_hideE = doc.getElementById("user-avatar-hide");
+                us_nameE = doc.getElementsByClass("us-name");
+                us_infoE = doc.getElementsByClass("us-info");
+                if(user_avatar_hideE == null || us_nameE == null || us_infoE == null) return null;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
 
             account.setAvatarURL(user_avatar_hideE.attr("src"));
 
@@ -116,10 +168,11 @@ public class CrawlerHelper {
                 }
             }
 
-            logger.info("account:"+account);
+            logger.info("account:" + account);
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return account;
     }
 
 }
