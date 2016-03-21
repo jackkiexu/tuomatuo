@@ -1,12 +1,12 @@
-package com.lami.tuomatuo.crawler.model.po.uicn;
+package com.lami.tuomatuo.model.crawler.vo;
 
 import lombok.Data;
 
 /**
- * Created by xujiankang on 2016/3/18.
+ * Created by xujiankang on 2016/3/21.
  */
 @Data
-public class Account {
+public class UIAccountVO {
     private Long id;
     private String avatarURL;
     private String name;
@@ -18,8 +18,8 @@ public class Account {
     private String sina;
     private String weiChat;
 
-    public Account(){}
-    public Account(Long id) {
+    public UIAccountVO(){}
+    public UIAccountVO(Long id) {
         this.id = id;
     }
 }

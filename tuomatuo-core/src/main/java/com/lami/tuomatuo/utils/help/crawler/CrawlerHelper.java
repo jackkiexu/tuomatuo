@@ -1,6 +1,6 @@
-package com.lami.tuomatuo.crawler.utils;
+package com.lami.tuomatuo.utils.help.crawler;
 
-import com.lami.tuomatuo.crawler.model.po.uicn.Account;
+import com.lami.tuomatuo.model.crawler.vo.UIAccountVO;
 import com.lami.tuomatuo.utils.CrawlerUtils;
 import com.lami.tuomatuo.utils.StringUtil;
 import org.apache.log4j.Logger;
@@ -27,24 +27,24 @@ public class CrawlerHelper {
     }
 
     public static void main(String[] args) {
-        List<Account> accountList = CrawlerHelper.getInstance().crawlerUICN(1l, 100l);
+        List<UIAccountVO> accountList = CrawlerHelper.getInstance().crawlerUICN(1l, 100l);
         logger.info("accountList:"+accountList);
     }
 
-    public List<Account> crawlerUICN(Long minId, Long maxId){
+    public List<UIAccountVO> crawlerUICN(Long minId, Long maxId){
 
         Long iInit = 1l;
         Long iMax = 10l;
         if(minId != null) iInit = minId;
         if(maxId != null) iMax = maxId;
 
-        Account account = new Account();
-        List<Account> accountList = new ArrayList<Account>();
+        UIAccountVO account = new UIAccountVO();
+        List<UIAccountVO> accountList = new ArrayList<UIAccountVO>();
 
         Long nullCount = 0l;
         String URL = null;
         String referer = null;
-        for(;nullCount <= 100 && iInit < iMax;iInit++){
+        for(;nullCount <= 100 && iInit <= iMax;iInit++){
             URL = "http://i.ui.cn/ucenter/"+iInit+".html";
             referer = "http://i.ui.cn/ucenter/"+iInit+".html";
             account = crawlerUIAccount(URL, referer, iInit);
@@ -66,9 +66,9 @@ public class CrawlerHelper {
         return accountList;
     }
 
-    private Account crawlerUIAccount(String URL, String referer, Long index) {
+    private UIAccountVO crawlerUIAccount(String URL, String referer, Long index) {
 
-        Account account = new Account(index);
+        UIAccountVO account = new UIAccountVO(index);
 
         try {
             Document doc = CrawlerUtils.buildConnection(URL, CrawlerUtils.getCookies(URL), referer).get();

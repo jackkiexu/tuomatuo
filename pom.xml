@@ -12,7 +12,6 @@
         <module>tuomatuo-web</module>
         <module>tuomatuo-utils</module>
         <module>tuomatuo-core</module>
-        <module>tuomatuo-crawler</module>
     </modules>
     <packaging>pom</packaging>
 </project>
