@@ -14,20 +14,20 @@ import java.util.List;
 /**
  * Created by xujiankang on 2016/3/18.
  */
-public class CrawlerHelper {
+public class CrawlerUIAccountHelper {
 
-    private static final Logger logger = Logger.getLogger(CrawlerHelper.class);
+    private static final Logger logger = Logger.getLogger(CrawlerUIAccountHelper.class);
 
-    private  CrawlerHelper() {}
+    private CrawlerUIAccountHelper() {}
     static class  InnerClass{
-        private static CrawlerHelper instance = new CrawlerHelper();
+        private static CrawlerUIAccountHelper instance = new CrawlerUIAccountHelper();
     }
-    public static CrawlerHelper getInstance(){
+    public static CrawlerUIAccountHelper getInstance(){
         return InnerClass.instance;
     }
 
     public static void main(String[] args) {
-        List<UIAccountVO> accountList = CrawlerHelper.getInstance().crawlerUICN(1l, 100l);
+        List<UIAccountVO> accountList = CrawlerUIAccountHelper.getInstance().crawlerUICN(1l, 100l);
         logger.info("accountList:"+accountList);
     }
 
