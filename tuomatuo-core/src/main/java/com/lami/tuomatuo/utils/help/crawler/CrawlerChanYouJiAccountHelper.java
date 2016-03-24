@@ -71,7 +71,7 @@ public class CrawlerChanYouJiAccountHelper {
     }
 
     public ChanYouJiVO crawlerChanYouJi(String URL, String referer, Long index) {
-
+        logger.info("URL:"+URL+", referer:"+referer+", index:"+index);
         ChanYouJiVO chanYouJiVO = new ChanYouJiVO();
         ChanYouJiAccountVO chanYouJiAccountVO = new ChanYouJiAccountVO(index);
         List<ChanYoujiDynamicVO> chanYoujiDynamicVOList = new ArrayList<ChanYoujiDynamicVO>();
@@ -109,10 +109,13 @@ public class CrawlerChanYouJiAccountHelper {
                 e.printStackTrace();
             }
 
+            logger.info("chanYouJiAccountVO:"+chanYouJiAccountVO);
+
             chanYouJiVO.setChanYouJiAccountVO(chanYouJiAccountVO);
 
             // iterator current_Page_Dynamic
             Elements elementDynamicS = doc.getElementsByAttributeValue("class", "trip-list-item");
+            logger.info("elementDynamicS:"+elementDynamicS.toString());
             if(elementDynamicS != null && elementDynamicS.size() != 0){
                 for(Element element : elementDynamicS){
 
@@ -152,7 +155,7 @@ public class CrawlerChanYouJiAccountHelper {
                         String pagination = elementA.attr("href");
                         String pageURL = "http://chanyouji.com" + pagination;
                         chanYouJiVO.getChanYoujiDynamicVOList().addAll(collectionChanYouJiDynamic(pageURL, pageURL, index));
-                        Thread.sleep(150);
+                        Thread.sleep(1100);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
