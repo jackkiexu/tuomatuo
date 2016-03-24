@@ -1,12 +1,13 @@
 package com.lami.tuomatuo.model.crawler;
 
 import javax.persistence.*;
+import java.util.Date;
 
 /**
  * Created by xujiankang on 2016/3/24.
  */
 @Entity
-@Table(name = "crawler_hupu_account")
+@Table(name = "crawler_chanyouji_dynamic")
 public class ChanYoujiDynamic implements java.io.Serializable {
 
     private static final long serialVersionUID = -661516726681365472L;
@@ -21,6 +22,8 @@ public class ChanYoujiDynamic implements java.io.Serializable {
     private Long forwardSum;
     private String dynaTitle;
     private String dynamicMeta;
+    private Date createTime;
+    private Date updateTime;
 
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
@@ -104,6 +107,22 @@ public class ChanYoujiDynamic implements java.io.Serializable {
         this.dynamicMeta = dynamicMeta;
     }
 
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
+    public Date getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Date updateTime) {
+        this.updateTime = updateTime;
+    }
+
     @Override
     public String toString() {
         return "ChanYoujiDynamic{" +
@@ -117,6 +136,8 @@ public class ChanYoujiDynamic implements java.io.Serializable {
                 ", forwardSum=" + forwardSum +
                 ", dynaTitle='" + dynaTitle + '\'' +
                 ", dynamicMeta='" + dynamicMeta + '\'' +
+                ", createTime=" + createTime +
+                ", updateTime=" + updateTime +
                 '}';
     }
 }

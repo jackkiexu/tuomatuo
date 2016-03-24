@@ -2,6 +2,8 @@ package com.lami.tuomatuo.model.crawler.vo;
 
 import lombok.Data;
 
+import java.util.Date;
+
 /**
  * Created by xujiankang on 2016/3/24.
  */
@@ -18,6 +20,8 @@ public class ChanYoujiDynamicVO {
     private Long forwardSum;
     private String dynaTitle;
     private String dynamicMeta;
+    private Date createTime = new Date();
+    private Date updateTime  = new Date();
 
     public ChanYoujiDynamicVO() {
     }

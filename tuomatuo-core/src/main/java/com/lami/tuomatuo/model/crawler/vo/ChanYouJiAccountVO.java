@@ -4,6 +4,7 @@ import lombok.Data;
 
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import java.util.Date;
 
 /**
  * Created by xujiankang on 2016/3/22.
@@ -15,6 +16,8 @@ public class ChanYouJiAccountVO {
     private String name;
     private String avatarURL;
     private String sina;
+    private Date createTime = new Date();
+    private Date updateTime  = new Date();
 
     public ChanYouJiAccountVO() {
     }
