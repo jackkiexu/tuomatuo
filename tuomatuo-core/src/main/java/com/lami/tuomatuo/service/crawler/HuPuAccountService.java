@@ -69,7 +69,7 @@ public class HuPuAccountService extends BaseService<UIAccount, Long> {
                 huPuAccountDaoInterface.batchSave(huPuAccountList);
 
                 try {
-                    Thread.sleep(1100);
+                    Thread.sleep(1300);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

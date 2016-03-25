@@ -93,7 +93,7 @@ public class ChanYouJiAccountService  extends BaseService<ChanYouJiAccount, Long
                 }
             }
             try {
-                Thread.sleep(1100);
+                Thread.sleep(1300);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

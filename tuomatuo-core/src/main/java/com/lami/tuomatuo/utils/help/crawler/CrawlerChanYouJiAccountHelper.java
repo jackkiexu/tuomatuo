@@ -155,12 +155,18 @@ public class CrawlerChanYouJiAccountHelper {
                         String pagination = elementA.attr("href");
                         String pageURL = "http://chanyouji.com" + pagination;
                         chanYouJiVO.getChanYoujiDynamicVOList().addAll(collectionChanYouJiDynamic(pageURL, pageURL, index));
-                        Thread.sleep(1100);
+                        Thread.sleep(1300);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            try {
+                Thread.sleep(1300);
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
