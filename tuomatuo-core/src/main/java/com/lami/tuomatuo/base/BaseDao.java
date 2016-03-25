@@ -80,7 +80,7 @@ public interface BaseDao<T,ID extends Serializable> {
 	
 	/**
 	 * 分页查询
-	 * 
+	 *
 	 * @param sql
 	 * @param values
 	 * @param pageBean
@@ -90,7 +90,7 @@ public interface BaseDao<T,ID extends Serializable> {
 	public PageBean<T> search(String sql, List<Object> values, PageBean<T> pageBean, boolean isCount);
 	/**
 	 * 分页查询
-	 * 
+	 *
 	 * @param sql
 	 * @param values
 	 * @param pageBean
@@ -100,7 +100,7 @@ public interface BaseDao<T,ID extends Serializable> {
 	public <E> PageBean<E> search(String sql, List<Object> values, PageBean<E> pageBean, Class<E> e, boolean isCount);
 	/**
 	 * 根据主键修改数据
-	 * 
+	 *
 	 * @param t
 	 * @return
 	 */

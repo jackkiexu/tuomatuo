@@ -8,6 +8,8 @@ import com.lami.tuomatuo.model.crawler.ChanYoujiDynamic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+
 /**
  * Created by xujiankang on 2016/3/24.
  */
@@ -17,5 +19,9 @@ public class ChanYouJiDynamicService extends BaseService<ChanYoujiDynamic, Long>
     @Autowired
     private ChanYoujiDynamicDaoInterface chanYoujiDynamicDaoInterface;
 
-
+    @Resource(name = "chanYoujiDynamicDaoInterface")
+    public void setChanYoujiDynamicDaoInterface(ChanYoujiDynamicDaoInterface chanYoujiDynamicDaoInterface) {
+        this.chanYoujiDynamicDaoInterface = chanYoujiDynamicDaoInterface;
+        this.baseDao = chanYoujiDynamicDaoInterface;
+    }
 }

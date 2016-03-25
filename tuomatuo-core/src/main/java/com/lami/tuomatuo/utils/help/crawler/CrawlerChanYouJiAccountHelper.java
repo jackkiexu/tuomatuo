@@ -115,7 +115,6 @@ public class CrawlerChanYouJiAccountHelper {
 
             // iterator current_Page_Dynamic
             Elements elementDynamicS = doc.getElementsByAttributeValue("class", "trip-list-item");
-            logger.info("elementDynamicS:"+elementDynamicS.toString());
             if(elementDynamicS != null && elementDynamicS.size() != 0){
                 for(Element element : elementDynamicS){
 

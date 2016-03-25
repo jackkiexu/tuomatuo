@@ -368,4 +368,7 @@
     </dependencies>
 
     <packaging>war</packaging>
+    <build>
+        <finalName>ROOT</finalName>
+    </build>
 </project>
