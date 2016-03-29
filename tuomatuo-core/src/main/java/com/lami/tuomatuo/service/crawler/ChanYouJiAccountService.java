@@ -47,7 +47,7 @@ public class ChanYouJiAccountService  extends BaseService<ChanYouJiAccount, Long
         String referer = null;
         for(;nullCount <= 1000 && iInit <= iMax;iInit++){
             URL = "http://chanyouji.com/users/"+iInit;
-            referer = "http://chanyouji.com/users/"+iInit;
+            referer = "http://chanyouji.com/users/"+iInit+1;
             chanYouJiVO = CrawlerChanYouJiAccountHelper.getInstance().crawlerChanYouJi(URL, referer, iInit);
             if(chanYouJiVO == null || chanYouJiVO.getChanYouJiAccountVO() == null){
                 logger.info("chanYouJiVO == null, and i = " + iInit);
