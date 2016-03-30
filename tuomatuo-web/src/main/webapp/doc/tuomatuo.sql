@@ -17,6 +17,74 @@ CREATE DATABASE /*!32312 IF NOT EXISTS*/`tuomatuo` /*!40100 DEFAULT CHARACTER SE
 
 USE `tuomatuo`;
 
+/*Table structure for table `crawler_chanyouji_account` */
+
+DROP TABLE IF EXISTS `crawler_chanyouji_account`;
+
+CREATE TABLE `crawler_chanyouji_account` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) DEFAULT NULL,
+  `avatarURL` varchar(256) DEFAULT NULL,
+  `sina` varchar(128) DEFAULT NULL,
+  `createTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updateTime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+/*Table structure for table `crawler_chanyouji_dynamic` */
+
+DROP TABLE IF EXISTS `crawler_chanyouji_dynamic`;
+
+CREATE TABLE `crawler_chanyouji_dynamic` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `chanYouId` bigint(20) DEFAULT NULL COMMENT '蝉游记用户id',
+  `dynaWebURL` varchar(256) DEFAULT NULL COMMENT '动态的URL',
+  `dynaCoverImgURL` varchar(256) DEFAULT NULL COMMENT '动态封面的 URL',
+  `seeSum` int(11) DEFAULT NULL COMMENT '观看人数',
+  `msgSum` int(11) DEFAULT NULL COMMENT '留言条数',
+  `loveSum` int(11) DEFAULT NULL COMMENT '点赞数',
+  `forwardSum` int(11) DEFAULT NULL COMMENT '转发数',
+  `dynaTitle` varchar(256) DEFAULT NULL COMMENT '动态标题',
+  `dynamicMeta` varchar(256) DEFAULT NULL COMMENT '动态元数据',
+  `createTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updateTime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+/*Table structure for table `crawler_hupu_account` */
+
+DROP TABLE IF EXISTS `crawler_hupu_account`;
+
+CREATE TABLE `crawler_hupu_account` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `avatarURL` varchar(256) DEFAULT NULL,
+  `sex` tinyint(3) DEFAULT NULL,
+  `address` varchar(32) DEFAULT NULL,
+  `affiliation` varchar(32) DEFAULT NULL,
+  `createTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updateTime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `name` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=228672 DEFAULT CHARSET=utf8;
+
+/*Table structure for table `crawler_ui_account` */
+
+DROP TABLE IF EXISTS `crawler_ui_account`;
+
+CREATE TABLE `crawler_ui_account` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `avatarURL` varchar(256) DEFAULT NULL,
+  `name` varchar(64) DEFAULT NULL,
+  `signature` varchar(128) DEFAULT NULL,
+  `age` varchar(32) DEFAULT NULL,
+  `qq` varchar(32) DEFAULT NULL,
+  `email` varchar(64) DEFAULT NULL,
+  `net` varchar(128) DEFAULT NULL,
+  `sina` varchar(128) DEFAULT NULL,
+  `weiChat` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=22994 DEFAULT CHARSET=utf8;
+
 /*Table structure for table `dynamic_comment` */
 
 DROP TABLE IF EXISTS `dynamic_comment`;
@@ -33,8 +101,6 @@ CREATE TABLE `dynamic_comment` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-/*Data for the table `dynamic_comment` */
-
 /*Table structure for table `dynamic_img` */
 
 DROP TABLE IF EXISTS `dynamic_img`;
@@ -49,8 +115,6 @@ CREATE TABLE `dynamic_img` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-/*Data for the table `dynamic_img` */
-
 /*Table structure for table `dynamic_love` */
 
 DROP TABLE IF EXISTS `dynamic_love`;
@@ -62,8 +126,6 @@ CREATE TABLE `dynamic_love` (
   `createTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-/*Data for the table `dynamic_love` */
 
 /*Table structure for table `friend` */
 
@@ -79,8 +141,6 @@ CREATE TABLE `friend` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-/*Data for the table `friend` */
-
 /*Table structure for table `mobile_account` */
 
 DROP TABLE IF EXISTS `mobile_account`;
@@ -94,8 +154,6 @@ CREATE TABLE `mobile_account` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-/*Data for the table `mobile_account` */
-
 /*Table structure for table `qq_account` */
 
 DROP TABLE IF EXISTS `qq_account`;
@@ -108,8 +166,6 @@ CREATE TABLE `qq_account` (
   `updateTime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-/*Data for the table `qq_account` */
 
 /*Table structure for table `sms` */
 
@@ -125,8 +181,6 @@ CREATE TABLE `sms` (
   `mobile` varchar(64) DEFAULT NULL COMMENT '发送信息的手机号码',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-/*Data for the table `sms` */
 
 /*Table structure for table `user` */
 
@@ -148,8 +202,6 @@ CREATE TABLE `user` (
   `sign` varchar(64) DEFAULT NULL COMMENT '账户的签名',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-/*Data for the table `user` */
 
 /*Table structure for table `user_dynamic` */
 
@@ -175,8 +227,6 @@ CREATE TABLE `user_dynamic` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-/*Data for the table `user_dynamic` */
-
 /*Table structure for table `user_position` */
 
 DROP TABLE IF EXISTS `user_position`;
@@ -190,8 +240,6 @@ CREATE TABLE `user_position` (
   `createTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-/*Data for the table `user_position` */
 
 /*Table structure for table `user_property` */
 
@@ -211,8 +259,6 @@ CREATE TABLE `user_property` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-/*Data for the table `user_property` */
-
 /*Table structure for table `weixin_account` */
 
 DROP TABLE IF EXISTS `weixin_account`;
@@ -225,23 +271,6 @@ CREATE TABLE `weixin_account` (
   `updateTime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE `crawler_ui_account` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `avatarURL` varchar(256) DEFAULT NULL,
-  `name` varchar(64) DEFAULT NULL,
-  `signature` varchar(128) DEFAULT NULL,
-  `age` varchar(32) DEFAULT NULL,
-  `qq` varchar(32) DEFAULT NULL,
-  `email` varchar(64) DEFAULT NULL,
-  `net` varchar(128) DEFAULT NULL,
-  `sina` varchar(128) DEFAULT NULL,
-  `weiChat` varchar(64) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8
-
-
-/*Data for the table `weixin_account` */
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
