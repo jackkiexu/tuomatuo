@@ -384,9 +384,6 @@
         </dependency>
     </dependencies>
 
-    <packaging>war</packaging>
-    <build>
-        <finalName>ROOT</finalName>
-    </build>
+    <packaging>jar</packaging>
 
 </project>
