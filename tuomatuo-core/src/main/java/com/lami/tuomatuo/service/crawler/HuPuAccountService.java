@@ -42,7 +42,7 @@ public class HuPuAccountService extends BaseService<UIAccount, Long> {
         Long nullCount = 0l;
         String URL = null;
         String referer = null;
-        for(;nullCount <= 1000 && iInit <= iMax;iInit++){
+        for(;nullCount <= 10000 && iInit <= iMax;iInit++){
             try {
                 URL = "http://my.hupu.com/"+iInit;
                 referer = "http://my.hupu.com/"+iInit;

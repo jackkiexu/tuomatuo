@@ -44,6 +44,15 @@ public class DateUtils {
 		c.add(Calendar.DAY_OF_MONTH, offset);
 		return c.getTime();
 	}
+
+	// 得到前/后几个月的同一时间点
+	public static Date getOffsetMonth(Date date, int offset) {
+		Calendar c = Calendar.getInstance();
+		c.setTime(date);
+		c.add(Calendar.MONTH, offset);
+		return c.getTime();
+	}
+
 	
 	// 得到昨天的同一时间点
 	public static Date getPrevDate(Date date) {
@@ -605,12 +614,8 @@ public class DateUtils {
 	}
 
 	public static void main(String[] args) {
-		boolean aa = new DateUtils().isFirstDayForThisMonth();
-		System.out.println(aa);
-		Integer bb = null;
-		if(bb==null)bb= 0;
-		Integer times = bb+1;
-		System.out.println(times);
-		
+		System.out.println(longDate(new Date()));
+		System.out.println(longDate(getOffsetMonth(new Date(), -4)));
+
 	}
 }

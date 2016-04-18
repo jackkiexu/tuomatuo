@@ -1,1 +1,31 @@
-[2016-03-29 17:50:13,087] INFO  main (SearchServer.java:67) - time elapsed(ms):514
+[2016-04-18 11:41:55,618] INFO  main-EventThread (queue.java:33) - CuratorEvent:WATCHED
+[2016-04-18 11:41:55,643] INFO  main (queue.java:44) - test - 0 priority:97
+[2016-04-18 11:41:55,687] INFO  main (queue.java:44) - test - 1 priority:38
+[2016-04-18 11:41:55,732] INFO  main (queue.java:44) - test - 2 priority:43
+[2016-04-18 11:41:55,735] INFO  main (queue.java:44) - test - 3 priority:91
+[2016-04-18 11:41:55,735] INFO  main (queue.java:44) - test - 4 priority:8
+[2016-04-18 11:41:55,750] INFO  Curator-QueueBuilder-0 (queue.java:72) - consume one message :test-1
+[2016-04-18 11:41:55,752] INFO  main (queue.java:44) - test - 5 priority:29
+[2016-04-18 11:41:55,756] INFO  Curator-QueueBuilder-0 (queue.java:72) - consume one message :test-0
+[2016-04-18 11:41:55,761] INFO  Curator-QueueBuilder-0 (queue.java:72) - consume one message :test-4
+[2016-04-18 11:41:55,776] INFO  Curator-QueueBuilder-0 (queue.java:72) - consume one message :test-5
+[2016-04-18 11:41:55,786] INFO  main (queue.java:44) - test - 6 priority:64
+[2016-04-18 11:41:55,789] INFO  main (queue.java:44) - test - 7 priority:77
+[2016-04-18 11:41:55,791] INFO  Curator-QueueBuilder-0 (queue.java:72) - consume one message :test-2
+[2016-04-18 11:41:55,810] INFO  Curator-QueueBuilder-0 (queue.java:72) - consume one message :test-6
+[2016-04-18 11:41:55,815] INFO  Curator-QueueBuilder-0 (queue.java:72) - consume one message :test-7
+[2016-04-18 11:41:55,817] INFO  main (queue.java:44) - test - 8 priority:44
+[2016-04-18 11:41:55,819] INFO  Curator-QueueBuilder-0 (queue.java:72) - consume one message :test-3
+[2016-04-18 11:41:55,834] INFO  Curator-QueueBuilder-0 (queue.java:72) - consume one message :test-8
+[2016-04-18 11:41:55,856] INFO  main (queue.java:44) - test - 9 priority:65
+[2016-04-18 11:41:55,870] INFO  Curator-QueueBuilder-0 (queue.java:72) - consume one message :test-9
+[2016-04-18 15:09:59,232] INFO  Curator-ConnectionStateManager-0 (SharedCounterExample.java:69) - State changed:CONNECTED
+[2016-04-18 15:10:02,681] INFO  pool-3-thread-2 (SharedCounterExample.java:48) - Increment:true
+[2016-04-18 15:10:02,686] INFO  main-EventThread (SharedCounterExample.java:65) - Counter's value is changed to 5
+[2016-04-18 15:10:03,898] INFO  pool-3-thread-1 (SharedCounterExample.java:48) - Increment:true
+[2016-04-18 15:10:03,902] INFO  main-EventThread (SharedCounterExample.java:65) - Counter's value is changed to 6
+[2016-04-18 15:10:07,217] INFO  pool-3-thread-4 (SharedCounterExample.java:48) - Increment:true
+[2016-04-18 15:10:07,220] INFO  main-EventThread (SharedCounterExample.java:65) - Counter's value is changed to 6
+[2016-04-18 15:10:07,678] INFO  pool-3-thread-5 (SharedCounterExample.java:48) - Increment:true
+[2016-04-18 15:10:07,681] INFO  main-EventThread (SharedCounterExample.java:65) - Counter's value is changed to 11
+[2016-04-18 15:10:08,541] INFO  pool-3-thread-3 (SharedCounterExample.java:48) - Increment:true

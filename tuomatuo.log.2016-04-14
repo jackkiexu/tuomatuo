@@ -1,0 +1,44 @@
+[2016-04-14 16:36:35,466] INFO  main-EventThread (queue.java:34) - CuratorEvent:WATCHED
+[2016-04-14 16:36:36,011] INFO  main (queue.java:45) - test - 0 priority:91
+[2016-04-14 16:36:36,032] INFO  main (queue.java:45) - test - 1 priority:0
+[2016-04-14 16:36:36,065] INFO  main (queue.java:45) - test - 2 priority:42
+[2016-04-14 16:36:36,068] INFO  main (queue.java:45) - test - 3 priority:47
+[2016-04-14 16:36:36,103] INFO  main (queue.java:45) - test - 4 priority:8
+[2016-04-14 16:36:36,127] INFO  main (queue.java:45) - test - 5 priority:17
+[2016-04-14 16:36:36,164] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-1
+[2016-04-14 16:36:36,169] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-4
+[2016-04-14 16:36:36,173] INFO  main (queue.java:45) - test - 6 priority:21
+[2016-04-14 16:36:36,179] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-5
+[2016-04-14 16:36:36,190] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-6
+[2016-04-14 16:36:36,191] INFO  main (queue.java:45) - test - 7 priority:2
+[2016-04-14 16:36:36,203] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-2
+[2016-04-14 16:36:36,227] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-7
+[2016-04-14 16:36:36,234] INFO  main (queue.java:45) - test - 8 priority:36
+[2016-04-14 16:36:36,236] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-3
+[2016-04-14 16:36:36,244] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-8
+[2016-04-14 16:36:36,252] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-0
+[2016-04-14 16:36:36,275] INFO  main (queue.java:45) - test - 9 priority:42
+[2016-04-14 16:36:36,368] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-9
+[2016-04-14 16:36:56,326] INFO  main (queue.java:34) - CuratorEvent:CLOSING
+[2016-04-14 16:37:43,078] INFO  main-EventThread (queue.java:34) - CuratorEvent:WATCHED
+[2016-04-14 16:37:43,121] INFO  main (queue.java:45) - test - 0 priority:87
+[2016-04-14 16:37:43,140] INFO  main (queue.java:45) - test - 1 priority:67
+[2016-04-14 16:37:43,152] INFO  main (queue.java:45) - test - 2 priority:0
+[2016-04-14 16:37:43,168] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-0
+[2016-04-14 16:37:43,186] INFO  main (queue.java:45) - test - 3 priority:30
+[2016-04-14 16:37:43,196] INFO  main (queue.java:45) - test - 4 priority:21
+[2016-04-14 16:37:43,199] INFO  main (queue.java:45) - test - 5 priority:63
+[2016-04-14 16:37:43,217] INFO  main (queue.java:45) - test - 6 priority:13
+[2016-04-14 16:37:43,240] INFO  main (queue.java:45) - test - 7 priority:93
+[2016-04-14 16:37:43,240] INFO  main (queue.java:45) - test - 8 priority:80
+[2016-04-14 16:37:43,278] INFO  main (queue.java:45) - test - 9 priority:46
+[2016-04-14 16:37:43,295] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-1
+[2016-04-14 16:37:43,340] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-2
+[2016-04-14 16:37:43,347] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-6
+[2016-04-14 16:37:43,360] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-4
+[2016-04-14 16:37:43,364] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-3
+[2016-04-14 16:37:43,371] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-9
+[2016-04-14 16:37:43,381] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-5
+[2016-04-14 16:37:43,404] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-8
+[2016-04-14 16:37:43,431] INFO  Curator-QueueBuilder-0 (queue.java:73) - consume one message :test-7
+[2016-04-14 16:38:03,290] INFO  main (queue.java:34) - CuratorEvent:CLOSING

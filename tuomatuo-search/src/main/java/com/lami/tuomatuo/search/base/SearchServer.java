@@ -25,16 +25,32 @@ public class SearchServer {
     public static final String SOLR_URL = "http://192.168.1.28:8983/solr";
 
     public static void main(String[] args) throws IOException, SolrServerException {
-        HttpSolrServer server = new HttpSolrServer("http://192.168.1.28:8983/solr");
-        for(int i=0;i<1000;++i) {
-            SolrInputDocument doc = new SolrInputDocument();
-            doc.addField("cat", "book");
-            doc.addField("id", "book-" + i);
-            doc.addField("name", "The Legend of the Hobbit part " + i);
-            server.add(doc);
-            if(i%100==0) server.commit();  // periodically flush
+        final HttpSolrServer server = new HttpSolrServer("http://192.168.1.105:8080/solr/mycore");
+        for(int a = 0; a < 10; a ++){
+            new Thread(){
+                @Override
+                public void run() {
+                    super.run();
+                    try {
+                        for(int i=20799;i<1000000;++i) {
+                            SolrInputDocument doc = new SolrInputDocument();
+                            doc.addField("subject", "book"+i);
+                            doc.addField("id", i+"");
+                            doc.addField("name", "The Legend of the Hobbit part " + i);
+                            server.add(doc);
+                            if(i%100==0) server.commit();  // periodically flush
+                            logger.info("i:"+i);
+                        }
+                        server.commit();
+                    } catch (SolrServerException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }.run();
         }
-        server.commit();
+
     }
 
     public static void AddDocs() {
