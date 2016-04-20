@@ -15,7 +15,7 @@ public class KProducer {
 
     public static void main(String[] args) {
         String topic= "test3";
-        long events = 3;
+        long events = 3000;
         Random rand = new Random();
 
         Properties props = new Properties();

@@ -73,15 +73,15 @@ public class NativeConsumer {
 
     public static void main(String[] args) {
         String zooKeeper = "192.168.1.28:2181";
-        String groupId = "mysqgroup1";
-        String topic = "test4";
+        String groupId = "mysqgroup2";
+        String topic = "test3";
         int threads = 1;
 
         NativeConsumer example = new NativeConsumer(zooKeeper, groupId, topic);
         example.run(threads);
 
         try {
-            Thread.sleep(10000);
+            Thread.sleep(20000);
         } catch (InterruptedException ie) {
 
         }
@@ -104,7 +104,7 @@ class ConsumerTest implements Runnable{
     public void run() {
         ConsumerIterator<byte[], byte[]> it = m_stream.iterator();
         while (it.hasNext()){
-            logger.info("Thread " + m_threadNumber + ":" + new String(it.next().message()));
+            logger.info("-------------------------------Thread " + m_threadNumber + ":" + new String(it.next().message()));
         }
         logger.info("Shutting down Thread: " + m_threadNumber);
     }

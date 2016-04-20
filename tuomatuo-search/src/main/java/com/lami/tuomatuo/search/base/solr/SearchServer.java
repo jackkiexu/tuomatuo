@@ -1,7 +1,6 @@
-package com.lami.tuomatuo.search.base;
+package com.lami.tuomatuo.search.base.solr;
 
 import org.apache.log4j.Logger;
-import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.request.AbstractUpdateRequest;

@@ -1,7 +1,6 @@
-package com.lami.tuomatuo.search.base;
+package com.lami.tuomatuo.search.base.solr;
 
 import java.text.DecimalFormat;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -9,7 +8,6 @@ import java.util.Set;
 
 import com.lami.tuomatuo.utils.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.lucene.util.CollectionUtil;
 import org.apache.solr.client.solrj.util.ClientUtils;
 
 /**

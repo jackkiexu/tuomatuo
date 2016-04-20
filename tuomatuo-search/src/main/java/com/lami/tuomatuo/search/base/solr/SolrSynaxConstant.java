@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.search.base;
+package com.lami.tuomatuo.search.base.solr;
 
 /**
  * Created by xujiankang on 2016/4/14.
