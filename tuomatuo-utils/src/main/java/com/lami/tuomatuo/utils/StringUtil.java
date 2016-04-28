@@ -1473,7 +1473,7 @@ public class StringUtil {
 		System.out.println(b-a);*/
 		
 		//System.out.println(isNumeric("02156885688"));
-		
+
 		System.out.println(replaceBlank("just do it \t \r \n!"));
 	}
 }
