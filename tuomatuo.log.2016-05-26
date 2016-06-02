@@ -1,0 +1,1215 @@
+[2016-05-26 10:14:56,321] INFO  main (SimpleLock.java:57) - fuck
+[2016-05-26 10:14:56,330] INFO  main (SimpleLock.java:17) - SimpleLock
+[2016-05-26 10:14:56,331] INFO  main (SimpleLock.java:18) - this.head:null
+[2016-05-26 10:14:56,331] INFO  main (SimpleLock.java:19) - this.tail:null
+[2016-05-26 10:14:56,331] INFO  main (SimpleLock.java:20) - this.state:0
+[2016-05-26 10:14:56,332] INFO  main (SimpleLock.java:39) - this.head:null
+[2016-05-26 10:14:56,332] INFO  main (SimpleLock.java:40) - this.tail:null
+[2016-05-26 10:14:56,332] INFO  main (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:14:56,334] INFO  Thread-0 (SimpleLock.java:64) - Thread name Thread-0, 10, acquired the lock begin!
+[2016-05-26 10:14:56,334] INFO  Thread-0 (SimpleLock.java:65) - this.head:null
+[2016-05-26 10:14:56,335] INFO  Thread-0 (SimpleLock.java:66) - this.tail:null
+[2016-05-26 10:14:56,335] INFO  Thread-0 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:14:56,335] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:379) - this.head:null
+[2016-05-26 10:14:56,335] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:380) - this.tail:null
+[2016-05-26 10:14:56,335] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:14:56,336] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:336) - this.head:null
+[2016-05-26 10:14:56,336] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:337) - this.tail:null
+[2016-05-26 10:14:56,336] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:338) - this.state:1
+[2016-05-26 10:14:56,336] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:348) - this.head:Node{ waitStatus=0 || 
+[2016-05-26 10:14:56,336] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:349) - this.tail:Node{ waitStatus=0 || 
+[2016-05-26 10:14:56,337] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:350) - this.state:1
+[2016-05-26 10:14:56,337] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:351) - node:Node{ waitStatus=0 || 
+[2016-05-26 10:14:56,337] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:360) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 10:14:56,337] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:361) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,338] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:362) - this.state:1
+[2016-05-26 10:14:56,338] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 10:14:56,338] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,338] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:14:56,434] INFO  Thread-1 (SimpleLock.java:64) - Thread name Thread-1, 11, acquired the lock begin!
+[2016-05-26 10:14:56,434] INFO  Thread-1 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,434] INFO  Thread-1 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,442] INFO  Thread-1 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:14:56,443] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,444] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,444] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:14:56,445] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,445] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,445] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:14:56,533] INFO  Thread-2 (SimpleLock.java:64) - Thread name Thread-2, 12, acquired the lock begin!
+[2016-05-26 10:14:56,533] INFO  Thread-2 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,533] INFO  Thread-2 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,533] INFO  Thread-2 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:14:56,533] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,534] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,534] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:14:56,534] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,534] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,534] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:14:56,633] INFO  Thread-3 (SimpleLock.java:64) - Thread name Thread-3, 13, acquired the lock begin!
+[2016-05-26 10:14:56,633] INFO  Thread-3 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,633] INFO  Thread-3 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,633] INFO  Thread-3 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:14:56,634] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,634] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,634] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:14:56,634] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,634] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,634] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:14:56,735] INFO  Thread-4 (SimpleLock.java:64) - Thread name Thread-4, 14, acquired the lock begin!
+[2016-05-26 10:14:56,735] INFO  Thread-4 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,735] INFO  Thread-4 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,735] INFO  Thread-4 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:14:56,735] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,736] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,736] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:14:56,737] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,739] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,739] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:14:56,834] INFO  Thread-5 (SimpleLock.java:64) - Thread name Thread-5, 15, acquired the lock begin!
+[2016-05-26 10:14:56,834] INFO  Thread-5 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,834] INFO  Thread-5 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,834] INFO  Thread-5 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:14:56,834] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,835] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,835] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:14:56,835] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,835] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,835] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:14:56,934] INFO  Thread-6 (SimpleLock.java:64) - Thread name Thread-6, 16, acquired the lock begin!
+[2016-05-26 10:14:56,934] INFO  Thread-6 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,934] INFO  Thread-6 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,934] INFO  Thread-6 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:14:56,934] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,935] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,935] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:14:56,935] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:56,935] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:56,935] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:14:57,035] INFO  Thread-7 (SimpleLock.java:64) - Thread name Thread-7, 17, acquired the lock begin!
+[2016-05-26 10:14:57,036] INFO  Thread-7 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:57,036] INFO  Thread-7 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:57,036] INFO  Thread-7 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:14:57,036] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:57,036] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:57,036] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:14:57,037] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:57,037] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:57,037] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:14:57,135] INFO  Thread-8 (SimpleLock.java:64) - Thread name Thread-8, 18, acquired the lock begin!
+[2016-05-26 10:14:57,135] INFO  Thread-8 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:57,136] INFO  Thread-8 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:57,136] INFO  Thread-8 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:14:57,136] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:57,136] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:57,136] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:14:57,136] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:57,136] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:57,136] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:14:57,234] INFO  Thread-9 (SimpleLock.java:64) - Thread name Thread-9, 19, acquired the lock begin!
+[2016-05-26 10:14:57,234] INFO  Thread-9 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:57,234] INFO  Thread-9 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:57,234] INFO  Thread-9 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:14:57,234] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:57,234] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:57,235] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:14:57,235] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:57,235] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:57,235] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:14:57,337] INFO  main (SimpleLock.java:87) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:57,337] INFO  main (SimpleLock.java:88) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:57,337] INFO  main (SimpleLock.java:89) - this.state:1
+[2016-05-26 10:14:58,837] INFO  main (SimpleLock.java:92) - main thread unlock begin
+[2016-05-26 10:14:58,838] INFO  main (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:58,838] INFO  main (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:58,838] INFO  main (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:14:58,838] INFO  main (SimpleLock.java:94) - main thread unlock over
+[2016-05-26 10:14:58,838] INFO  Thread-0 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:58,839] INFO  Thread-0 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:58,839] INFO  Thread-0 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:14:58,839] INFO  Thread-0 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:58,839] INFO  Thread-0 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:58,839] INFO  Thread-0 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:14:58,839] INFO  Thread-0 (SimpleLock.java:72) - Thread name Thread-0, 10, acquired the lock over!
+[2016-05-26 10:14:59,340] INFO  Thread-0 (SimpleLock.java:78) - Thread name Thread-0, 10, acquired the unlock begin!
+[2016-05-26 10:14:59,340] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:59,340] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:59,340] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:14:59,340] INFO  Thread-0 (SimpleLock.java:80) - Thread name Thread-0, 10, acquired the unlock over!
+[2016-05-26 10:14:59,340] INFO  Thread-1 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:59,341] INFO  Thread-1 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:59,341] INFO  Thread-1 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:14:59,341] INFO  Thread-1 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:59,341] INFO  Thread-1 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:59,341] INFO  Thread-1 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:14:59,341] INFO  Thread-1 (SimpleLock.java:72) - Thread name Thread-1, 11, acquired the lock over!
+[2016-05-26 10:14:59,842] INFO  Thread-1 (SimpleLock.java:78) - Thread name Thread-1, 11, acquired the unlock begin!
+[2016-05-26 10:14:59,842] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:59,842] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:59,842] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:14:59,842] INFO  Thread-1 (SimpleLock.java:80) - Thread name Thread-1, 11, acquired the unlock over!
+[2016-05-26 10:14:59,842] INFO  Thread-2 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:59,843] INFO  Thread-2 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:59,843] INFO  Thread-2 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:14:59,843] INFO  Thread-2 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:14:59,843] INFO  Thread-2 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:14:59,843] INFO  Thread-2 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:14:59,843] INFO  Thread-2 (SimpleLock.java:72) - Thread name Thread-2, 12, acquired the lock over!
+[2016-05-26 10:15:00,343] INFO  Thread-2 (SimpleLock.java:78) - Thread name Thread-2, 12, acquired the unlock begin!
+[2016-05-26 10:15:00,343] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:00,343] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:00,343] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:15:00,343] INFO  Thread-2 (SimpleLock.java:80) - Thread name Thread-2, 12, acquired the unlock over!
+[2016-05-26 10:15:00,343] INFO  Thread-3 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:00,344] INFO  Thread-3 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:00,344] INFO  Thread-3 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:00,344] INFO  Thread-3 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:00,344] INFO  Thread-3 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:00,344] INFO  Thread-3 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:15:00,344] INFO  Thread-3 (SimpleLock.java:72) - Thread name Thread-3, 13, acquired the lock over!
+[2016-05-26 10:15:00,844] INFO  Thread-3 (SimpleLock.java:78) - Thread name Thread-3, 13, acquired the unlock begin!
+[2016-05-26 10:15:00,844] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:00,844] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:00,844] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:15:00,844] INFO  Thread-3 (SimpleLock.java:80) - Thread name Thread-3, 13, acquired the unlock over!
+[2016-05-26 10:15:00,844] INFO  Thread-4 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:00,845] INFO  Thread-4 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:00,845] INFO  Thread-4 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:00,845] INFO  Thread-4 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:00,845] INFO  Thread-4 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:00,846] INFO  Thread-4 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:15:00,846] INFO  Thread-4 (SimpleLock.java:72) - Thread name Thread-4, 14, acquired the lock over!
+[2016-05-26 10:15:01,346] INFO  Thread-4 (SimpleLock.java:78) - Thread name Thread-4, 14, acquired the unlock begin!
+[2016-05-26 10:15:01,346] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:01,346] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:01,347] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:15:01,347] INFO  Thread-4 (SimpleLock.java:80) - Thread name Thread-4, 14, acquired the unlock over!
+[2016-05-26 10:15:01,347] INFO  Thread-5 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:01,347] INFO  Thread-5 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:01,347] INFO  Thread-5 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:01,347] INFO  Thread-5 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:01,347] INFO  Thread-5 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:01,348] INFO  Thread-5 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:15:01,348] INFO  Thread-5 (SimpleLock.java:72) - Thread name Thread-5, 15, acquired the lock over!
+[2016-05-26 10:15:01,848] INFO  Thread-5 (SimpleLock.java:78) - Thread name Thread-5, 15, acquired the unlock begin!
+[2016-05-26 10:15:01,848] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:01,848] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:01,848] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:15:01,848] INFO  Thread-5 (SimpleLock.java:80) - Thread name Thread-5, 15, acquired the unlock over!
+[2016-05-26 10:15:01,848] INFO  Thread-6 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:01,849] INFO  Thread-6 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:01,849] INFO  Thread-6 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:01,849] INFO  Thread-6 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:01,849] INFO  Thread-6 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:01,849] INFO  Thread-6 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:15:01,849] INFO  Thread-6 (SimpleLock.java:72) - Thread name Thread-6, 16, acquired the lock over!
+[2016-05-26 10:15:02,349] INFO  Thread-6 (SimpleLock.java:78) - Thread name Thread-6, 16, acquired the unlock begin!
+[2016-05-26 10:15:02,349] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:02,349] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:02,349] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:15:02,349] INFO  Thread-6 (SimpleLock.java:80) - Thread name Thread-6, 16, acquired the unlock over!
+[2016-05-26 10:15:02,350] INFO  Thread-7 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:02,350] INFO  Thread-7 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:02,350] INFO  Thread-7 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:02,350] INFO  Thread-7 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:02,350] INFO  Thread-7 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:02,350] INFO  Thread-7 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:15:02,350] INFO  Thread-7 (SimpleLock.java:72) - Thread name Thread-7, 17, acquired the lock over!
+[2016-05-26 10:15:02,852] INFO  Thread-7 (SimpleLock.java:78) - Thread name Thread-7, 17, acquired the unlock begin!
+[2016-05-26 10:15:02,852] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:02,852] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:02,852] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:15:02,852] INFO  Thread-7 (SimpleLock.java:80) - Thread name Thread-7, 17, acquired the unlock over!
+[2016-05-26 10:15:02,852] INFO  Thread-8 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:02,852] INFO  Thread-8 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:02,853] INFO  Thread-8 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:02,853] INFO  Thread-8 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:02,853] INFO  Thread-8 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:02,853] INFO  Thread-8 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:15:02,853] INFO  Thread-8 (SimpleLock.java:72) - Thread name Thread-8, 18, acquired the lock over!
+[2016-05-26 10:15:03,353] INFO  Thread-8 (SimpleLock.java:78) - Thread name Thread-8, 18, acquired the unlock begin!
+[2016-05-26 10:15:03,353] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:03,353] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:03,353] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:15:03,353] INFO  Thread-8 (SimpleLock.java:80) - Thread name Thread-8, 18, acquired the unlock over!
+[2016-05-26 10:15:03,353] INFO  Thread-9 (SimpleLock.java:39) - this.head:Node{ waitStatus=0 || 
+[2016-05-26 10:15:03,353] INFO  Thread-9 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 || 
+[2016-05-26 10:15:03,354] INFO  Thread-9 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:03,354] INFO  Thread-9 (SimpleLock.java:69) - this.head:Node{ waitStatus=0 || 
+[2016-05-26 10:15:03,354] INFO  Thread-9 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 || 
+[2016-05-26 10:15:03,354] INFO  Thread-9 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:15:03,354] INFO  Thread-9 (SimpleLock.java:72) - Thread name Thread-9, 19, acquired the lock over!
+[2016-05-26 10:15:03,854] INFO  Thread-9 (SimpleLock.java:78) - Thread name Thread-9, 19, acquired the unlock begin!
+[2016-05-26 10:15:03,854] INFO  Thread-9 (SimpleLock.java:80) - Thread name Thread-9, 19, acquired the unlock over!
+[2016-05-26 10:15:28,225] INFO  main (SimpleLock.java:57) - fuck
+[2016-05-26 10:15:28,228] INFO  main (SimpleLock.java:17) - SimpleLock
+[2016-05-26 10:15:28,229] INFO  main (SimpleLock.java:18) - this.head:null
+[2016-05-26 10:15:28,229] INFO  main (SimpleLock.java:19) - this.tail:null
+[2016-05-26 10:15:28,229] INFO  main (SimpleLock.java:20) - this.state:0
+[2016-05-26 10:15:28,229] INFO  main (SimpleLock.java:39) - this.head:null
+[2016-05-26 10:15:28,230] INFO  main (SimpleLock.java:40) - this.tail:null
+[2016-05-26 10:15:28,230] INFO  main (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:28,231] INFO  Thread-0 (SimpleLock.java:64) - Thread name Thread-0, 12, acquired the lock begin!
+[2016-05-26 10:15:28,232] INFO  Thread-0 (SimpleLock.java:65) - this.head:null
+[2016-05-26 10:15:28,232] INFO  Thread-0 (SimpleLock.java:66) - this.tail:null
+[2016-05-26 10:15:28,232] INFO  Thread-0 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:15:28,232] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:379) - this.head:null
+[2016-05-26 10:15:28,233] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:380) - this.tail:null
+[2016-05-26 10:15:28,233] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:15:28,233] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:336) - this.head:null
+[2016-05-26 10:15:28,233] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:337) - this.tail:null
+[2016-05-26 10:15:28,234] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:338) - this.state:1
+[2016-05-26 10:15:28,234] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:348) - this.head:Node{ waitStatus=0 || 
+[2016-05-26 10:15:28,234] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:349) - this.tail:Node{ waitStatus=0 || 
+[2016-05-26 10:15:28,234] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:350) - this.state:1
+[2016-05-26 10:15:28,235] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:351) - node:Node{ waitStatus=0 || 
+[2016-05-26 10:15:28,235] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:360) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 10:15:28,235] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:361) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,235] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:362) - this.state:1
+[2016-05-26 10:15:28,236] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 10:15:28,236] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,236] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:15:28,331] INFO  Thread-1 (SimpleLock.java:64) - Thread name Thread-1, 13, acquired the lock begin!
+[2016-05-26 10:15:28,332] INFO  Thread-1 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,332] INFO  Thread-1 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,332] INFO  Thread-1 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:15:28,332] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,332] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,332] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:15:28,333] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,333] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,333] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:15:28,431] INFO  Thread-2 (SimpleLock.java:64) - Thread name Thread-2, 14, acquired the lock begin!
+[2016-05-26 10:15:28,431] INFO  Thread-2 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,432] INFO  Thread-2 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,432] INFO  Thread-2 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:15:28,432] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,432] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,432] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:15:28,432] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,433] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,433] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:15:28,531] INFO  Thread-3 (SimpleLock.java:64) - Thread name Thread-3, 15, acquired the lock begin!
+[2016-05-26 10:15:28,531] INFO  Thread-3 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,531] INFO  Thread-3 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,532] INFO  Thread-3 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:15:28,532] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,532] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,532] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:15:28,532] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,532] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,532] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:15:28,631] INFO  Thread-4 (SimpleLock.java:64) - Thread name Thread-4, 16, acquired the lock begin!
+[2016-05-26 10:15:28,631] INFO  Thread-4 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,631] INFO  Thread-4 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,631] INFO  Thread-4 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:15:28,632] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,632] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,632] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:15:28,632] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,632] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,632] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:15:28,731] INFO  Thread-5 (SimpleLock.java:64) - Thread name Thread-5, 17, acquired the lock begin!
+[2016-05-26 10:15:28,731] INFO  Thread-5 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,731] INFO  Thread-5 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,731] INFO  Thread-5 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:15:28,732] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,732] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,732] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:15:28,732] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,732] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,732] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:15:28,831] INFO  Thread-6 (SimpleLock.java:64) - Thread name Thread-6, 18, acquired the lock begin!
+[2016-05-26 10:15:28,831] INFO  Thread-6 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,831] INFO  Thread-6 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,832] INFO  Thread-6 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:15:28,832] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,832] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,832] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:15:28,832] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,833] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,833] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:15:28,931] INFO  Thread-7 (SimpleLock.java:64) - Thread name Thread-7, 19, acquired the lock begin!
+[2016-05-26 10:15:28,931] INFO  Thread-7 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,931] INFO  Thread-7 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,932] INFO  Thread-7 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:15:28,932] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,932] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,932] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:15:28,932] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:28,932] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:28,932] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:15:29,031] INFO  Thread-8 (SimpleLock.java:64) - Thread name Thread-8, 20, acquired the lock begin!
+[2016-05-26 10:15:29,031] INFO  Thread-8 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:29,031] INFO  Thread-8 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:29,032] INFO  Thread-8 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:15:29,032] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:29,032] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:29,032] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:15:29,032] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:29,032] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:29,032] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:15:29,131] INFO  Thread-9 (SimpleLock.java:64) - Thread name Thread-9, 21, acquired the lock begin!
+[2016-05-26 10:15:29,131] INFO  Thread-9 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:29,131] INFO  Thread-9 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:29,132] INFO  Thread-9 (SimpleLock.java:67) - this.state:1
+[2016-05-26 10:15:29,132] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:379) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:29,132] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:380) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:29,132] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:381) - this.state:1
+[2016-05-26 10:15:29,132] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:639) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:29,132] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:640) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:29,132] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:641) - this.state:1
+[2016-05-26 10:15:29,231] INFO  main (SimpleLock.java:87) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:29,231] INFO  main (SimpleLock.java:88) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:29,231] INFO  main (SimpleLock.java:89) - this.state:1
+[2016-05-26 10:15:30,731] INFO  main (SimpleLock.java:92) - main thread unlock begin
+[2016-05-26 10:15:30,731] INFO  main (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:30,731] INFO  main (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:30,731] INFO  main (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:15:30,731] INFO  main (SimpleLock.java:94) - main thread unlock over
+[2016-05-26 10:15:30,731] INFO  Thread-0 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:30,732] INFO  Thread-0 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:30,732] INFO  Thread-0 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:30,732] INFO  Thread-0 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:30,732] INFO  Thread-0 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:30,732] INFO  Thread-0 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:15:30,732] INFO  Thread-0 (SimpleLock.java:72) - Thread name Thread-0, 12, acquired the lock over!
+[2016-05-26 10:15:31,233] INFO  Thread-0 (SimpleLock.java:78) - Thread name Thread-0, 12, acquired the unlock begin!
+[2016-05-26 10:15:31,233] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:31,233] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:31,233] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:15:31,233] INFO  Thread-0 (SimpleLock.java:80) - Thread name Thread-0, 12, acquired the unlock over!
+[2016-05-26 10:15:31,233] INFO  Thread-1 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:31,234] INFO  Thread-1 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:31,234] INFO  Thread-1 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:31,234] INFO  Thread-1 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:31,234] INFO  Thread-1 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:31,235] INFO  Thread-1 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:15:31,235] INFO  Thread-1 (SimpleLock.java:72) - Thread name Thread-1, 13, acquired the lock over!
+[2016-05-26 10:15:31,735] INFO  Thread-1 (SimpleLock.java:78) - Thread name Thread-1, 13, acquired the unlock begin!
+[2016-05-26 10:15:31,735] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:31,735] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:31,735] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:15:31,735] INFO  Thread-1 (SimpleLock.java:80) - Thread name Thread-1, 13, acquired the unlock over!
+[2016-05-26 10:15:31,735] INFO  Thread-2 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:31,736] INFO  Thread-2 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:31,736] INFO  Thread-2 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:31,736] INFO  Thread-2 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:31,736] INFO  Thread-2 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:31,736] INFO  Thread-2 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:15:31,736] INFO  Thread-2 (SimpleLock.java:72) - Thread name Thread-2, 14, acquired the lock over!
+[2016-05-26 10:15:32,237] INFO  Thread-2 (SimpleLock.java:78) - Thread name Thread-2, 14, acquired the unlock begin!
+[2016-05-26 10:15:32,237] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:32,237] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:32,237] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:15:32,237] INFO  Thread-2 (SimpleLock.java:80) - Thread name Thread-2, 14, acquired the unlock over!
+[2016-05-26 10:15:32,237] INFO  Thread-3 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:32,238] INFO  Thread-3 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:32,238] INFO  Thread-3 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:32,238] INFO  Thread-3 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:32,238] INFO  Thread-3 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:32,238] INFO  Thread-3 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:15:32,238] INFO  Thread-3 (SimpleLock.java:72) - Thread name Thread-3, 15, acquired the lock over!
+[2016-05-26 10:15:32,738] INFO  Thread-3 (SimpleLock.java:78) - Thread name Thread-3, 15, acquired the unlock begin!
+[2016-05-26 10:15:32,738] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:32,738] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:32,738] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:15:32,738] INFO  Thread-3 (SimpleLock.java:80) - Thread name Thread-3, 15, acquired the unlock over!
+[2016-05-26 10:15:32,738] INFO  Thread-4 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:32,739] INFO  Thread-4 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:32,739] INFO  Thread-4 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:32,739] INFO  Thread-4 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:32,739] INFO  Thread-4 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:32,739] INFO  Thread-4 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:15:32,739] INFO  Thread-4 (SimpleLock.java:72) - Thread name Thread-4, 16, acquired the lock over!
+[2016-05-26 10:15:33,239] INFO  Thread-4 (SimpleLock.java:78) - Thread name Thread-4, 16, acquired the unlock begin!
+[2016-05-26 10:15:33,239] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:33,239] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:33,239] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:15:33,239] INFO  Thread-4 (SimpleLock.java:80) - Thread name Thread-4, 16, acquired the unlock over!
+[2016-05-26 10:15:33,239] INFO  Thread-5 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:33,239] INFO  Thread-5 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:33,240] INFO  Thread-5 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:33,240] INFO  Thread-5 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:33,240] INFO  Thread-5 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:33,240] INFO  Thread-5 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:15:33,240] INFO  Thread-5 (SimpleLock.java:72) - Thread name Thread-5, 17, acquired the lock over!
+[2016-05-26 10:15:33,740] INFO  Thread-5 (SimpleLock.java:78) - Thread name Thread-5, 17, acquired the unlock begin!
+[2016-05-26 10:15:33,740] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:33,740] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:33,740] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:15:33,740] INFO  Thread-5 (SimpleLock.java:80) - Thread name Thread-5, 17, acquired the unlock over!
+[2016-05-26 10:15:33,740] INFO  Thread-6 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:33,741] INFO  Thread-6 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:33,741] INFO  Thread-6 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:33,741] INFO  Thread-6 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:33,741] INFO  Thread-6 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:33,741] INFO  Thread-6 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:15:33,741] INFO  Thread-6 (SimpleLock.java:72) - Thread name Thread-6, 18, acquired the lock over!
+[2016-05-26 10:15:34,241] INFO  Thread-6 (SimpleLock.java:78) - Thread name Thread-6, 18, acquired the unlock begin!
+[2016-05-26 10:15:34,241] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:34,241] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:34,241] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:15:34,241] INFO  Thread-6 (SimpleLock.java:80) - Thread name Thread-6, 18, acquired the unlock over!
+[2016-05-26 10:15:34,241] INFO  Thread-7 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:34,242] INFO  Thread-7 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:34,242] INFO  Thread-7 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:34,242] INFO  Thread-7 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:34,242] INFO  Thread-7 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:34,242] INFO  Thread-7 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:15:34,242] INFO  Thread-7 (SimpleLock.java:72) - Thread name Thread-7, 19, acquired the lock over!
+[2016-05-26 10:15:34,743] INFO  Thread-7 (SimpleLock.java:78) - Thread name Thread-7, 19, acquired the unlock begin!
+[2016-05-26 10:15:34,743] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:34,743] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:34,743] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:15:34,743] INFO  Thread-7 (SimpleLock.java:80) - Thread name Thread-7, 19, acquired the unlock over!
+[2016-05-26 10:15:34,743] INFO  Thread-8 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:34,744] INFO  Thread-8 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:34,744] INFO  Thread-8 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:34,744] INFO  Thread-8 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:34,744] INFO  Thread-8 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:34,744] INFO  Thread-8 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:15:34,745] INFO  Thread-8 (SimpleLock.java:72) - Thread name Thread-8, 20, acquired the lock over!
+[2016-05-26 10:15:35,245] INFO  Thread-8 (SimpleLock.java:78) - Thread name Thread-8, 20, acquired the unlock begin!
+[2016-05-26 10:15:35,245] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:422) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 10:15:35,245] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:423) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 10:15:35,245] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:424) - this.state:0
+[2016-05-26 10:15:35,245] INFO  Thread-8 (SimpleLock.java:80) - Thread name Thread-8, 20, acquired the unlock over!
+[2016-05-26 10:15:35,245] INFO  Thread-9 (SimpleLock.java:39) - this.head:Node{ waitStatus=0 || 
+[2016-05-26 10:15:35,246] INFO  Thread-9 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 || 
+[2016-05-26 10:15:35,246] INFO  Thread-9 (SimpleLock.java:41) - this.state:1
+[2016-05-26 10:15:35,246] INFO  Thread-9 (SimpleLock.java:69) - this.head:Node{ waitStatus=0 || 
+[2016-05-26 10:15:35,246] INFO  Thread-9 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 || 
+[2016-05-26 10:15:35,247] INFO  Thread-9 (SimpleLock.java:71) - this.state:1
+[2016-05-26 10:15:35,247] INFO  Thread-9 (SimpleLock.java:72) - Thread name Thread-9, 21, acquired the lock over!
+[2016-05-26 10:15:35,747] INFO  Thread-9 (SimpleLock.java:78) - Thread name Thread-9, 21, acquired the unlock begin!
+[2016-05-26 10:15:35,747] INFO  Thread-9 (SimpleLock.java:80) - Thread name Thread-9, 21, acquired the unlock over!
+[2016-05-26 11:05:06,474] INFO  main (SimpleLock.java:57) - fuck
+[2016-05-26 11:05:06,478] INFO  main (SimpleLock.java:17) - SimpleLock
+[2016-05-26 11:05:06,478] INFO  main (SimpleLock.java:18) - this.head:null
+[2016-05-26 11:05:06,478] INFO  main (SimpleLock.java:19) - this.tail:null
+[2016-05-26 11:05:06,478] INFO  main (SimpleLock.java:20) - this.state:0
+[2016-05-26 11:05:06,479] INFO  main (SimpleLock.java:39) - this.head:null
+[2016-05-26 11:05:06,479] INFO  main (SimpleLock.java:40) - this.tail:null
+[2016-05-26 11:05:06,479] INFO  main (SimpleLock.java:41) - this.state:1
+[2016-05-26 11:05:06,487] INFO  Thread-0 (SimpleLock.java:64) - Thread name Thread-0, 12, acquired the lock begin!
+[2016-05-26 11:05:06,487] INFO  Thread-0 (SimpleLock.java:65) - this.head:null
+[2016-05-26 11:05:06,487] INFO  Thread-0 (SimpleLock.java:66) - this.tail:null
+[2016-05-26 11:05:06,487] INFO  Thread-0 (SimpleLock.java:67) - this.state:1
+[2016-05-26 11:05:06,488] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:159) - this.head:null
+[2016-05-26 11:05:06,488] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:160) - this.tail:null
+[2016-05-26 11:05:06,488] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 11:05:06,488] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:122) - this.head:null
+[2016-05-26 11:05:06,489] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:123) - this.tail:null
+[2016-05-26 11:05:06,489] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:124) - this.state:1
+[2016-05-26 11:05:06,489] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:134) - this.head:Node{ waitStatus=0 || 
+[2016-05-26 11:05:06,490] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:135) - this.tail:Node{ waitStatus=0 || 
+[2016-05-26 11:05:06,490] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:136) - this.state:1
+[2016-05-26 11:05:06,490] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:137) - node:Node{ waitStatus=0 || 
+[2016-05-26 11:05:06,490] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:146) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 11:05:06,490] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:147) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:06,491] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:148) - this.state:1
+[2016-05-26 11:05:06,491] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 11:05:06,491] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:06,492] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 11:05:06,580] INFO  Thread-1 (SimpleLock.java:64) - Thread name Thread-1, 13, acquired the lock begin!
+[2016-05-26 11:05:06,580] INFO  Thread-1 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:06,580] INFO  Thread-1 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:06,581] INFO  Thread-1 (SimpleLock.java:67) - this.state:1
+[2016-05-26 11:05:06,581] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:06,581] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:06,581] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 11:05:06,582] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:06,582] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:06,582] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 11:05:06,680] INFO  Thread-2 (SimpleLock.java:64) - Thread name Thread-2, 14, acquired the lock begin!
+[2016-05-26 11:05:06,680] INFO  Thread-2 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:06,680] INFO  Thread-2 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:06,681] INFO  Thread-2 (SimpleLock.java:67) - this.state:1
+[2016-05-26 11:05:06,681] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:06,681] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:06,681] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 11:05:06,681] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:06,681] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:06,681] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 11:05:06,780] INFO  Thread-3 (SimpleLock.java:64) - Thread name Thread-3, 15, acquired the lock begin!
+[2016-05-26 11:05:06,780] INFO  Thread-3 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:06,780] INFO  Thread-3 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:06,781] INFO  Thread-3 (SimpleLock.java:67) - this.state:1
+[2016-05-26 11:05:06,781] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:06,781] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:06,781] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 11:05:06,781] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:06,781] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:06,782] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 11:05:06,880] INFO  Thread-4 (SimpleLock.java:64) - Thread name Thread-4, 16, acquired the lock begin!
+[2016-05-26 11:05:06,880] INFO  Thread-4 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:06,880] INFO  Thread-4 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:06,880] INFO  Thread-4 (SimpleLock.java:67) - this.state:1
+[2016-05-26 11:05:06,881] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:06,881] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:06,881] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 11:05:06,881] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:06,881] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:06,881] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 11:05:06,980] INFO  Thread-5 (SimpleLock.java:64) - Thread name Thread-5, 17, acquired the lock begin!
+[2016-05-26 11:05:06,980] INFO  Thread-5 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:06,980] INFO  Thread-5 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:06,980] INFO  Thread-5 (SimpleLock.java:67) - this.state:1
+[2016-05-26 11:05:06,981] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:06,981] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:06,981] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 11:05:06,981] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:06,981] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:06,981] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 11:05:07,081] INFO  Thread-6 (SimpleLock.java:64) - Thread name Thread-6, 18, acquired the lock begin!
+[2016-05-26 11:05:07,081] INFO  Thread-6 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:07,081] INFO  Thread-6 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:07,081] INFO  Thread-6 (SimpleLock.java:67) - this.state:1
+[2016-05-26 11:05:07,081] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:07,082] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:07,082] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 11:05:07,082] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:07,082] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:07,082] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 11:05:07,180] INFO  Thread-7 (SimpleLock.java:64) - Thread name Thread-7, 19, acquired the lock begin!
+[2016-05-26 11:05:07,180] INFO  Thread-7 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:07,180] INFO  Thread-7 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:07,180] INFO  Thread-7 (SimpleLock.java:67) - this.state:1
+[2016-05-26 11:05:07,180] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:07,181] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:07,181] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 11:05:07,181] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:07,181] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:07,182] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 11:05:07,280] INFO  Thread-8 (SimpleLock.java:64) - Thread name Thread-8, 20, acquired the lock begin!
+[2016-05-26 11:05:07,280] INFO  Thread-8 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:07,280] INFO  Thread-8 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:07,281] INFO  Thread-8 (SimpleLock.java:67) - this.state:1
+[2016-05-26 11:05:07,281] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:07,281] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:07,281] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 11:05:07,281] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:07,281] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:07,282] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 11:05:07,380] INFO  Thread-9 (SimpleLock.java:64) - Thread name Thread-9, 21, acquired the lock begin!
+[2016-05-26 11:05:07,380] INFO  Thread-9 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:07,380] INFO  Thread-9 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:07,380] INFO  Thread-9 (SimpleLock.java:67) - this.state:1
+[2016-05-26 11:05:07,380] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:07,380] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:07,381] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 11:05:07,381] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:07,381] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:07,381] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 11:05:07,480] INFO  main (SimpleLock.java:87) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:07,480] INFO  main (SimpleLock.java:88) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:07,480] INFO  main (SimpleLock.java:89) - this.state:1
+[2016-05-26 11:05:08,980] INFO  main (SimpleLock.java:92) - main thread unlock begin
+[2016-05-26 11:05:08,980] INFO  main (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:08,980] INFO  main (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:08,980] INFO  main (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 11:05:08,980] INFO  main (SimpleLock.java:94) - main thread unlock over
+[2016-05-26 11:05:08,980] INFO  Thread-0 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:08,981] INFO  Thread-0 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:08,981] INFO  Thread-0 (SimpleLock.java:41) - this.state:1
+[2016-05-26 11:05:08,981] INFO  Thread-0 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:08,981] INFO  Thread-0 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:08,981] INFO  Thread-0 (SimpleLock.java:71) - this.state:1
+[2016-05-26 11:05:08,981] INFO  Thread-0 (SimpleLock.java:72) - Thread name Thread-0, 12, acquired the lock over!
+[2016-05-26 11:05:09,481] INFO  Thread-0 (SimpleLock.java:78) - Thread name Thread-0, 12, acquired the unlock begin!
+[2016-05-26 11:05:37,882] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:05:38,427] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:05:39,162] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 11:07:14,423] INFO  Thread-0 (SimpleLock.java:80) - Thread name Thread-0, 12, acquired the unlock over!
+[2016-05-26 11:07:14,423] INFO  Thread-1 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:14,424] INFO  Thread-1 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:14,424] INFO  Thread-1 (SimpleLock.java:41) - this.state:1
+[2016-05-26 11:07:14,424] INFO  Thread-1 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:14,424] INFO  Thread-1 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:14,425] INFO  Thread-1 (SimpleLock.java:71) - this.state:1
+[2016-05-26 11:07:14,425] INFO  Thread-1 (SimpleLock.java:72) - Thread name Thread-1, 13, acquired the lock over!
+[2016-05-26 11:07:14,925] INFO  Thread-1 (SimpleLock.java:78) - Thread name Thread-1, 13, acquired the unlock begin!
+[2016-05-26 11:07:22,387] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:22,579] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:22,972] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 11:07:26,790] INFO  Thread-1 (SimpleLock.java:80) - Thread name Thread-1, 13, acquired the unlock over!
+[2016-05-26 11:07:26,790] INFO  Thread-2 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:26,790] INFO  Thread-2 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:26,790] INFO  Thread-2 (SimpleLock.java:41) - this.state:1
+[2016-05-26 11:07:26,790] INFO  Thread-2 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:26,791] INFO  Thread-2 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:26,791] INFO  Thread-2 (SimpleLock.java:71) - this.state:1
+[2016-05-26 11:07:26,791] INFO  Thread-2 (SimpleLock.java:72) - Thread name Thread-2, 14, acquired the lock over!
+[2016-05-26 11:07:27,291] INFO  Thread-2 (SimpleLock.java:78) - Thread name Thread-2, 14, acquired the unlock begin!
+[2016-05-26 11:07:29,256] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:29,257] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:29,258] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 11:07:29,258] INFO  Thread-2 (SimpleLock.java:80) - Thread name Thread-2, 14, acquired the unlock over!
+[2016-05-26 11:07:29,258] INFO  Thread-3 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:29,258] INFO  Thread-3 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:29,259] INFO  Thread-3 (SimpleLock.java:41) - this.state:1
+[2016-05-26 11:07:29,259] INFO  Thread-3 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:29,259] INFO  Thread-3 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:29,259] INFO  Thread-3 (SimpleLock.java:71) - this.state:1
+[2016-05-26 11:07:29,259] INFO  Thread-3 (SimpleLock.java:72) - Thread name Thread-3, 15, acquired the lock over!
+[2016-05-26 11:07:29,760] INFO  Thread-3 (SimpleLock.java:78) - Thread name Thread-3, 15, acquired the unlock begin!
+[2016-05-26 11:07:29,760] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:29,760] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:29,760] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 11:07:29,760] INFO  Thread-3 (SimpleLock.java:80) - Thread name Thread-3, 15, acquired the unlock over!
+[2016-05-26 11:07:29,760] INFO  Thread-4 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:29,761] INFO  Thread-4 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:29,761] INFO  Thread-4 (SimpleLock.java:41) - this.state:1
+[2016-05-26 11:07:29,761] INFO  Thread-4 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:29,761] INFO  Thread-4 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:29,761] INFO  Thread-4 (SimpleLock.java:71) - this.state:1
+[2016-05-26 11:07:29,761] INFO  Thread-4 (SimpleLock.java:72) - Thread name Thread-4, 16, acquired the lock over!
+[2016-05-26 11:07:30,262] INFO  Thread-4 (SimpleLock.java:78) - Thread name Thread-4, 16, acquired the unlock begin!
+[2016-05-26 11:07:30,262] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:30,262] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:30,262] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 11:07:30,262] INFO  Thread-4 (SimpleLock.java:80) - Thread name Thread-4, 16, acquired the unlock over!
+[2016-05-26 11:07:30,262] INFO  Thread-5 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:30,263] INFO  Thread-5 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:30,263] INFO  Thread-5 (SimpleLock.java:41) - this.state:1
+[2016-05-26 11:07:30,263] INFO  Thread-5 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:30,263] INFO  Thread-5 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:30,263] INFO  Thread-5 (SimpleLock.java:71) - this.state:1
+[2016-05-26 11:07:30,263] INFO  Thread-5 (SimpleLock.java:72) - Thread name Thread-5, 17, acquired the lock over!
+[2016-05-26 11:07:30,763] INFO  Thread-5 (SimpleLock.java:78) - Thread name Thread-5, 17, acquired the unlock begin!
+[2016-05-26 11:07:30,763] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:30,763] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:30,763] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 11:07:30,763] INFO  Thread-5 (SimpleLock.java:80) - Thread name Thread-5, 17, acquired the unlock over!
+[2016-05-26 11:07:30,763] INFO  Thread-6 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:30,764] INFO  Thread-6 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:30,764] INFO  Thread-6 (SimpleLock.java:41) - this.state:1
+[2016-05-26 11:07:30,764] INFO  Thread-6 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:30,764] INFO  Thread-6 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:30,764] INFO  Thread-6 (SimpleLock.java:71) - this.state:1
+[2016-05-26 11:07:30,764] INFO  Thread-6 (SimpleLock.java:72) - Thread name Thread-6, 18, acquired the lock over!
+[2016-05-26 11:07:31,264] INFO  Thread-6 (SimpleLock.java:78) - Thread name Thread-6, 18, acquired the unlock begin!
+[2016-05-26 11:07:31,264] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:31,264] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:31,264] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 11:07:31,264] INFO  Thread-6 (SimpleLock.java:80) - Thread name Thread-6, 18, acquired the unlock over!
+[2016-05-26 11:07:31,264] INFO  Thread-7 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:31,265] INFO  Thread-7 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:31,265] INFO  Thread-7 (SimpleLock.java:41) - this.state:1
+[2016-05-26 11:07:31,265] INFO  Thread-7 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:31,265] INFO  Thread-7 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:31,265] INFO  Thread-7 (SimpleLock.java:71) - this.state:1
+[2016-05-26 11:07:31,265] INFO  Thread-7 (SimpleLock.java:72) - Thread name Thread-7, 19, acquired the lock over!
+[2016-05-26 11:07:31,765] INFO  Thread-7 (SimpleLock.java:78) - Thread name Thread-7, 19, acquired the unlock begin!
+[2016-05-26 11:07:31,765] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:31,765] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:31,765] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 11:07:31,765] INFO  Thread-7 (SimpleLock.java:80) - Thread name Thread-7, 19, acquired the unlock over!
+[2016-05-26 11:07:31,765] INFO  Thread-8 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:31,766] INFO  Thread-8 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:31,766] INFO  Thread-8 (SimpleLock.java:41) - this.state:1
+[2016-05-26 11:07:31,766] INFO  Thread-8 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:31,766] INFO  Thread-8 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:31,766] INFO  Thread-8 (SimpleLock.java:71) - this.state:1
+[2016-05-26 11:07:31,766] INFO  Thread-8 (SimpleLock.java:72) - Thread name Thread-8, 20, acquired the lock over!
+[2016-05-26 11:07:32,267] INFO  Thread-8 (SimpleLock.java:78) - Thread name Thread-8, 20, acquired the unlock begin!
+[2016-05-26 11:07:32,267] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 11:07:32,267] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 11:07:32,267] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 11:07:32,267] INFO  Thread-8 (SimpleLock.java:80) - Thread name Thread-8, 20, acquired the unlock over!
+[2016-05-26 11:07:32,267] INFO  Thread-9 (SimpleLock.java:39) - this.head:Node{ waitStatus=0 || 
+[2016-05-26 11:07:32,268] INFO  Thread-9 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 || 
+[2016-05-26 11:07:32,268] INFO  Thread-9 (SimpleLock.java:41) - this.state:1
+[2016-05-26 11:07:32,268] INFO  Thread-9 (SimpleLock.java:69) - this.head:Node{ waitStatus=0 || 
+[2016-05-26 11:07:32,268] INFO  Thread-9 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 || 
+[2016-05-26 11:07:32,269] INFO  Thread-9 (SimpleLock.java:71) - this.state:1
+[2016-05-26 11:07:32,269] INFO  Thread-9 (SimpleLock.java:72) - Thread name Thread-9, 21, acquired the lock over!
+[2016-05-26 11:07:32,769] INFO  Thread-9 (SimpleLock.java:78) - Thread name Thread-9, 21, acquired the unlock begin!
+[2016-05-26 11:07:32,769] INFO  Thread-9 (SimpleLock.java:80) - Thread name Thread-9, 21, acquired the unlock over!
+[2016-05-26 13:43:17,167] INFO  main (SimpleLock.java:57) - fuck
+[2016-05-26 13:43:17,170] INFO  main (SimpleLock.java:17) - SimpleLock
+[2016-05-26 13:43:17,170] INFO  main (SimpleLock.java:18) - this.head:null
+[2016-05-26 13:43:17,170] INFO  main (SimpleLock.java:19) - this.tail:null
+[2016-05-26 13:43:17,170] INFO  main (SimpleLock.java:20) - this.state:0
+[2016-05-26 13:43:17,171] INFO  main (SimpleLock.java:39) - this.head:null
+[2016-05-26 13:43:17,171] INFO  main (SimpleLock.java:40) - this.tail:null
+[2016-05-26 13:43:17,171] INFO  main (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:43:17,172] INFO  Thread-0 (SimpleLock.java:64) - Thread name Thread-0, 12, acquired the lock begin!
+[2016-05-26 13:43:17,173] INFO  Thread-0 (SimpleLock.java:65) - this.head:null
+[2016-05-26 13:43:17,173] INFO  Thread-0 (SimpleLock.java:66) - this.tail:null
+[2016-05-26 13:43:17,173] INFO  Thread-0 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:43:17,173] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:159) - this.head:null
+[2016-05-26 13:43:17,174] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:160) - this.tail:null
+[2016-05-26 13:43:17,174] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:43:17,174] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:122) - this.head:null
+[2016-05-26 13:43:17,174] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:123) - this.tail:null
+[2016-05-26 13:43:17,175] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:124) - this.state:1
+[2016-05-26 13:43:17,175] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:134) - this.head:Node{ waitStatus=0 || 
+[2016-05-26 13:43:17,175] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:135) - this.tail:Node{ waitStatus=0 || 
+[2016-05-26 13:43:17,175] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:136) - this.state:1
+[2016-05-26 13:43:17,176] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:137) - node:Node{ waitStatus=0 || 
+[2016-05-26 13:43:17,176] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:146) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:43:17,176] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:147) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,176] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:148) - this.state:1
+[2016-05-26 13:43:17,177] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:43:17,177] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,177] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:43:17,272] INFO  Thread-1 (SimpleLock.java:64) - Thread name Thread-1, 13, acquired the lock begin!
+[2016-05-26 13:43:17,272] INFO  Thread-1 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,272] INFO  Thread-1 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,272] INFO  Thread-1 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:43:17,273] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,273] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,273] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:43:17,273] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,273] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,273] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:43:17,372] INFO  Thread-2 (SimpleLock.java:64) - Thread name Thread-2, 14, acquired the lock begin!
+[2016-05-26 13:43:17,372] INFO  Thread-2 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,372] INFO  Thread-2 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,373] INFO  Thread-2 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:43:17,373] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,373] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,373] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:43:17,373] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,373] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,374] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:43:17,472] INFO  Thread-3 (SimpleLock.java:64) - Thread name Thread-3, 15, acquired the lock begin!
+[2016-05-26 13:43:17,472] INFO  Thread-3 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,473] INFO  Thread-3 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,473] INFO  Thread-3 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:43:17,473] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,473] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,473] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:43:17,474] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,474] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,474] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:43:17,572] INFO  Thread-4 (SimpleLock.java:64) - Thread name Thread-4, 16, acquired the lock begin!
+[2016-05-26 13:43:17,572] INFO  Thread-4 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,572] INFO  Thread-4 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,572] INFO  Thread-4 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:43:17,572] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,573] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,573] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:43:17,573] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,573] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,573] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:43:17,672] INFO  Thread-5 (SimpleLock.java:64) - Thread name Thread-5, 17, acquired the lock begin!
+[2016-05-26 13:43:17,673] INFO  Thread-5 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,673] INFO  Thread-5 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,673] INFO  Thread-5 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:43:17,673] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,673] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,674] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:43:17,674] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,674] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,676] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:43:17,772] INFO  Thread-6 (SimpleLock.java:64) - Thread name Thread-6, 18, acquired the lock begin!
+[2016-05-26 13:43:17,772] INFO  Thread-6 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,772] INFO  Thread-6 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,772] INFO  Thread-6 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:43:17,773] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,773] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,773] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:43:17,773] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,773] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,774] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:43:17,877] INFO  Thread-7 (SimpleLock.java:64) - Thread name Thread-7, 19, acquired the lock begin!
+[2016-05-26 13:43:17,877] INFO  Thread-7 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,877] INFO  Thread-7 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,877] INFO  Thread-7 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:43:17,877] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,877] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,877] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:43:17,878] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,878] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,878] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:43:17,976] INFO  Thread-8 (SimpleLock.java:64) - Thread name Thread-8, 20, acquired the lock begin!
+[2016-05-26 13:43:17,976] INFO  Thread-8 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,976] INFO  Thread-8 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,976] INFO  Thread-8 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:43:17,976] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,977] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,977] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:43:17,977] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:17,977] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:17,977] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:43:18,076] INFO  Thread-9 (SimpleLock.java:64) - Thread name Thread-9, 21, acquired the lock begin!
+[2016-05-26 13:43:18,076] INFO  Thread-9 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:18,076] INFO  Thread-9 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:18,076] INFO  Thread-9 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:43:18,077] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:18,077] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:18,077] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:43:18,077] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:18,077] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:18,077] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:43:18,176] INFO  main (SimpleLock.java:87) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:18,176] INFO  main (SimpleLock.java:88) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:18,176] INFO  main (SimpleLock.java:89) - this.state:1
+[2016-05-26 13:43:19,676] INFO  main (SimpleLock.java:92) - main thread unlock begin
+[2016-05-26 13:43:19,676] INFO  main (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:19,676] INFO  main (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:19,676] INFO  main (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:43:19,676] INFO  main (SimpleLock.java:94) - main thread unlock over
+[2016-05-26 13:43:19,676] INFO  Thread-0 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:19,677] INFO  Thread-0 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:19,677] INFO  Thread-0 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:43:19,677] INFO  Thread-0 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:19,677] INFO  Thread-0 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:19,677] INFO  Thread-0 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:43:19,677] INFO  Thread-0 (SimpleLock.java:72) - Thread name Thread-0, 12, acquired the lock over!
+[2016-05-26 13:43:20,177] INFO  Thread-0 (SimpleLock.java:78) - Thread name Thread-0, 12, acquired the unlock begin!
+[2016-05-26 13:43:20,177] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:20,177] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:20,177] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:43:20,177] INFO  Thread-0 (SimpleLock.java:80) - Thread name Thread-0, 12, acquired the unlock over!
+[2016-05-26 13:43:20,177] INFO  Thread-1 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:20,178] INFO  Thread-1 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:20,178] INFO  Thread-1 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:43:20,178] INFO  Thread-1 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:20,178] INFO  Thread-1 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:20,178] INFO  Thread-1 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:43:20,178] INFO  Thread-1 (SimpleLock.java:72) - Thread name Thread-1, 13, acquired the lock over!
+[2016-05-26 13:43:20,678] INFO  Thread-1 (SimpleLock.java:78) - Thread name Thread-1, 13, acquired the unlock begin!
+[2016-05-26 13:43:20,678] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:20,678] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:20,678] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:43:20,678] INFO  Thread-1 (SimpleLock.java:80) - Thread name Thread-1, 13, acquired the unlock over!
+[2016-05-26 13:43:20,678] INFO  Thread-2 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:20,679] INFO  Thread-2 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:20,679] INFO  Thread-2 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:43:20,679] INFO  Thread-2 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:20,679] INFO  Thread-2 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:20,679] INFO  Thread-2 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:43:20,679] INFO  Thread-2 (SimpleLock.java:72) - Thread name Thread-2, 14, acquired the lock over!
+[2016-05-26 13:43:21,179] INFO  Thread-2 (SimpleLock.java:78) - Thread name Thread-2, 14, acquired the unlock begin!
+[2016-05-26 13:43:21,179] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:21,179] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:21,179] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:43:21,179] INFO  Thread-2 (SimpleLock.java:80) - Thread name Thread-2, 14, acquired the unlock over!
+[2016-05-26 13:43:21,179] INFO  Thread-3 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:21,180] INFO  Thread-3 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:21,180] INFO  Thread-3 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:43:21,180] INFO  Thread-3 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:21,180] INFO  Thread-3 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:21,180] INFO  Thread-3 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:43:21,180] INFO  Thread-3 (SimpleLock.java:72) - Thread name Thread-3, 15, acquired the lock over!
+[2016-05-26 13:43:21,680] INFO  Thread-3 (SimpleLock.java:78) - Thread name Thread-3, 15, acquired the unlock begin!
+[2016-05-26 13:43:21,680] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:21,680] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:21,680] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:43:21,680] INFO  Thread-3 (SimpleLock.java:80) - Thread name Thread-3, 15, acquired the unlock over!
+[2016-05-26 13:43:21,680] INFO  Thread-4 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:21,681] INFO  Thread-4 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:21,681] INFO  Thread-4 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:43:21,681] INFO  Thread-4 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:21,681] INFO  Thread-4 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:21,681] INFO  Thread-4 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:43:21,681] INFO  Thread-4 (SimpleLock.java:72) - Thread name Thread-4, 16, acquired the lock over!
+[2016-05-26 13:43:22,182] INFO  Thread-4 (SimpleLock.java:78) - Thread name Thread-4, 16, acquired the unlock begin!
+[2016-05-26 13:43:22,182] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:22,182] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:22,182] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:43:22,182] INFO  Thread-4 (SimpleLock.java:80) - Thread name Thread-4, 16, acquired the unlock over!
+[2016-05-26 13:43:22,182] INFO  Thread-5 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:22,183] INFO  Thread-5 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:22,183] INFO  Thread-5 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:43:22,183] INFO  Thread-5 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:22,183] INFO  Thread-5 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:22,184] INFO  Thread-5 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:43:22,184] INFO  Thread-5 (SimpleLock.java:72) - Thread name Thread-5, 17, acquired the lock over!
+[2016-05-26 13:43:22,684] INFO  Thread-5 (SimpleLock.java:78) - Thread name Thread-5, 17, acquired the unlock begin!
+[2016-05-26 13:43:22,684] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:22,684] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:22,684] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:43:22,684] INFO  Thread-5 (SimpleLock.java:80) - Thread name Thread-5, 17, acquired the unlock over!
+[2016-05-26 13:43:22,684] INFO  Thread-6 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:22,685] INFO  Thread-6 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:22,685] INFO  Thread-6 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:43:22,685] INFO  Thread-6 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:22,685] INFO  Thread-6 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:22,685] INFO  Thread-6 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:43:22,685] INFO  Thread-6 (SimpleLock.java:72) - Thread name Thread-6, 18, acquired the lock over!
+[2016-05-26 13:43:23,185] INFO  Thread-6 (SimpleLock.java:78) - Thread name Thread-6, 18, acquired the unlock begin!
+[2016-05-26 13:43:23,185] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:23,185] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:23,185] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:43:23,185] INFO  Thread-6 (SimpleLock.java:80) - Thread name Thread-6, 18, acquired the unlock over!
+[2016-05-26 13:43:23,185] INFO  Thread-7 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:23,186] INFO  Thread-7 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:23,186] INFO  Thread-7 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:43:23,186] INFO  Thread-7 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:23,186] INFO  Thread-7 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:23,187] INFO  Thread-7 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:43:23,187] INFO  Thread-7 (SimpleLock.java:72) - Thread name Thread-7, 19, acquired the lock over!
+[2016-05-26 13:43:23,688] INFO  Thread-7 (SimpleLock.java:78) - Thread name Thread-7, 19, acquired the unlock begin!
+[2016-05-26 13:43:30,226] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:30,475] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:30,699] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:43:34,113] INFO  Thread-8 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:34,986] INFO  Thread-8 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:36,914] INFO  Thread-8 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:43:37,978] INFO  Thread-8 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:37,980] INFO  Thread-7 (SimpleLock.java:80) - Thread name Thread-7, 19, acquired the unlock over!
+[2016-05-26 13:43:37,980] INFO  Thread-8 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:38,426] INFO  Thread-8 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:43:38,427] INFO  Thread-8 (SimpleLock.java:72) - Thread name Thread-8, 20, acquired the lock over!
+[2016-05-26 13:43:38,928] INFO  Thread-8 (SimpleLock.java:78) - Thread name Thread-8, 20, acquired the unlock begin!
+[2016-05-26 13:43:38,929] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:43:38,930] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:43:38,930] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:43:38,931] INFO  Thread-8 (SimpleLock.java:80) - Thread name Thread-8, 20, acquired the unlock over!
+[2016-05-26 13:43:38,931] INFO  Thread-9 (SimpleLock.java:39) - this.head:Node{ waitStatus=0 || 
+[2016-05-26 13:43:38,933] INFO  Thread-9 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 || 
+[2016-05-26 13:43:38,934] INFO  Thread-9 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:43:38,935] INFO  Thread-9 (SimpleLock.java:69) - this.head:Node{ waitStatus=0 || 
+[2016-05-26 13:43:38,936] INFO  Thread-9 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 || 
+[2016-05-26 13:43:38,936] INFO  Thread-9 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:43:38,937] INFO  Thread-9 (SimpleLock.java:72) - Thread name Thread-9, 21, acquired the lock over!
+[2016-05-26 13:43:39,438] INFO  Thread-9 (SimpleLock.java:78) - Thread name Thread-9, 21, acquired the unlock begin!
+[2016-05-26 13:43:39,439] INFO  Thread-9 (SimpleLock.java:80) - Thread name Thread-9, 21, acquired the unlock over!
+[2016-05-26 13:44:02,658] INFO  main (SimpleLock.java:57) - fuck
+[2016-05-26 13:44:02,661] INFO  main (SimpleLock.java:17) - SimpleLock
+[2016-05-26 13:44:02,662] INFO  main (SimpleLock.java:18) - this.head:null
+[2016-05-26 13:44:02,662] INFO  main (SimpleLock.java:19) - this.tail:null
+[2016-05-26 13:44:02,662] INFO  main (SimpleLock.java:20) - this.state:0
+[2016-05-26 13:44:02,662] INFO  main (SimpleLock.java:39) - this.head:null
+[2016-05-26 13:44:02,663] INFO  main (SimpleLock.java:40) - this.tail:null
+[2016-05-26 13:44:02,663] INFO  main (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:44:02,674] INFO  Thread-0 (SimpleLock.java:64) - Thread name Thread-0, 12, acquired the lock begin!
+[2016-05-26 13:44:02,675] INFO  Thread-0 (SimpleLock.java:65) - this.head:null
+[2016-05-26 13:44:02,675] INFO  Thread-0 (SimpleLock.java:66) - this.tail:null
+[2016-05-26 13:44:02,675] INFO  Thread-0 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:44:02,675] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:159) - this.head:null
+[2016-05-26 13:44:02,675] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:160) - this.tail:null
+[2016-05-26 13:44:02,676] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:44:02,676] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:122) - this.head:null
+[2016-05-26 13:44:02,676] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:123) - this.tail:null
+[2016-05-26 13:44:02,676] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:124) - this.state:1
+[2016-05-26 13:44:02,677] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:134) - this.head:Node{ waitStatus=0 || 
+[2016-05-26 13:44:02,677] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:135) - this.tail:Node{ waitStatus=0 || 
+[2016-05-26 13:44:02,677] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:136) - this.state:1
+[2016-05-26 13:44:02,677] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:137) - node:Node{ waitStatus=0 || 
+[2016-05-26 13:44:02,678] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:146) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:44:02,678] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:147) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:44:02,678] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:148) - this.state:1
+[2016-05-26 13:44:02,785] INFO  Thread-1 (SimpleLock.java:64) - Thread name Thread-1, 13, acquired the lock begin!
+[2016-05-26 13:44:02,788] INFO  Thread-1 (SimpleLock.java:65) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:44:11,129] INFO  Thread-2 (SimpleLock.java:64) - Thread name Thread-2, 14, acquired the lock begin!
+[2016-05-26 13:44:11,130] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:44:11,130] INFO  Thread-1 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:44:11,157] INFO  Thread-1 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:44:11,159] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:44:11,159] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:44:11,159] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:44:11,159] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:44:11,160] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:44:11,160] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:44:11,130] INFO  Thread-2 (SimpleLock.java:65) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:44:11,691] INFO  Thread-2 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:44:11,692] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:44:11,692] INFO  Thread-3 (SimpleLock.java:64) - Thread name Thread-3, 15, acquired the lock begin!
+[2016-05-26 13:44:11,718] INFO  Thread-3 (SimpleLock.java:65) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:44:11,718] INFO  Thread-3 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:44:11,718] INFO  Thread-3 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:44:11,692] INFO  Thread-2 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:44:27,939] INFO  Thread-5 (SimpleLock.java:64) - Thread name Thread-5, 17, acquired the lock begin!
+[2016-05-26 13:44:27,938] INFO  Thread-4 (SimpleLock.java:64) - Thread name Thread-4, 16, acquired the lock begin!
+[2016-05-26 13:44:21,863] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:44:27,940] INFO  Thread-4 (SimpleLock.java:65) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:44:27,940] INFO  Thread-5 (SimpleLock.java:65) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:44:27,939] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:44:27,939] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:44:27,969] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:44:27,969] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:44:27,970] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:44:27,970] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:44:31,541] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:44:27,941] INFO  Thread-4 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:44:39,002] INFO  Thread-7 (SimpleLock.java:64) - Thread name Thread-7, 19, acquired the lock begin!
+[2016-05-26 13:44:39,849] INFO  Thread-7 (SimpleLock.java:65) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:44:39,849] INFO  Thread-7 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:44:39,852] INFO  Thread-7 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:44:39,852] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:44:39,852] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:44:39,852] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:44:39,852] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:44:39,853] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:44:39,854] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:44:27,941] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:44:39,854] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:44:39,854] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:44:39,854] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:44:39,854] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:44:28,545] INFO  Thread-6 (SimpleLock.java:64) - Thread name Thread-6, 18, acquired the lock begin!
+[2016-05-26 13:45:06,418] INFO  Thread-6 (SimpleLock.java:65) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:45:06,418] INFO  main (SimpleLock.java:87) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:45:05,611] INFO  Thread-9 (SimpleLock.java:64) - Thread name Thread-9, 21, acquired the lock begin!
+[2016-05-26 13:45:56,781] INFO  main (SimpleLock.java:88) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:44:39,026] INFO  Thread-4 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:47:13,868] INFO  Thread-9 (SimpleLock.java:65) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:47:42,296] INFO  Thread-9 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:44:39,856] INFO  Thread-8 (SimpleLock.java:64) - Thread name Thread-8, 20, acquired the lock begin!
+[2016-05-26 13:48:08,327] INFO  Thread-8 (SimpleLock.java:65) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:48:08,332] INFO  Thread-8 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:48:08,332] INFO  Thread-8 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:48:08,332] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:48:08,332] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:48:08,332] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:48:08,332] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:48:08,332] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:48:08,333] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:48:00,435] INFO  Thread-9 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:48:08,334] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:48:08,334] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:48:08,334] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:48:08,335] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:48:08,335] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:48:08,335] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:44:27,941] INFO  Thread-5 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:48:08,335] INFO  Thread-5 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:48:08,335] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:48:08,335] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:48:08,335] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:47:33,518] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=0 ||  next isnot null  || 
+[2016-05-26 13:48:13,206] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:45:06,455] INFO  Thread-6 (SimpleLock.java:66) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:48:14,095] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:48:15,809] INFO  Thread-6 (SimpleLock.java:67) - this.state:1
+[2016-05-26 13:48:10,729] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:48:18,850] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:159) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:48:21,059] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:160) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:48:27,913] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:161) - this.state:1
+[2016-05-26 13:48:19,414] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:47:17,417] INFO  main (SimpleLock.java:89) - this.state:1
+[2016-05-26 13:48:18,066] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:48:27,919] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:301) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:48:29,099] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:48:29,100] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:48:28,356] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:48:29,099] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:302) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:48:29,100] INFO  Thread-6 (MyAbstractQueuedSynchronizer.java:303) - this.state:1
+[2016-05-26 13:48:30,599] INFO  main (SimpleLock.java:92) - main thread unlock begin
+[2016-05-26 13:48:30,599] INFO  main (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:48:30,599] INFO  main (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:48:30,599] INFO  main (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:48:30,599] INFO  main (SimpleLock.java:94) - main thread unlock over
+[2016-05-26 13:49:16,635] INFO  Thread-0 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:17,252] INFO  Thread-0 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:17,540] INFO  Thread-0 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:49:21,154] INFO  Thread-0 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:21,651] INFO  Thread-0 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:24,137] INFO  Thread-0 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:49:24,979] INFO  Thread-0 (SimpleLock.java:72) - Thread name Thread-0, 12, acquired the lock over!
+[2016-05-26 13:49:29,224] INFO  Thread-0 (SimpleLock.java:78) - Thread name Thread-0, 12, acquired the unlock begin!
+[2016-05-26 13:49:29,225] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:29,225] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:29,225] INFO  Thread-0 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:49:29,225] INFO  Thread-0 (SimpleLock.java:80) - Thread name Thread-0, 12, acquired the unlock over!
+[2016-05-26 13:49:29,225] INFO  Thread-1 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:29,225] INFO  Thread-1 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:29,226] INFO  Thread-1 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:49:29,226] INFO  Thread-1 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:29,226] INFO  Thread-1 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:29,226] INFO  Thread-1 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:49:29,226] INFO  Thread-1 (SimpleLock.java:72) - Thread name Thread-1, 13, acquired the lock over!
+[2016-05-26 13:49:29,726] INFO  Thread-1 (SimpleLock.java:78) - Thread name Thread-1, 13, acquired the unlock begin!
+[2016-05-26 13:49:29,726] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:29,726] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:29,726] INFO  Thread-1 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:49:29,726] INFO  Thread-1 (SimpleLock.java:80) - Thread name Thread-1, 13, acquired the unlock over!
+[2016-05-26 13:49:29,726] INFO  Thread-2 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:29,727] INFO  Thread-2 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:29,727] INFO  Thread-2 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:49:29,727] INFO  Thread-2 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:29,727] INFO  Thread-2 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:29,727] INFO  Thread-2 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:49:29,727] INFO  Thread-2 (SimpleLock.java:72) - Thread name Thread-2, 14, acquired the lock over!
+[2016-05-26 13:49:30,227] INFO  Thread-2 (SimpleLock.java:78) - Thread name Thread-2, 14, acquired the unlock begin!
+[2016-05-26 13:49:30,227] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:30,227] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:30,227] INFO  Thread-2 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:49:30,227] INFO  Thread-2 (SimpleLock.java:80) - Thread name Thread-2, 14, acquired the unlock over!
+[2016-05-26 13:49:30,227] INFO  Thread-7 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:30,228] INFO  Thread-7 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:30,228] INFO  Thread-7 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:49:30,228] INFO  Thread-7 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:30,228] INFO  Thread-7 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:30,228] INFO  Thread-7 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:49:30,228] INFO  Thread-7 (SimpleLock.java:72) - Thread name Thread-7, 19, acquired the lock over!
+[2016-05-26 13:49:30,729] INFO  Thread-7 (SimpleLock.java:78) - Thread name Thread-7, 19, acquired the unlock begin!
+[2016-05-26 13:49:30,729] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:30,729] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:30,730] INFO  Thread-7 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:49:30,730] INFO  Thread-7 (SimpleLock.java:80) - Thread name Thread-7, 19, acquired the unlock over!
+[2016-05-26 13:49:30,730] INFO  Thread-3 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:30,730] INFO  Thread-3 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:30,730] INFO  Thread-3 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:49:30,730] INFO  Thread-3 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:30,731] INFO  Thread-3 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:30,731] INFO  Thread-3 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:49:30,731] INFO  Thread-3 (SimpleLock.java:72) - Thread name Thread-3, 15, acquired the lock over!
+[2016-05-26 13:49:31,231] INFO  Thread-3 (SimpleLock.java:78) - Thread name Thread-3, 15, acquired the unlock begin!
+[2016-05-26 13:49:31,231] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:31,231] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:31,231] INFO  Thread-3 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:49:31,231] INFO  Thread-3 (SimpleLock.java:80) - Thread name Thread-3, 15, acquired the unlock over!
+[2016-05-26 13:49:31,231] INFO  Thread-8 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:31,232] INFO  Thread-8 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:31,232] INFO  Thread-8 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:49:31,232] INFO  Thread-8 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:31,232] INFO  Thread-8 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:31,232] INFO  Thread-8 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:49:31,232] INFO  Thread-8 (SimpleLock.java:72) - Thread name Thread-8, 20, acquired the lock over!
+[2016-05-26 13:49:31,732] INFO  Thread-8 (SimpleLock.java:78) - Thread name Thread-8, 20, acquired the unlock begin!
+[2016-05-26 13:49:31,732] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:31,732] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:31,732] INFO  Thread-8 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:49:31,732] INFO  Thread-8 (SimpleLock.java:80) - Thread name Thread-8, 20, acquired the unlock over!
+[2016-05-26 13:49:31,732] INFO  Thread-9 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:31,733] INFO  Thread-9 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:31,733] INFO  Thread-9 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:49:31,733] INFO  Thread-9 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:31,733] INFO  Thread-9 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:31,734] INFO  Thread-9 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:49:31,734] INFO  Thread-9 (SimpleLock.java:72) - Thread name Thread-9, 21, acquired the lock over!
+[2016-05-26 13:49:32,234] INFO  Thread-9 (SimpleLock.java:78) - Thread name Thread-9, 21, acquired the unlock begin!
+[2016-05-26 13:49:32,234] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:32,234] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:32,235] INFO  Thread-9 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:49:32,235] INFO  Thread-9 (SimpleLock.java:80) - Thread name Thread-9, 21, acquired the unlock over!
+[2016-05-26 13:49:32,235] INFO  Thread-5 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:32,235] INFO  Thread-5 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:32,236] INFO  Thread-5 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:49:32,236] INFO  Thread-5 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:32,236] INFO  Thread-5 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:32,237] INFO  Thread-5 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:49:32,237] INFO  Thread-5 (SimpleLock.java:72) - Thread name Thread-5, 17, acquired the lock over!
+[2016-05-26 13:49:32,737] INFO  Thread-5 (SimpleLock.java:78) - Thread name Thread-5, 17, acquired the unlock begin!
+[2016-05-26 13:49:32,737] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:32,737] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:32,737] INFO  Thread-5 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:49:32,737] INFO  Thread-5 (SimpleLock.java:80) - Thread name Thread-5, 17, acquired the unlock over!
+[2016-05-26 13:49:32,737] INFO  Thread-4 (SimpleLock.java:39) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:32,738] INFO  Thread-4 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:32,738] INFO  Thread-4 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:49:32,738] INFO  Thread-4 (SimpleLock.java:69) - this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:32,738] INFO  Thread-4 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:32,738] INFO  Thread-4 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:49:32,739] INFO  Thread-4 (SimpleLock.java:72) - Thread name Thread-4, 16, acquired the lock over!
+[2016-05-26 13:49:33,239] INFO  Thread-4 (SimpleLock.java:78) - Thread name Thread-4, 16, acquired the unlock begin!
+[2016-05-26 13:49:33,239] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:185) - ************************this.head:Node{ waitStatus=-1 ||  next isnot null  || 
+[2016-05-26 13:49:33,240] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:186) - this.tail:Node{ waitStatus=0 ||   prev isnot null  || 
+[2016-05-26 13:49:33,240] INFO  Thread-4 (MyAbstractQueuedSynchronizer.java:187) - this.state:0
+[2016-05-26 13:49:33,240] INFO  Thread-4 (SimpleLock.java:80) - Thread name Thread-4, 16, acquired the unlock over!
+[2016-05-26 13:49:33,240] INFO  Thread-6 (SimpleLock.java:39) - this.head:Node{ waitStatus=0 || 
+[2016-05-26 13:49:33,240] INFO  Thread-6 (SimpleLock.java:40) - this.tail:Node{ waitStatus=0 || 
+[2016-05-26 13:49:33,241] INFO  Thread-6 (SimpleLock.java:41) - this.state:1
+[2016-05-26 13:49:33,241] INFO  Thread-6 (SimpleLock.java:69) - this.head:Node{ waitStatus=0 || 
+[2016-05-26 13:49:33,241] INFO  Thread-6 (SimpleLock.java:70) - this.tail:Node{ waitStatus=0 || 
+[2016-05-26 13:49:33,241] INFO  Thread-6 (SimpleLock.java:71) - this.state:1
+[2016-05-26 13:49:33,241] INFO  Thread-6 (SimpleLock.java:72) - Thread name Thread-6, 18, acquired the lock over!
+[2016-05-26 13:49:33,741] INFO  Thread-6 (SimpleLock.java:78) - Thread name Thread-6, 18, acquired the unlock begin!
+[2016-05-26 13:49:33,741] INFO  Thread-6 (SimpleLock.java:80) - Thread name Thread-6, 18, acquired the unlock over!

@@ -2,6 +2,8 @@ package com.lami.tuomatuo.search.base.concurrent.spinlock;
 
 import org.apache.log4j.Logger;
 
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -64,7 +66,7 @@ public class ClhSpinLock {
             }).start();
             Thread.sleep(100);
         }
-
+        Queue queue = new ConcurrentLinkedQueue();
         logger.info("main thread unlock");
         lock.unlock();
     }
