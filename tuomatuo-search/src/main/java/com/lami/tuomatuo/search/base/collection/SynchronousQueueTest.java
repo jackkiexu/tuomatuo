@@ -52,7 +52,7 @@ public class SynchronousQueueTest {
 
                 // queue.offer(rand);  //注意offer与put方法的区别
                 try {
-					// put()往queue放进去一个element以后就一直wait直到有其他thread进来把这个element取走
+					// put() 往queue放进去一个element以后就一直wait直到有其他thread进来把这个element取走
                     queue.put(rand);
                 } catch (InterruptedException e) {
                     e.printStackTrace();

@@ -1,11 +1,14 @@
 package com.lami.tuomatuo.utils;
 
+import org.apache.log4j.Logger;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class DateUtils {
+	private static  Logger logger = Logger.getLogger(DateUtils.class);
 	
 	private static SimpleDateFormat formatter;
 	
@@ -616,6 +619,7 @@ public class DateUtils {
 	public static void main(String[] args) {
 		System.out.println(longDate(new Date()));
 		System.out.println(longDate(getOffsetMonth(new Date(), -4)));
-
+		Integer a = null;
+		logger.info("a"+a);
 	}
 }
