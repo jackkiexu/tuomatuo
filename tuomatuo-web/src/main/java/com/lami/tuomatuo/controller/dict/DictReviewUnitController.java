@@ -2,7 +2,9 @@ package com.lami.tuomatuo.controller.dict;
 
 import com.lami.tuomatuo.controller.BaseController;
 import com.lami.tuomatuo.model.base.Result;
+import com.lami.tuomatuo.model.dict.DictUser;
 import com.lami.tuomatuo.model.po.crawler.CrawlerUIAccountParam;
+import com.lami.tuomatuo.model.po.dict.StartReviewUnitParam;
 import com.lami.tuomatuo.service.dict.DictReviceUnitService;
 import com.lami.tuomatuo.service.dict.DictUserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +27,7 @@ public class DictReviewUnitController extends DictBaseController {
 
     @Override
     protected boolean checkAuth() {
-        return false;
+        return true;
     }
 
     /**
@@ -34,9 +36,12 @@ public class DictReviewUnitController extends DictBaseController {
      */
     @RequestMapping(value = "/login.form")
     @ResponseBody
-    public Result getDynamic(HttpServletRequest httpServletRequest, @RequestBody CrawlerUIAccountParam crawlerUIAccountParam){
-        Result result = execute(crawlerUIAccountParam);
+    public Result getDynamic(HttpServletRequest httpServletRequest, @RequestBody StartReviewUnitParam param){
+        Result result = execute(param);
         if (Result.SUCCESS != result.getStatus()) return result;
+        DictUser dictUser = (DictUser)result.getValue();
+
+
         return new Result(Result.SUCCESS).setValue("");
     }
 }

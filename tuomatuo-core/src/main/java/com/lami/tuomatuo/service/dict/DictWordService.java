@@ -15,6 +15,4 @@ public class DictWordService extends BaseService<DictWord, Long> {
     @Autowired
     private DictWordDaoInterface dictWordDaoInterface;
 
-
-
 }
