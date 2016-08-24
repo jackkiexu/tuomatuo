@@ -31,12 +31,12 @@ public class DictReviewUnitController extends DictBaseController {
     }
 
     /**
-     * 用户查询自己的动态信息
+     * 开启一个新单元的学习
      * @param httpServletRequest
      */
-    @RequestMapping(value = "/login.form")
+    @RequestMapping(value = "/startReviewUnit.form")
     @ResponseBody
-    public Result getDynamic(HttpServletRequest httpServletRequest, @RequestBody StartReviewUnitParam param){
+    public Result startReviewUnit(HttpServletRequest httpServletRequest, @RequestBody StartReviewUnitParam param){
         Result result = execute(param);
         if (Result.SUCCESS != result.getStatus()) return result;
         DictUser dictUser = (DictUser)result.getValue();

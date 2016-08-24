@@ -38,4 +38,14 @@ public class DictReviceUnitService extends BaseService<DictReviewUnit, Long> {
         return dictReviewUnitList;
     }
 
+    /**
+     * 用户开启自己的 reviewUnit
+     * @param userId
+     * @param unitId
+     */
+    public void beginReviewUnit(Long userId, Long unitId){
+        DictReviewUnit dictReviewUnit = new DictReviewUnit();
+
+    }
+
 }
