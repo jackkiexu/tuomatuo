@@ -2,8 +2,10 @@ package com.lami.tuomatuo.controller.dict;
 
 import com.lami.tuomatuo.controller.BaseController;
 import com.lami.tuomatuo.model.base.Result;
+import com.lami.tuomatuo.model.dict.DictReviewUnit;
 import com.lami.tuomatuo.model.dict.DictUser;
 import com.lami.tuomatuo.model.po.crawler.CrawlerUIAccountParam;
+import com.lami.tuomatuo.model.po.dict.ReviewUnitWordparam;
 import com.lami.tuomatuo.model.po.dict.StartReviewUnitParam;
 import com.lami.tuomatuo.service.dict.DictReviceUnitService;
 import com.lami.tuomatuo.service.dict.DictUserService;
@@ -40,8 +42,21 @@ public class DictReviewUnitController extends DictBaseController {
         Result result = execute(param);
         if (Result.SUCCESS != result.getStatus()) return result;
         DictUser dictUser = (DictUser)result.getValue();
+        DictReviewUnit dictReviewUnit = dictReviceUnitService.beginReviewUnit(dictUser.getId(), param.getUnitId());
+        return new Result(Result.SUCCESS).setValue(dictReviewUnit);
+    }
 
-
-        return new Result(Result.SUCCESS).setValue("");
+    /**
+     * 复习单元中的单词
+     * @param httpServletRequest
+     */
+    @RequestMapping(value = "/processReviewUnit.form")
+    @ResponseBody
+    public Result processReviewUnit(HttpServletRequest httpServletRequest, @RequestBody ReviewUnitWordparam param){
+        Result result = execute(param);
+        if (Result.SUCCESS != result.getStatus()) return result;
+        DictUser dictUser = (DictUser)result.getValue();
+        DictReviewUnit dictReviewUnit = dictReviceUnitService.beginReviewUnit(dictUser.getId(), param.getUnitId());
+        return new Result(Result.SUCCESS).setValue(dictReviewUnit);
     }
 }

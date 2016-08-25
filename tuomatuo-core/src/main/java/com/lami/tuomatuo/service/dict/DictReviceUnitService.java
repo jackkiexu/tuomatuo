@@ -2,10 +2,13 @@ package com.lami.tuomatuo.service.dict;
 
 import com.lami.tuomatuo.base.BaseService;
 import com.lami.tuomatuo.dao.dict.DictReviewUnitDaoInterface;
+import com.lami.tuomatuo.dao.dict.DictUnitDaoInterface;
 import com.lami.tuomatuo.dao.dict.DictWordDaoInterface;
 import com.lami.tuomatuo.model.dict.DictReviewUnit;
+import com.lami.tuomatuo.model.dict.DictUnit;
 import com.lami.tuomatuo.model.dict.DictWord;
 import com.lami.tuomatuo.utils.DateUtils;
+import com.lami.tuomatuo.utils.GsonUtils;
 import com.lami.tuomatuo.utils.uuid.UUIDFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,10 @@ public class DictReviceUnitService extends BaseService<DictReviewUnit, Long> {
 
     @Autowired
     private DictReviewUnitDaoInterface dictReviewUnitDaoInterface;
+    @Autowired
+    private DictUnitDaoInterface dictUnitDaoInterface;
+    @Autowired
+    private DictWordService dictWordService;
 
     /**
      * 获取用户所有 的 reviewUnit
@@ -44,7 +51,15 @@ public class DictReviceUnitService extends BaseService<DictReviewUnit, Long> {
      * @param userId
      * @param unitId
      */
-    public void beginReviewUnit(Long userId, Long unitId){
+    public DictReviewUnit beginReviewUnit(Long userId, Long unitId){
+        /** 1. 查询对应的 DictUnit DictWord
+         *  2. 初始化 DictReviewUnit 进行存储
+         *  3. 返回初始化的 DictReviewUnit
+         */
+
+        DictUnit dictUnit = dictUnitDaoInterface.get(unitId);
+        List<String> dictWordList = dictWordService.getUnitWordStr(unitId);
+
         DictReviewUnit dictReviewUnit = new DictReviewUnit();
         dictReviewUnit.setCreateTime(new Date());
         dictReviewUnit.setEndTime(DateUtils.addDate(new Date(), 2));
@@ -53,7 +68,11 @@ public class DictReviceUnitService extends BaseService<DictReviewUnit, Long> {
         dictReviewUnit.setReviewSum(0);
         dictReviewUnit.setUnit(unitId);
         dictReviewUnit.setUticket(UUIDFactory.shortUUID());
-
+        dictReviewUnit.setUserId(userId);
+        dictReviewUnit.setWordAll(GsonUtils.toGson(dictWordList));
+        return dictReviewUnitDaoInterface.save(dictReviewUnit);
     }
+
+
 
 }
