@@ -1,6 +1,5 @@
 package com.lami.tuomatuo.search.base.Disruptor;
 
-import javafx.event.Event;
 import lombok.Data;
 
 /**

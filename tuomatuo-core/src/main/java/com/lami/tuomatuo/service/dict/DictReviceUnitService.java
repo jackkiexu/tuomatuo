@@ -6,6 +6,7 @@ import com.lami.tuomatuo.dao.dict.DictWordDaoInterface;
 import com.lami.tuomatuo.model.dict.DictReviewUnit;
 import com.lami.tuomatuo.model.dict.DictWord;
 import com.lami.tuomatuo.utils.DateUtils;
+import com.lami.tuomatuo.utils.uuid.UUIDFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -45,6 +46,13 @@ public class DictReviceUnitService extends BaseService<DictReviewUnit, Long> {
      */
     public void beginReviewUnit(Long userId, Long unitId){
         DictReviewUnit dictReviewUnit = new DictReviewUnit();
+        dictReviewUnit.setCreateTime(new Date());
+        dictReviewUnit.setEndTime(DateUtils.addDate(new Date(), 2));
+        dictReviewUnit.setHasReviewSum(0);
+        dictReviewUnit.setReviewOver(0);
+        dictReviewUnit.setReviewSum(0);
+        dictReviewUnit.setUnit(unitId);
+        dictReviewUnit.setUticket(UUIDFactory.shortUUID());
 
     }
 

@@ -3,7 +3,7 @@ package com.lami.tuomatuo.utils.uuid;
 import java.net.InetAddress;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class SimpleUUIDGenerator implements UUIDGenerator
+public class ShortUUIDGenerator implements UUIDGenerator
 {
 
     private static final int IP; // 本机ip地址(pad 后)
@@ -36,7 +36,7 @@ public class SimpleUUIDGenerator implements UUIDGenerator
     }
 
     private static int getJvmTime() {
-        return SimpleUUIDGenerator.JVM_TIME;
+        return ShortUUIDGenerator.JVM_TIME;
     }
 
     private static short getCount() {
@@ -45,7 +45,7 @@ public class SimpleUUIDGenerator implements UUIDGenerator
     }
 
     private static int getIP() {
-        return SimpleUUIDGenerator.IP;
+        return ShortUUIDGenerator.IP;
     }
     private static short getHighTime() {
         return (short) (System.currentTimeMillis() >>> 32);
