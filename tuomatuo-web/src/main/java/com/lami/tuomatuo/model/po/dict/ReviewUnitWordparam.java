@@ -10,4 +10,5 @@ import lombok.Data;
 public class ReviewUnitWordparam extends BaseParam {
     private Long unitId;
     private String word;
+    private String uTicket;
 }

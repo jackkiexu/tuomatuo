@@ -13,10 +13,7 @@ import com.lami.tuomatuo.utils.uuid.UUIDFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Created by xujiankang on 2016/8/23.
@@ -47,6 +44,22 @@ public class DictReviceUnitService extends BaseService<DictReviewUnit, Long> {
     }
 
     /**
+     * 获取用户所有 的 reviewUnit
+     * @param userId
+     * @return
+     */
+    public List<DictReviewUnit> getUserAllDictReviewUnit(Long userId, Long unit, String uTicket){
+        List<Object> parameters = new ArrayList<Object>();
+        parameters.add(userId);
+        parameters.add(unit);
+        parameters.add(uTicket);
+        parameters.add(new Date());
+
+        List<DictReviewUnit> dictReviewUnitList = dictReviewUnitDaoInterface.search("select * from dict_review_unit where userId = ? and unit = ? and uticket = ? and endTime > ? order by id desc", parameters);
+        return dictReviewUnitList;
+    }
+
+    /**
      * 用户开启自己的 reviewUnit
      * @param userId
      * @param unitId
@@ -73,6 +86,19 @@ public class DictReviceUnitService extends BaseService<DictReviewUnit, Long> {
         return dictReviewUnitDaoInterface.save(dictReviewUnit);
     }
 
+
+    public void processReviewUnit(DictReviewUnit dictReviewUnit){
+        /** 1. 根据 uTicket 获取对应的 DictReviewUnit
+         *  2. 获取第一个 wordAll 中的一个 word (随机)
+         *  3. 更新 DictReviewUnit 中的数据
+         */
+        LinkedList<String> list = GsonUtils.getLinkedListStringGson(dictReviewUnit.getWordAll());
+        Integer length = list.size();
+        Integer index = new Random().nextInt(length);
+        String keyWord = list.get(index);
+        list.remove(index);
+
+    }
 
 
 }

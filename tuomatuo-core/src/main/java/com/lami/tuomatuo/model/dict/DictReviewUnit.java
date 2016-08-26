@@ -16,6 +16,7 @@ public class DictReviewUnit implements java.io.Serializable {
     private Long id;
     private Long userId; //用户 ID
     private String uticket; // 进行单元测试的唯一标识
+    private String currentWord; // 当前复习到的词
     private String wordAll; // 所有的单词
     private Long unit; // 进行复习的单元
     private Integer reviewSum; // 将要复习的单词数

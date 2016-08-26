@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -26,7 +27,7 @@ public class DictWordService extends BaseService<DictWord, Long> {
     }
 
     public List<String> getUnitWordStr(Long unitId){
-        List<String> result = new ArrayList<String>();
+        List<String> result = new LinkedList<String>();
         List<DictWord> dictWordList = getUnitWord(unitId);
         for(DictWord dictWord : dictWordList){
             result.add(dictWord.getWord());
