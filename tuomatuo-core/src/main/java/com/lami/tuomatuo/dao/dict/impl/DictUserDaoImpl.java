@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 /**
  * Created by xujiankang on 2016/8/23.
  */
-@Repository("userDaoInterface")
+@Repository("dictUserDaoInterface")
 public class DictUserDaoImpl extends BaseDaoMysqlImpl<DictUser, Long> implements DictUserDaoInterface {
     public DictUserDaoImpl(){
         super(DictUser.class);
