@@ -56,7 +56,7 @@ public class DictReviewUnitController extends DictBaseController {
         Result result = execute(param);
         if (Result.SUCCESS != result.getStatus()) return result;
         DictUser dictUser = (DictUser)result.getValue();
-        DictReviewUnit dictReviewUnit = dictReviceUnitService.beginReviewUnit(dictUser.getId(), param.getUnitId());
+        DictReviewUnit dictReviewUnit = dictReviceUnitService.processReviewUnit(dictUser.getId(), param.getUnitId(), param.getUTicket());
         return new Result(Result.SUCCESS).setValue(dictReviewUnit);
     }
 }
