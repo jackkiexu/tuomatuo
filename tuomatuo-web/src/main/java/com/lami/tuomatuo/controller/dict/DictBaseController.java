@@ -33,7 +33,7 @@ public abstract class DictBaseController {
     protected abstract boolean checkAuth();
 
     protected  Result execute(BaseParam baseParam){
-        logger.info("baseParam:"+baseParam);
+        logger.info("Class" + getClass() + ", baseParam:"+baseParam);
         if (!checkAuth()) return new Result(Result.SUCCESS);
         if(!StringUtil.isMobile(baseParam.getMobile()) || StringUtil.isEmpty(baseParam.getSign())) return new Result(Result.PARAMCHECKERROR);
         DictUser user = dictUserService.getDictUserByMobile(baseParam.getMobile());

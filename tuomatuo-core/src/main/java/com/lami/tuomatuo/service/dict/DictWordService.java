@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -33,6 +34,15 @@ public class DictWordService extends BaseService<DictWord, Long> {
             result.add(dictWord.getWord());
         }
         return result;
+    }
+
+    public void addWordToUnit(String word, Long unitId){
+        DictWord dictWord = new DictWord();
+        dictWord.setUnit(unitId);
+        dictWord.setWord(word);
+        dictWord.setCreateTime(new Date());
+        dictWord.setUpdateTime(new Date());
+        dictWordDaoInterface.save(dictWord);
     }
 
 }

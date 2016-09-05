@@ -3,6 +3,7 @@ package com.lami.tuomatuo.controller.dict;
 import com.lami.tuomatuo.controller.BaseController;
 import com.lami.tuomatuo.model.base.Result;
 import com.lami.tuomatuo.model.po.crawler.CrawlerUIAccountParam;
+import com.lami.tuomatuo.model.po.dict.AddWordParam;
 import com.lami.tuomatuo.service.dict.DictWordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -31,11 +32,12 @@ public class DictWordController extends DictBaseController {
      * 用户查询自己的动态信息
      * @param httpServletRequest
      */
-    @RequestMapping(value = "/login.form")
+    @RequestMapping(value = "/addWordParam.form")
     @ResponseBody
-    public Result getDynamic(HttpServletRequest httpServletRequest, @RequestBody CrawlerUIAccountParam crawlerUIAccountParam){
-        Result result = execute(crawlerUIAccountParam);
+    public Result getDynamic(HttpServletRequest httpServletRequest, @RequestBody AddWordParam param){
+        Result result = execute(param);
         if (Result.SUCCESS != result.getStatus()) return result;
+        dictWordService.addWordToUnit(param.getWord(), param.getUnitId());
         return new Result(Result.SUCCESS).setValue("");
     }
 }
