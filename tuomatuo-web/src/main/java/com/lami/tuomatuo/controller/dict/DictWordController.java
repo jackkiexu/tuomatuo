@@ -29,7 +29,7 @@ public class DictWordController extends DictBaseController {
     }
 
     /**
-     * 用户查询自己的动态信息
+     * 添加单词
      * @param httpServletRequest
      */
     @RequestMapping(value = "/addWordParam.form")
