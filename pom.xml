@@ -13,6 +13,7 @@
         <module>tuomatuo-utils</module>
         <module>tuomatuo-core</module>
         <module>tuomatuo-search</module>
+        <module>tuomatuo-lbdatasource</module>
     </modules>
     <packaging>pom</packaging>
 </project>
