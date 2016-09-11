@@ -30,7 +30,7 @@ public class AddressDao extends JdbcDaoSupport{
     }
 
     public void save(final Address address){
-        final String sql = "insert into address(userId, cityId values (?,?))";
+        final String sql = "insert into address(userId, city) values (?,?)";
         KeyHolder generatedHolder = new GeneratedKeyHolder();
         getJdbcTemplate().update(new PreparedStatementCreator() {
             public PreparedStatement createPreparedStatement(Connection con) throws SQLException {

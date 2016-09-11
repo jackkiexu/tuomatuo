@@ -91,7 +91,9 @@ public class ReadWriteDataSourceProcessor implements BeanPostProcessor {
             }
         }
 
-        Boolean isForceChoiceRead = readMethodMap.get(bestNameMatch);
+        if(bestNameMatch == null) return false;
+        Boolean isForceChoiceRead = this.readMethodMap.get(bestNameMatch);
+        if(isForceChoiceRead == null) return false;
         if(isForceChoiceRead == Boolean.TRUE){
             return false;
         }
