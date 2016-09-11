@@ -11,6 +11,9 @@ public class Address {
     private Integer userId;
     private String cityId;
 
+    public Address() {
+    }
+
     public Address(String cityId) {
         this.cityId = cityId;
     }

@@ -53,7 +53,7 @@ public class UserDao extends JdbcDaoSupport {
     }
 
     public User findById(int id){
-        String sql = "select Id, name, from user where id = ?";
+        String sql = "select Id, name from user where id = ?";
         List<User> userList = getJdbcTemplate().query(sql, rowMapper, id);
         if(userList.size() == 0){
             return new User();

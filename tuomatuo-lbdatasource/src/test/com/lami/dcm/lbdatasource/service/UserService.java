@@ -5,12 +5,13 @@ import com.lami.dcm.lbdatasource.model.Address;
 import com.lami.dcm.lbdatasource.model.User;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 /**
  * Created by xjk on 9/10/16.
  */
-@Service
+@Service("lbUserService")
 public class UserService {
 
     @Autowired
