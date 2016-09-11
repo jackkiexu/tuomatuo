@@ -73,10 +73,10 @@ public class A {
         try {
             byte[] classContents = getClassContent();
 
-            Class c = getUnsafe().defineClass(
+            /*Class c = getUnsafe().defineClass(
               null, classContents, 0, classContents.length
             );
-            c.getMethod("a").invoke(c.newInstance(), null);
+            c.getMethod("a").invoke(c.newInstance(), null);*/
         } catch (Exception e) {
             e.printStackTrace();
         }

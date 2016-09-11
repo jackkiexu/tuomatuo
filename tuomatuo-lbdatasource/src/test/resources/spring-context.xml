@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+       ">
+
+       <!-- scan bean -->
+       <context:component-scan base-package="com.lami">
+              <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller";
+       </context:component-scan>
+
+       <context:property-placeholder location="resources.properties"></context:property-placeholder>
+
+       <bean id="readWriteDataSourceTransactionProcessor" class="com.lami.dcm.lbdatasource.ReadWriteDataSourceProcessor">
+              <property name="forceChoiceReadWhenWrite" value="false" />
+       </bean>
+
+       <bean id="readWriteDataSource" class="com.lami.dcm.lbdatasource.ReadWriteDataSource">
+              <property name="writeDataSource" ref="wDataSource"></property>
+              <property name="readDataSourceMap">
+                    <map>
+                           <entry key="rDataSource1" value-ref="rDataSource"></entry>
+                           <entry key="rDataSource2" value-ref="rDataSource"></entry>
+                           <entry key="rDataSource3" value-ref="rDataSource"></entry>
+                           <entry key="rDataSource4" value-ref="rDataSource"></entry>
+                           <entry key="rDataSource5" value-ref="rDataSource"></entry>
+                           <entry key="rDataSource6" value-ref="rDataSource"></entry>
+                    </map>
+              </property>
+       </bean>
+
+       <aop:config expose-proxy="true">
+              <aop:pointcut id="txPointCut" expression="execution(* com.lami.dcm.lbdatasource.service.*.*(..))"></aop:pointcut>
+              <aop:advisor advice-ref="txAdvice" pointcut-ref="txPointCut" />
+
+              <aop:aspect order="-2147483648" ref="readWriteDataSourceTransactionProcessor">
+                     <aop:around pointcut-ref="txPointCut" method="determineReadOrWriteDB"/>
+              </aop:aspect>
+       </aop:config>
+
+       <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+              <property name="dataSource" ref="readWriteDataSource"></property>
+       </bean>
+
+       <tx:advice id="txAdvice" transaction-manager="txManager">
+              <tx:attributes>
+                     <tx:method name="save*" propagation="REQUIRED" />
+                     <tx:method name="add*" propagation="REQUIRED" />
+                     <tx:method name="create*" propagation="REQUIRED" />
+                     <tx:method name="insert*" propagation="REQUIRED" />
+                     <tx:method name="update*" propagation="REQUIRED" />
+                     <tx:method name="merge*" propagation="REQUIRED" />
+                     <tx:method name="del*" propagation="REQUIRED" />
+                     <tx:method name="remove*" propagation="REQUIRED" />
+
+                     <tx:method name="put*" read-only="true"/>
+                     <tx:method name="query*" read-only="true"/>
+                     <tx:method name="use*" read-only="true"/>
+                     <tx:method name="get*" read-only="true" />
+                     <tx:method name="count*" read-only="true" />
+                     <tx:method name="find*" read-only="true" />
+                     <tx:method name="list*" read-only="true" />
+
+                     <tx:method name="*" propagation="REQUIRED"/>
+              </tx:attributes>
+       </tx:advice>
+
+       <bean id="wDataSource" class="org.apache.commons.dbcp.BasicDataSource">
+              <property name="driverClassName" value="${write.connection.driver_class}"/>
+              <property name="url" value="${write.connection.url}"/>
+              <property name="username" value="${write.connection.username}"/>
+              <property name="password" value="${write.connection.password}"/>
+              <property name="maxActive" value="100"/>
+              <property name="maxIdle" value="30"/>
+              <property name="maxWait" value="10000"/>
+              <property name="minIdle" value="10" />
+              <property name="testOnBorrow" value="true"/>
+              <property name="testWhileIdle" value="true"/>
+              <property name="validationQuery">
+                     <value>select 1 from dual</value>
+              </property>
+       </bean>
+
+       <bean id="rDataSource" class="org.apache.commons.dbcp.BasicDataSource">
+              <property name="driverClassName" value="${write.connection.driver_class}"/>
+              <property name="url" value="${write.connection.url}"/>
+              <property name="username" value="${write.connection.username}"/>
+              <property name="password" value="${write.connection.password}"/>
+              <property name="maxActive" value="100"/>
+              <property name="maxIdle" value="30"/>
+              <property name="maxWait" value="10000"/>
+              <property name="minIdle" value="10" />
+              <property name="testOnBorrow" value="true"/>
+              <property name="testWhileIdle" value="true"/>
+              <property name="validationQuery">
+                     <value>select 1 from dual</value>
+              </property>
+       </bean>
+
+</beans>

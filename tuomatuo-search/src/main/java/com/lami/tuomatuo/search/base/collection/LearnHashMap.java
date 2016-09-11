@@ -228,9 +228,9 @@ import java.util.*;
                     (capacity >= Holder.ALTERNATIVE_HASHING_THRESHOLD);
             boolean switching = currentAltHashing ^ useAltHashing;
             if (switching) {
-                hashSeed = useAltHashing
-                        ? sun.misc.Hashing.randomHashSeed(this)
-                        : 0;
+//                hashSeed = useAltHashing
+//                        ? sun.misc.Hashing.randomHashSeed(this)
+//                        : 0;
             }
             return switching;
         }
@@ -245,7 +245,7 @@ import java.util.*;
         public final int hash(Object k) {
             int h = hashSeed;
             if (0 != h && k instanceof String) {
-                return sun.misc.Hashing.stringHash32((String) k);
+                return 1;
             }
 
             h ^= k.hashCode();

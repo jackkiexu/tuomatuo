@@ -1,4 +1,4 @@
-package com.manyi.dcm.lbdatasource;
+package com.lami.dcm.lbdatasource;
 
 /**
  * Created by xujiankang on 2016/9/9.

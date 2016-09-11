@@ -1,4 +1,4 @@
-package com.manyi.dcm.lbdatasource;
+package com.lami.dcm.lbdatasource;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;

@@ -367,7 +367,7 @@
         </dependency>
     </dependencies>
 
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
 
 
 </project>

@@ -1,4 +1,4 @@
-package com.manyi.dcm.lbdatasource;
+package com.lami.dcm.lbdatasource;
 
 import org.apache.log4j.Logger;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -13,7 +13,6 @@ import org.springframework.util.PatternMatchUtils;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
