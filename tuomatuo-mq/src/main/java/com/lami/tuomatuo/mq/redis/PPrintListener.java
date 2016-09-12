@@ -1,6 +1,7 @@
 package com.lami.tuomatuo.mq.redis;
 
 import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.log4j.Logger;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
@@ -10,6 +11,8 @@ import java.util.Date;
  * Created by xujiankang on 2016/9/12.
  */
 public class PPrintListener extends JedisPubSub{
+
+    private static final Logger logger = Logger.getLogger(PPrintListener.class);
 
     private String clientId;
     private PSubHandler handler;
@@ -30,38 +33,38 @@ public class PPrintListener extends JedisPubSub{
 
     private void message(String channel,String message){
         String time = DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss");
-        System.out.println("message receive:" + message + ",channel:" + channel + "..." + time);
+        logger.info("message receive:" + message + ",channel:" + channel + "..." + time);
     }
 
     @Override
     public void onPMessage(String pattern, String channel, String message) {
-        System.out.println("message receive:" + message + ",pattern channel:" + channel);
+        logger.info("message receive:" + message + ",pattern channel:" + channel);
 
     }
 
     @Override
     public void onSubscribe(String channel, int subscribedChannels) {
         handler.subscribe(channel);
-        System.out.println("subscribe:" + channel + ";total channels : " + subscribedChannels);
+        logger.info("subscribe:" + channel + ";total channels : " + subscribedChannels);
 
     }
 
     @Override
     public void onUnsubscribe(String channel, int subscribedChannels) {
         handler.unsubscribe(channel);
-        System.out.println("unsubscribe:" + channel + ";total channels : " + subscribedChannels);
+        logger.info("unsubscribe:" + channel + ";total channels : " + subscribedChannels);
 
     }
 
     @Override
     public void onPUnsubscribe(String pattern, int subscribedChannels) {
-        System.out.println("unsubscribe pattern:" + pattern + ";total channels : " + subscribedChannels);
+        logger.info("unsubscribe pattern:" + pattern + ";total channels : " + subscribedChannels);
 
     }
 
     @Override
     public void onPSubscribe(String pattern, int subscribedChannels) {
-        System.out.println("subscribe pattern:" + pattern + ";total channels : " + subscribedChannels);
+        logger.info("subscribe pattern:" + pattern + ";total channels : " + subscribedChannels);
     }
 
     @Override

@@ -22,7 +22,11 @@ public class PPubClient {
         //期望这个集合不要太大
         Set<String> subClients = jedis.smembers(Constants.SUBSCRIBE_CENTER);
         for(String clientKey : subClients){
-            jedis.rpush(clientKey, message);
+            try {
+                jedis.rpush(clientKey, message);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -33,7 +37,11 @@ public class PPubClient {
         String content = txid + "/" + message;
         //非事务
         this.put(content);
-        jedis.publish(channel, content);//为每个消息设定id，最终消息格式1000/messageContent
+        try {
+            jedis.publish(channel, content);//为每个消息设定id，最终消息格式1000/messageContent
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 
