@@ -12,17 +12,14 @@
        ">
 
        <!-- scan bean -->
-       <context:component-scan base-package="com.lami.dcm.lbdatasource">
-              <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"></context:exclude-filter>
-       </context:component-scan>
+       <context:component-scan base-package="com.lami.dcm.lbdatasource" />
+       <context:property-placeholder location="classpath:resources.properties"></context:property-placeholder>
 
-       <context:property-placeholder location="resources.properties"></context:property-placeholder>
-
-       <bean id="readWriteDataSourceTransactionProcessor" class="com.lami.dcm.lbdatasource.ReadWriteDataSourceProcessor">
+       <bean id="readWriteDataSourceTransactionProcessor" class="com.lami.dcm.lbdatasource.DataSourceProcessor">
               <property name="forceChoiceReadWhenWrite" value="false" />
        </bean>
 
-       <bean id="readWriteDataSource" class="com.lami.dcm.lbdatasource.ReadWriteDataSource">
+       <bean id="readWriteDataSource" class="com.lami.dcm.lbdatasource.DataSourcePool">
               <property name="writeDataSource" ref="wDataSource"></property>
               <property name="readDataSourceMap">
                     <map>
