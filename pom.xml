@@ -14,6 +14,7 @@
         <module>tuomatuo-core</module>
         <module>tuomatuo-search</module>
         <module>tuomatuo-lbdatasource</module>
+        <module>tuomatuo-mq</module>
     </modules>
     <packaging>pom</packaging>
 </project>
