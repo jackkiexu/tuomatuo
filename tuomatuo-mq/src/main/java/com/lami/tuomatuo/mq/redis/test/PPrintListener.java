@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.mq.redis;
+package com.lami.tuomatuo.mq.redis.test;
 
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.log4j.Logger;

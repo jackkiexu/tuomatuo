@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.mq.redis;
+package com.lami.tuomatuo.mq.redis.test;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;

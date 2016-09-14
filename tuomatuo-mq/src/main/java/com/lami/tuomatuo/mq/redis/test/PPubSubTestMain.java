@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.mq.redis;
+package com.lami.tuomatuo.mq.redis.test;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.log4j.Logger;
@@ -30,11 +30,11 @@ public class PPubSubTestMain {
         subThread.setDaemon(true);
         subThread.start();
         int i = 0;
-        while(i < 999999){
+        while(i < 99999999999l){
             String message = RandomStringUtils.random(64, true, true);//apache-commons
             pubClient.pub(channel, message);
             i++;
-            Thread.sleep(1000);
+            Thread.sleep(10);
         }
         subClient.unsubscribe(channel);
     }
