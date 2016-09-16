@@ -16,6 +16,9 @@ public class PPrintListener extends JedisPubSub{
 
     private String clientId;
     private PSubHandler handler;
+    // TODO heartbeat ＋ reconnect
+    // TODO pipleline tohandler message
+    // TODO factory produce the variety handler
 
     public PPrintListener(String clientId,Jedis jedis){
         this.clientId = clientId;
@@ -89,6 +92,7 @@ public class PPrintListener extends JedisPubSub{
             Long txid = Long.valueOf(message.substring(0,index));
             String key = clientId + "/" + channel;
             while(true){
+
                 String lm = jedis.lindex(key, 0);//获取第一个消息
                 if(lm == null){
                     break;

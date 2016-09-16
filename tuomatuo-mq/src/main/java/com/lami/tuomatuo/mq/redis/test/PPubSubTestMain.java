@@ -27,6 +27,7 @@ public class PPubSubTestMain {
 
             }
         });
+        new PSubClient(Constants.host, Constants.port,"subClient-1");
         subThread.setDaemon(true);
         subThread.start();
         int i = 0;

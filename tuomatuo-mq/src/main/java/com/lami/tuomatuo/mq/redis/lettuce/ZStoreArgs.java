@@ -15,8 +15,18 @@ public class ZStoreArgs {
     private Aggregate aggregate;
 
     public static class Builder{
-        public static SortArgs by(String pattern) { return new SortArgs().by(pattern);}
-//        public static SortArgs limit(long offset, long count) { return }
+        public static ZStoreArgs weights(long...weights){
+            return new ZStoreArgs().weights(weights);
+        }
+        public static ZStoreArgs sum(){
+            return new ZStoreArgs().sum();
+        }
+        public static ZStoreArgs min(){
+            return new ZStoreArgs().min();
+        }
+        public static ZStoreArgs max(){
+            return new ZStoreArgs().max();
+        }
     }
 
     public ZStoreArgs weights(long...weights){
@@ -41,7 +51,5 @@ public class ZStoreArgs {
         aggregate = Aggregate.MAX;
         return this;
     }
-
-
 
 }
