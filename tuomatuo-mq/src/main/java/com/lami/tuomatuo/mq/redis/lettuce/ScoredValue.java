@@ -3,12 +3,12 @@ package com.lami.tuomatuo.mq.redis.lettuce;
 /**
  * Created by xjk on 9/16/16.
  */
-public class ScoreValue<V> {
+public class ScoredValue<V> {
 
     public double score;
     public V value;
 
-    public ScoreValue(double score, V value) {
+    public ScoredValue(double score, V value) {
         this.score = score;
         this.value = value;
     }
@@ -18,7 +18,7 @@ public class ScoreValue<V> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ScoreValue<?> that = (ScoreValue<?>) o;
+        ScoredValue<?> that = (ScoredValue<?>) o;
 
         if (Double.compare(that.score, score) != 0) return false;
         return !(value != null ? !value.equals(that.value) : that.value != null);

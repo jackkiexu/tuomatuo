@@ -1,6 +1,8 @@
 package com.lami.tuomatuo.mq.redis.lettuce;
 
 import com.lambdaworks.redis.SortArgs;
+import com.lami.tuomatuo.mq.redis.lettuce.protocol.CommandArgs;
+import com.lami.tuomatuo.mq.redis.lettuce.protocol.CommandKeyword;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +52,30 @@ public class ZStoreArgs {
     public ZStoreArgs max(){
         aggregate = Aggregate.MAX;
         return this;
+    }
+
+    <K, V> void build(CommandArgs<K, V> args){
+        if(weights != null){
+            args.add(CommandKeyword.WEIGHTS);
+            for(long weight : weights){
+                args.add(weight);
+            }
+
+            if(aggregate != null){
+                args.add(CommandKeyword.AGGREGATE);
+                switch (aggregate){
+                    case SUM:
+                        args.add(CommandKeyword.SUM);
+                        break;
+                    case MIN:
+                        args.add(CommandKeyword.MIN);
+                        break;
+                    case MAX:
+                        args.add(CommandKeyword.MAX);
+                        break;
+                }
+            }
+        }
     }
 
 }
