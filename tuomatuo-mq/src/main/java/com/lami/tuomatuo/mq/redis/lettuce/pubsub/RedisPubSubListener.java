@@ -29,6 +29,13 @@ public interface RedisPubSubListener<V> {
     void subscribed(String channel, long count);
 
     /**
+     * unsubscribed from a channel
+     * @param channel
+     * @param count
+     */
+    void unsubscribed(String channel, long count);
+
+    /**
      * Unsubscribed from a channel
      * @param pattern
      * @param count

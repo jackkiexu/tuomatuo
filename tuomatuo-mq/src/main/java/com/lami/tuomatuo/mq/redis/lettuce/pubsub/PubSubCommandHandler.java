@@ -22,10 +22,12 @@ public class PubSubCommandHandler<K, V> extends CommandHandler {
      *
      * @param queue
      */
-    public PubSubCommandHandler(BlockingQueue<Command<?>> queue) {
+    public PubSubCommandHandler(BlockingQueue<Command<?>> queue, RedisCodec<K, V> codec) {
         super(queue);
         this.codec = codec;
     }
+
+
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ChannelBuffer buffer) throws InterruptedException {
