@@ -26,14 +26,12 @@ public class CommandHandler extends SimpleChannelHandler {
 
     @Override
     public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        super.channelOpen(ctx, e);
         buffer = ChannelBuffers.dynamicBuffer(ctx.getChannel().getConfig().getBufferFactory());
         rsm = new RedisStateMachine();
     }
 
     @Override
     public void writeRequested(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-        super.writeRequested(ctx, e);
         Command cmd = (Command) e.getMessage();
         Channel channel = ctx.getChannel();
         ChannelBuffer buf = ChannelBuffers.dynamicBuffer(channel.getConfig().getBufferFactory());
@@ -43,7 +41,6 @@ public class CommandHandler extends SimpleChannelHandler {
 
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-        super.messageReceived(ctx, e);
         ChannelBuffer input = (ChannelBuffer)e.getMessage();
         if(!input.readable()) return;
 

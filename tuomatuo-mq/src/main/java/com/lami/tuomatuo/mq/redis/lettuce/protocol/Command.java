@@ -101,30 +101,30 @@ public class Command<T> implements Future<T> {
         buf.writeBytes(CRLF);
         buf.writeBytes(type.bytes);
         buf.writeBytes(CRLF);
-        if(args != null){
+        if (args != null) {
             buf.writeBytes(args.buffer());
         }
     }
 
     protected static void writeInt(ChannelBuffer buf, int value){
-        if(value >= 0 && value <= 9){
+        if (value >= 0 && value <= 9) {
             buf.writeByte('0' + value);
             return;
         }
 
-        if(value < 0){
+        if (value < 0) {
             value = -value;
             buf.writeByte('-');
         }
 
         StringBuilder sb = new StringBuilder(8);
-        while(value > 0){
+        while (value > 0) {
             int digit = value % 10;
-            sb.append((char)('0' + digit));
+            sb.append((char) ('0' + digit));
             value /= 10;
         }
 
-        for(int i = sb.length() - 1; i >= 0; i--){
+        for (int i = sb.length() - 1; i >= 0; i--) {
             buf.writeByte(sb.charAt(i));
         }
     }

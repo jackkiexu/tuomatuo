@@ -929,12 +929,9 @@ public class RedisConnection<K, V> extends SimpleChannelUpstreamHandler {
             if (channel != null) {
                 channel.write(cmd);
             }
-        } catch (NullPointerException e) {
-            throw new RedisException("Connection is closed");
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             throw new RedisCommandInterruptedException(e);
         }
-
         return cmd;
     }
 

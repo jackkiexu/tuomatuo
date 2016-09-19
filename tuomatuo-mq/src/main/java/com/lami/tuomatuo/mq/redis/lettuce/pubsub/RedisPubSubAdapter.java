@@ -19,6 +19,10 @@ public class RedisPubSubAdapter<V> implements RedisPubSubListener<V> {
 
     }
 
+    public void unsubscribed(String channel, long count) {
+
+    }
+
     public void psubscribed(String pattern, long count) {
 
     }

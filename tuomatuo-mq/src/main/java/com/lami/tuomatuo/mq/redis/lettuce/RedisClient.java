@@ -2,6 +2,7 @@ package com.lami.tuomatuo.mq.redis.lettuce;
 
 
 import com.lami.tuomatuo.mq.redis.lettuce.codec.RedisCodec;
+import com.lami.tuomatuo.mq.redis.lettuce.codec.Utf8StringCodec;
 import com.lami.tuomatuo.mq.redis.lettuce.protocol.Command;
 import com.lami.tuomatuo.mq.redis.lettuce.protocol.CommandHandler;
 import com.lami.tuomatuo.mq.redis.lettuce.protocol.ConnectionWatchdog;
@@ -50,7 +51,7 @@ public class RedisClient {
         InetSocketAddress addr = new InetSocketAddress(host, port);
         bootstrap = new ClientBootstrap(factory);
         bootstrap.setOption("remoteAddress", addr);
-        setDefaultTimeout(60, TimeUnit.SECONDS);
+        setDefaultTimeout(5, TimeUnit.SECONDS);
 
         channels = new DefaultChannelGroup();
         timer = new HashedWheelTimer();
@@ -65,6 +66,16 @@ public class RedisClient {
         this.timeout = timeout;
         this.unit = unit;
         bootstrap.setOption("connectTimeoutMillis", unit.toMillis(timeout));
+    }
+
+    /**
+     * Open a new connection to the redis server that redis treats all keys and
+     * values as UTF-8 strings
+     *
+     * @return
+     */
+    public RedisConnection<String, String> connect(){
+        return connect(new Utf8StringCodec());
     }
 
     public <K, V> RedisConnection<K, V> connect(RedisCodec<K, V> codec){
@@ -93,9 +104,27 @@ public class RedisClient {
         }
     }
 
+    /**
+     * Open a new pub/sub connection to the redis server that treats all keys
+     * and values as UTF-8 strings
+     * @return
+     */
+    public RedisPubSubConnection<String, String> connectPubSub(){
+        return connectPubSub(new Utf8StringCodec());
+    }
+
+    /**
+     * Open a new pub/sub connection to the redis server. Use the supplied
+     * {@link RedisCodec codec} to encode/decode keys and values
+     *
+     * @param codec
+     * @param <K>
+     * @param <V>
+     * @return
+     */
     public <K, V> RedisPubSubConnection<K, V> connectPubSub(RedisCodec<K, V> codec){
         try {
-            BlockingQueue<Command<?>> queue = new LinkedBlockingDeque<Command<?>>();
+            BlockingQueue<Command<?>> queue = new LinkedBlockingQueue<Command<?>>();
 
             ConnectionWatchdog watchdog = new ConnectionWatchdog(bootstrap, channels, timer);
             PubSubCommandHandler<K, V> handler = new PubSubCommandHandler<K, V>(queue, codec);
@@ -104,12 +133,13 @@ public class RedisClient {
             ChannelPipeline pipeline = Channels.pipeline(watchdog, handler, connection);
             Channel channel = bootstrap.getFactory().newChannel(pipeline);
 
-            ChannelFuture future = channel.connect((SocketAddress)bootstrap.getOption("remoteAddress"));
+            ChannelFuture future = channel.connect((SocketAddress) bootstrap.getOption("remoteAddress"));
             future.await();
 
-            if(!future.isSuccess()){
+            if (!future.isSuccess()) {
                 throw future.getCause();
             }
+
             watchdog.setReconnect(true);
 
             return connection;

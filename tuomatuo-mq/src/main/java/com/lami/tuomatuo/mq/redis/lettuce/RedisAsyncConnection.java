@@ -19,6 +19,16 @@ public class RedisAsyncConnection<K, V> extends RedisConnection<K, V>{
     private RedisConnection<K, V> parent;
     private List<Command<?>> pipeline;
 
+    /**
+     * Initialize a new connection
+     * @param codec
+     * @param parent
+     */
+    public RedisAsyncConnection(RedisCodec<K, V> codec, RedisConnection<K, V> parent) {
+        super(null, codec, 0, null);
+        this.parent = parent;
+        this.pipeline = new ArrayList<Command<?>>();
+    }
 
     /**
      * Initialize a new connection.

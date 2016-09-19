@@ -1,5 +1,6 @@
 package com.lami.tuomatuo.mq.redis.lettuce.protocol;
 
+import com.lami.tuomatuo.mq.redis.lettuce.RedisConnection;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.group.ChannelGroup;
@@ -7,6 +8,7 @@ import org.jboss.netty.util.Timeout;
 import org.jboss.netty.util.Timer;
 import org.jboss.netty.util.TimerTask;
 
+import java.net.SocketAddress;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -32,6 +34,14 @@ public class ConnectionWatchdog extends SimpleChannelHandler implements TimerTas
     }
 
     @Override
+    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        channel = ctx.getChannel();
+        channels.add(channel);
+        attempts = 0;
+        ctx.sendUpstream(e);
+    }
+
+    @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         if(reconnect){
             if(attempts < 8) attempts++;
@@ -43,14 +53,18 @@ public class ConnectionWatchdog extends SimpleChannelHandler implements TimerTas
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-        super.exceptionCaught(ctx, e);
         ctx.getChannel().close();
     }
 
     public void run(Timeout timeout) throws Exception {
         ChannelPipeline old = channel.getPipeline();
         CommandHandler handler = old.get(CommandHandler.class);
+        RedisConnection connection = old.get(RedisConnection.class);
+        ChannelPipeline pipeline = Channels.pipeline(this, handler, connection);
 
-
+        Channel c = bootstrap.getFactory().newChannel(pipeline);
+        c.getConfig().setOptions(bootstrap.getOptions());
+        c.connect((SocketAddress)bootstrap.getOption("remoteAddress"));
     }
+
 }
