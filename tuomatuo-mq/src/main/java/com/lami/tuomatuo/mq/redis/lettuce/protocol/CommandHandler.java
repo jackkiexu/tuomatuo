@@ -1,5 +1,6 @@
 package com.lami.tuomatuo.mq.redis.lettuce.protocol;
 
+import org.apache.log4j.Logger;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.*;
@@ -11,6 +12,8 @@ import java.util.concurrent.BlockingQueue;
  * Created by xjk on 9/16/16.
  */
 public class CommandHandler extends SimpleChannelHandler {
+
+    protected Logger logger = Logger.getLogger(CommandHandler.class);
 
     protected BlockingQueue<Command<?>> queue;
     protected ChannelBuffer buffer;

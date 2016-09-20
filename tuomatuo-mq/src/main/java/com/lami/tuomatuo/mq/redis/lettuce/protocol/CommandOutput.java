@@ -2,12 +2,14 @@ package com.lami.tuomatuo.mq.redis.lettuce.protocol;
 
 import com.lami.tuomatuo.mq.redis.lettuce.RedisException;
 import com.lami.tuomatuo.mq.redis.lettuce.codec.RedisCodec;
+import lombok.Data;
 
 import java.nio.ByteBuffer;
 
 /**
  * Created by xjk on 9/16/16.
  */
+@Data
 public abstract class CommandOutput<T> {
 
     protected RedisCodec<?, ?> codec;

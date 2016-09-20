@@ -3,6 +3,7 @@ package com.lami.tuomatuo.mq.redis.lettuce;
 import com.lami.tuomatuo.mq.redis.lettuce.codec.RedisCodec;
 import com.lami.tuomatuo.mq.redis.lettuce.output.*;
 import com.lami.tuomatuo.mq.redis.lettuce.protocol.*;
+import org.apache.log4j.Logger;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
@@ -29,6 +30,8 @@ import java.util.concurrent.TimeUnit;
  * Created by xjk on 9/17/16.
  */
 public class RedisConnection<K, V> extends SimpleChannelUpstreamHandler {
+
+    private Logger logger = Logger.getLogger(RedisConnection.class);
 
     protected BlockingQueue<Command<?>> queue;
     protected RedisCodec<K, V> codec;
@@ -891,11 +894,14 @@ public class RedisConnection<K, V> extends SimpleChannelUpstreamHandler {
 
         for (Command cmd : queue) {
             channel.write(cmd);
+            logger.info(cmd);
+//            new RuntimeException().printStackTrace();
         }
     }
 
     @Override
     public synchronized void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        logger.info("channelClosed " + closed);
         if (closed) {
             for (Command<?> cmd : queue) {
                 cmd.getOutput().setError("Connection closed");

@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.mq.test;
+package com.lami.tuomatuo.mq.redis;
 
 import com.lami.tuomatuo.mq.redis.lettuce.RedisClient;
 import com.lami.tuomatuo.mq.redis.lettuce.RedisConnection;

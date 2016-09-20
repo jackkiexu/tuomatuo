@@ -22,82 +22,99 @@ public class SortArgs {
     private boolean alpha;
 
     /**
-     * Static builder methods
+     * Static builder methods.
      */
-    public static class Builder{
-        public static SortArgs by(String pattern) { return new SortArgs().by(pattern); }
-        public static SortArgs limit(long offset, long count) { return new SortArgs().limit(offset, count); }
-        public static SortArgs get(String pattern) { return new SortArgs().get(pattern); }
-        public static SortArgs asc() { return new SortArgs().asc(); }
-        public static SortArgs desc() { return new SortArgs().desc(); }
-        public static SortArgs alpha() { return new SortArgs().alpha(); }
-    }
+    public static class Builder {
+        public static SortArgs by(String pattern) {
+            return new SortArgs().by(pattern);
+        }
 
+        public static SortArgs limit(long offset, long count) {
+            return new SortArgs().limit(offset, count);
+        }
+
+        public static SortArgs get(String pattern) {
+            return new SortArgs().get(pattern);
+        }
+
+        public static SortArgs asc() {
+            return new SortArgs().asc();
+        }
+
+        public static SortArgs desc() {
+            return new SortArgs().desc();
+        }
+
+        public static SortArgs alpha() {
+            return new SortArgs().alpha();
+        }
+    }
 
     public SortArgs by(String pattern) {
         by = pattern;
         return this;
     }
 
-    public SortArgs limit(long offset, long count){
+    public SortArgs limit(long offset, long count) {
         this.offset = offset;
-        this.count = count;
+        this.count  = count;
         return this;
     }
 
-    public SortArgs get(String pattern){
-        if(get == null){
+    public SortArgs get(String pattern) {
+        if (get == null) {
             get = new ArrayList<String>();
         }
         get.add(pattern);
         return this;
     }
 
-    public SortArgs asc(){
+    public SortArgs asc() {
         order = CommandKeyword.ASC;
         return this;
     }
 
-    public SortArgs desc(){
+    public SortArgs desc() {
         order = CommandKeyword.DESC;
         return this;
     }
 
-    public SortArgs alpha(){
+    public SortArgs alpha() {
         alpha = true;
         return this;
     }
 
-    <K, V> void build(CommandArgs<K, V> args, K store){
-        if(by != null){
+    <K, V> void build(CommandArgs<K, V> args, K store) {
+
+        if (by != null) {
             args.add(CommandKeyword.BY);
             args.add(by);
         }
-        if(get != null){
-            for(String pattern : get){
+
+        if (get != null) {
+            for (String pattern : get) {
                 args.add(CommandType.GET);
                 args.add(pattern);
             }
         }
 
-        if(offset != null){
+        if (offset != null) {
             args.add(CommandKeyword.LIMIT);
             args.add(offset);
             args.add(count);
         }
 
-        if(order != null){
+        if (order != null) {
             args.add(order);
         }
-        if(alpha){
+
+        if (alpha) {
             args.add(CommandKeyword.ALPHA);
         }
 
-        if(store != null){
+        if (store != null) {
             args.add(CommandKeyword.STORE);
             args.addKey(store);
         }
-
-
     }
 }

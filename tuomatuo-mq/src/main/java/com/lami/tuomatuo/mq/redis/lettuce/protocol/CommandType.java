@@ -60,7 +60,7 @@ public enum CommandType {
 
     public byte[] bytes;
 
-    CommandType() {
+    private CommandType() {
         bytes = name().getBytes();
     }
 }

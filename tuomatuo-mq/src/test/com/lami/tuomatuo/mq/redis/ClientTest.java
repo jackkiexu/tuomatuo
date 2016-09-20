@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.mq.test;
+package com.lami.tuomatuo.mq.redis;
 
 import com.lami.tuomatuo.mq.redis.lettuce.RedisException;
 import org.junit.Rule;

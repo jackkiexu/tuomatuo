@@ -43,42 +43,78 @@ public class RedisClient {
     private int timeout;
     private TimeUnit unit;
 
-    public RedisClient(String host, int port) {
-        ExecutorService connectors = Executors.newFixedThreadPool(1);
-        ExecutorService workers = Executors.newFixedThreadPool(1);
-        ClientSocketChannelFactory factory = new NioClientSocketChannelFactory(connectors, workers);
-
-        InetSocketAddress addr = new InetSocketAddress(host, port);
-        bootstrap = new ClientBootstrap(factory);
-        bootstrap.setOption("remoteAddress", addr);
-        setDefaultTimeout(5, TimeUnit.SECONDS);
-
-        channels = new DefaultChannelGroup();
-        timer = new HashedWheelTimer();
+    /**
+     * Create a new client that connects to the supplied host on the default port.
+     *
+     * @param host    Server hostname.
+     */
+    public RedisClient(String host) {
+        this(host, 6379);
     }
 
     /**
-     * Set the default timeout for connections created by this client
-     * @param timeout
-     * @param unit
+     * Create a new client that connects to the supplied host and port.
+     *
+     * @param host    Server hostname.
+     * @param port    Server port.
      */
-    public void setDefaultTimeout(int timeout, TimeUnit unit){
+    public RedisClient(String host, int port) {
+        ExecutorService connectors = Executors.newFixedThreadPool(1);
+        ExecutorService workers    = Executors.newCachedThreadPool();
+        ClientSocketChannelFactory factory = new NioClientSocketChannelFactory(connectors, workers);
+
+        InetSocketAddress addr = new InetSocketAddress(host, port);
+
+        bootstrap = new ClientBootstrap(factory);
+        bootstrap.setOption("remoteAddress", addr);
+
+        setDefaultTimeout(20, TimeUnit.SECONDS);
+
+        channels = new DefaultChannelGroup();
+        timer    = new HashedWheelTimer();
+    }
+
+    /**
+     * Set the default timeout for connections created by this client.
+     *
+     * @param timeout   Default connection timeout.
+     * @param unit      Unit of time for the timeout.
+     */
+    public void setDefaultTimeout(int timeout, TimeUnit unit) {
         this.timeout = timeout;
-        this.unit = unit;
+        this.unit    = unit;
         bootstrap.setOption("connectTimeoutMillis", unit.toMillis(timeout));
     }
 
     /**
-     * Open a new connection to the redis server that redis treats all keys and
-     * values as UTF-8 strings
+     * Open a new connection to the redis server that treats all keys and
+     * values as UTF-8 strings.
      *
-     * @return
+     * @return A new connection.
      */
-    public RedisConnection<String, String> connect(){
+    public RedisConnection<String, String> connect() {
         return connect(new Utf8StringCodec());
     }
 
-    public <K, V> RedisConnection<K, V> connect(RedisCodec<K, V> codec){
+    /**
+     * Open a new pub/sub connection to the redis server that treats all
+     * keys and values as UTF-8 strings.
+     *
+     * @return A new connection.
+     */
+    public RedisPubSubConnection<String, String> connectPubSub() {
+        return connectPubSub(new Utf8StringCodec());
+    }
+
+    /**
+     * Open a new connection to the redis server. Use the supplied
+     * {@link RedisCodec codec} to encode/decode keys and values.
+     *
+     * @param codec Use this codec to encode/decode keys and values.
+     *
+     * @return A new connection.
+     */
+    public <K, V> RedisConnection<K, V> connect(RedisCodec<K, V> codec) {
         try {
             BlockingQueue<Command<?>> queue = new LinkedBlockingQueue<Command<?>>();
 
@@ -105,24 +141,14 @@ public class RedisClient {
     }
 
     /**
-     * Open a new pub/sub connection to the redis server that treats all keys
-     * and values as UTF-8 strings
-     * @return
-     */
-    public RedisPubSubConnection<String, String> connectPubSub(){
-        return connectPubSub(new Utf8StringCodec());
-    }
-
-    /**
      * Open a new pub/sub connection to the redis server. Use the supplied
-     * {@link RedisCodec codec} to encode/decode keys and values
+     * {@link RedisCodec codec} to encode/decode keys and values.
      *
-     * @param codec
-     * @param <K>
-     * @param <V>
-     * @return
+     * @param codec Use this codec to encode/decode keys and values.
+     *
+     * @return A new pub/sub connection.
      */
-    public <K, V> RedisPubSubConnection<K, V> connectPubSub(RedisCodec<K, V> codec){
+    public <K, V> RedisPubSubConnection<K, V> connectPubSub(RedisCodec<K, V> codec) {
         try {
             BlockingQueue<Command<?>> queue = new LinkedBlockingQueue<Command<?>>();
 
@@ -133,6 +159,12 @@ public class RedisClient {
             ChannelPipeline pipeline = Channels.pipeline(watchdog, handler, connection);
             Channel channel = bootstrap.getFactory().newChannel(pipeline);
 
+            ChannelFuture bootFuture = bootstrap.connect();
+
+            boolean connectionB = bootFuture.getChannel().isConnected();
+
+
+            SocketAddress socketAddress = (SocketAddress) bootstrap.getOption("remoteAddress");
             ChannelFuture future = channel.connect((SocketAddress) bootstrap.getOption("remoteAddress"));
             future.await();
 
@@ -150,12 +182,12 @@ public class RedisClient {
 
     /**
      * Shutdown this client and close all open connections. The client should be
-     * discarded after shutdown
+     * discarded after calling shutdown.
      */
-    public void shutdown(){
-        for(Channel c : channels){
-            ChannelPipeline pipline = c.getPipeline();
-            RedisConnection connection = pipline.get(RedisConnection.class);
+    public void shutdown() {
+        for (Channel c : channels) {
+            ChannelPipeline pipeline = c.getPipeline();
+            RedisConnection connection = pipeline.get(RedisConnection.class);
             connection.close();
         }
         ChannelGroupFuture future = channels.close();

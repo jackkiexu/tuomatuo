@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.mq.test;
+package com.lami.tuomatuo.mq.redis;
 
 import com.lami.tuomatuo.mq.redis.lettuce.RedisClient;
 import com.lami.tuomatuo.mq.redis.lettuce.pubsub.RedisPubSubConnection;
@@ -53,8 +53,10 @@ public class PubSubCommandTest extends AbstractCommandTest implements RedisPubSu
         connection.close();
     }
 
-    @Test(timeout = 10000)
+    @Test(timeout = 999999)
     public void message() throws Exception{
+        redis.set("name", "nomoney");
+        String value = redis.get("name");
         pubsub.subscribe(channel);
         Long v = redis.publish(channel, message);
         logger.info("V:"+v);

@@ -2,6 +2,7 @@ package com.lami.tuomatuo.mq.redis.lettuce.protocol;
 
 import com.lami.tuomatuo.mq.redis.lettuce.RedisCommandInterruptedException;
 import com.lami.tuomatuo.mq.redis.lettuce.RedisException;
+import lombok.Data;
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import java.util.concurrent.*;
@@ -9,6 +10,7 @@ import java.util.concurrent.*;
 /**
  * Created by xjk on 9/16/16.
  */
+@Data
 public class Command<T> implements Future<T> {
 
     protected static final byte[] CRLF = "\r\n".getBytes();

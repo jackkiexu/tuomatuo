@@ -16,18 +16,18 @@ import java.util.LinkedList;
  */
 public class RedisStateMachine {
 
-    private static final ByteBuffer QUEUED = ByteBuffer.wrap("QUEUE".getBytes());
+    private static final ByteBuffer QUEUED = ByteBuffer.wrap("QUEUED".getBytes());
 
     static class State {
         enum Type { SINGLE, ERROR, INTEGER, BULK, MULTI, BYTES }
-        Type type = null;
-        int count = -1;
+        Type type  = null;
+        int  count = -1;
     }
 
     private LinkedList<State> stack;
 
     /**
-     * Initialize a new instance
+     * Initialize a new instance.
      */
     public RedisStateMachine() {
         stack = new LinkedList<State>();
@@ -35,114 +35,126 @@ public class RedisStateMachine {
 
     /**
      * Attempt to decode a redis response and return a flag indicating whether a complete
-     * response was read
-     * @param buffer
-     * @param output
-     * @return
+     * response was read.
+     *
+     * @param buffer    Buffer containing data from the server.
+     * @param output    Current command output.
+     *
+     * @return true if a complete response was read.
      */
-    public boolean decode(ChannelBuffer buffer, CommandOutput<?> output){
+    public boolean decode(ChannelBuffer buffer, CommandOutput<?> output) {
         int length, end;
         ByteBuffer bytes;
-        if(stack.isEmpty()) stack.add(new State());
+
+        if (stack.isEmpty()) {
+            stack.add(new State());
+        }
 
         loop:
-        while(!stack.isEmpty()){
+
+        while (!stack.isEmpty()) {
             State state = stack.peek();
 
-            if(state.type == null){
-                if(!buffer.readable()) break ;
+            if (state.type == null) {
+                if (!buffer.readable()) break;
                 state.type = readReplyType(buffer);
                 buffer.markReaderIndex();
             }
 
-            switch (state.type){
+            switch (state.type) {
                 case SINGLE:
-                    if((bytes = readLine(buffer)) == null) break loop;
-                    if(!QUEUED.equals(bytes)) output.set(bytes);
-                    break ;
+                    if ((bytes = readLine(buffer)) == null) break loop;
+                    if (!QUEUED.equals(bytes)) {
+                        output.set(bytes);
+                    }
+                    break;
                 case ERROR:
-                    if((bytes = readLine(buffer)) == null) break loop;
+                    if ((bytes = readLine(buffer)) == null) break loop;
                     output.setError(bytes);
-                    break ;
+                    break;
                 case INTEGER:
-                    if((end = findLineEnd(buffer)) == -1) break loop;
+                    if ((end = findLineEnd(buffer)) == -1) break loop;
                     output.set(readLong(buffer, buffer.readerIndex(), end));
-                    break ;
+                    break;
                 case BULK:
-                    if((end = findLineEnd(buffer)) == -1) break loop;
-                    length = (int)readLong(buffer, buffer.readerIndex(), end);
-                    if(length == -1){
+                    if ((end = findLineEnd(buffer)) == -1) break loop;
+                    length = (int) readLong(buffer, buffer.readerIndex(), end);
+                    if (length == -1) {
                         output.set(null);
-                    }else{
+                    } else {
                         state.type = State.Type.BYTES;
                         state.count = length + 2;
                         buffer.markReaderIndex();
                         continue loop;
                     }
-                    break ;
+                    break;
                 case MULTI:
-                    if(state.count == -1){
-                        if((end = findLineEnd(buffer)) == -1) break loop;
-                        length = (int)readLong(buffer, buffer.readerIndex(), end);
+                    if (state.count == -1) {
+                        if ((end = findLineEnd(buffer)) == -1) break loop;
+                        length = (int) readLong(buffer, buffer.readerIndex(), end);
+                        state.count = length;
                         buffer.markReaderIndex();
                     }
-                    if(state.count == -1){
+
+                    if (state.count == -1) {
                         output.set(null);
-                        break ;
-                    }else if(state.count == 0){
-                        break ;
-                    }else{
+                        break;
+                    } else if (state.count == 0) {
+                        break;
+                    } else {
                         state.count--;
                         stack.addFirst(new State());
                     }
                     continue loop;
                 case BYTES:
-                    if((bytes = readBytes(buffer, state.count)) == null) break loop;
+                    if ((bytes = readBytes(buffer, state.count)) == null) break loop;
                     output.set(bytes);
             }
+
             buffer.markReaderIndex();
             stack.remove();
             output.complete(stack.size());
         }
+
         return stack.isEmpty();
     }
 
-    private int findLineEnd(ChannelBuffer buffer){
+    private int findLineEnd(ChannelBuffer buffer) {
         int start = buffer.readerIndex();
-        int index = buffer.indexOf(start, buffer.writerIndex(), (byte)'\n');
-        return (index > 0 && buffer.getByte(index - 1) == '\r'?index:-1);
+        int index = buffer.indexOf(start, buffer.writerIndex(), (byte) '\n');
+        return (index > 0 && buffer.getByte(index - 1) == '\r') ? index : -1;
     }
 
-    private State.Type readReplyType(ChannelBuffer buffer){
-        switch (buffer.readByte()){
+    private State.Type readReplyType(ChannelBuffer buffer) {
+        switch (buffer.readByte()) {
             case '+': return State.Type.SINGLE;
             case '-': return State.Type.ERROR;
             case ':': return State.Type.INTEGER;
             case '$': return State.Type.BULK;
             case '*': return State.Type.MULTI;
-            default: throw new RedisException("Invalid first byte");
+            default:  throw new RedisException("Invalid first byte");
         }
     }
 
-    private long readLong(ChannelBuffer buffer, int start, int end){
+    private long readLong(ChannelBuffer buffer, int start, int end) {
         long value = 0;
 
         boolean negative = buffer.getByte(start) == '-';
-        int offset = negative? start + 1 : start;
-        while(offset < end - 1){
+        int offset = negative ? start + 1 : start;
+        while (offset < end - 1) {
             int digit = buffer.getByte(offset++) - '0';
             value = value * 10 - digit;
         }
-        if(!negative) value = -value;
-
+        if (!negative) value = -value;
         buffer.readerIndex(end + 1);
+
         return value;
     }
 
-    private ByteBuffer readLine(ChannelBuffer buffer){
+    private ByteBuffer readLine(ChannelBuffer buffer) {
         ByteBuffer bytes = null;
         int end = findLineEnd(buffer);
-        if(end > -1){
+        if (end > -1) {
             int start = buffer.readerIndex();
             bytes = buffer.toByteBuffer(start, end - start - 1);
             buffer.readerIndex(end + 1);
@@ -150,9 +162,9 @@ public class RedisStateMachine {
         return bytes;
     }
 
-    private ByteBuffer readBytes(ChannelBuffer buffer, int count){
+    private ByteBuffer readBytes(ChannelBuffer buffer, int count) {
         ByteBuffer bytes = null;
-        if(buffer.readableBytes() >= count){
+        if (buffer.readableBytes() >= count) {
             bytes = buffer.toByteBuffer(buffer.readerIndex(), count - 2);
             buffer.readerIndex(buffer.readerIndex() + count);
         }

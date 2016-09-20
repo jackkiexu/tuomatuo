@@ -1,6 +1,7 @@
 package com.lami.tuomatuo.mq.redis.lettuce.protocol;
 
 import com.lami.tuomatuo.mq.redis.lettuce.RedisConnection;
+import org.apache.log4j.Logger;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.group.ChannelGroup;
@@ -16,6 +17,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class ConnectionWatchdog extends SimpleChannelHandler implements TimerTask {
 
+    private Logger logger = Logger.getLogger(ConnectionWatchdog.class);
+
     private ClientBootstrap bootstrap;
     private Channel channel;
     private ChannelGroup channels;
@@ -23,18 +26,26 @@ public class ConnectionWatchdog extends SimpleChannelHandler implements TimerTas
     private boolean reconnect;
     private int attempts;
 
+    /**
+     * Create a new watchdog that adds to new connections to the supplied {@link ChannelGroup}
+     * and establishes a new {@link Channel} when disconnected, while reconnect is true.
+     *
+     * @param bootstrap Configuration for new channels.
+     * @param channels  ChannelGroup to add new channels to.
+     * @param timer     Timer used for delayed reconnect.
+     */
     public ConnectionWatchdog(ClientBootstrap bootstrap, ChannelGroup channels, Timer timer) {
         this.bootstrap = bootstrap;
-        this.channels = channels;
-        this.timer = timer;
+        this.channels  = channels;
+        this.timer     = timer;
     }
 
-    public void setReconnect(boolean reconnect){
+    public void setReconnect(boolean reconnect) {
         this.reconnect = reconnect;
     }
 
     @Override
-    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public synchronized void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         channel = ctx.getChannel();
         channels.add(channel);
         attempts = 0;
@@ -42,9 +53,11 @@ public class ConnectionWatchdog extends SimpleChannelHandler implements TimerTas
     }
 
     @Override
-    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        if(reconnect){
-            if(attempts < 8) attempts++;
+    public synchronized void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        logger.info("channelClosed");
+        if (reconnect) {
+            logger.info(attempts);
+            if (attempts < 8) attempts++;
             int timeout = 2 << attempts;
             timer.newTimeout(this, timeout, TimeUnit.MILLISECONDS);
         }
@@ -56,6 +69,15 @@ public class ConnectionWatchdog extends SimpleChannelHandler implements TimerTas
         ctx.getChannel().close();
     }
 
+    /**
+     * Reconnect to the remote address that the closed channel was connected to.
+     * This creates a new {@link ChannelPipeline} with the same handler instances
+     * contained in the old channel's pipeline.
+     *
+     * @param timeout Timer task handle.
+     *
+     * @throws Exception when reconnection fails.
+     */
     public void run(Timeout timeout) throws Exception {
         ChannelPipeline old = channel.getPipeline();
         CommandHandler handler = old.get(CommandHandler.class);
@@ -64,7 +86,7 @@ public class ConnectionWatchdog extends SimpleChannelHandler implements TimerTas
 
         Channel c = bootstrap.getFactory().newChannel(pipeline);
         c.getConfig().setOptions(bootstrap.getOptions());
-        c.connect((SocketAddress)bootstrap.getOption("remoteAddress"));
+        c.connect((SocketAddress) bootstrap.getOption("remoteAddress"));
     }
 
 }
