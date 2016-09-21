@@ -1,6 +1,7 @@
 package com.lami.tuomatuo.mq.redis;
 
 import com.lami.tuomatuo.mq.redis.lettuce.RedisClient;
+import com.lami.tuomatuo.mq.redis.lettuce.RedisException;
 import com.lami.tuomatuo.mq.redis.lettuce.pubsub.RedisPubSubConnection;
 import com.lami.tuomatuo.mq.redis.lettuce.pubsub.RedisPubSubListener;
 import org.junit.After;
@@ -36,11 +37,14 @@ public class PubSubCommandTest extends AbstractCommandTest implements RedisPubSu
         patterns = new LinkedBlockingDeque<String>();
         messages = new LinkedBlockingDeque<String>();
         counts = new LinkedBlockingDeque<Long>();
+        logger.info("openPubSubConnection complete");
     }
 
     @After
     public void closePubSubConnection() throws Exception{
+        logger.info("closePubSubConnection begin");
         pubsub.close();
+        logger.info("closePubSubConnection complete");
     }
 
     @Test
@@ -53,13 +57,22 @@ public class PubSubCommandTest extends AbstractCommandTest implements RedisPubSu
         connection.close();
     }
 
+    @Test(expected = RedisException.class)
+    public void close() throws Exception{
+        redis.set("name", "nomoney");
+        String v = redis.get("name");
+        logger.info("********************************************************************V:" + v);
+        redis.close();
+    }
+
     @Test(timeout = 999999)
     public void message() throws Exception{
-        redis.set("name", "nomoney");
-        String value = redis.get("name");
+/*        redis.set("name", "nomoney");
+        String value = redis.get("name");*/
         pubsub.subscribe(channel);
+//        assertEquals(channel, channels.take());
         Long v = redis.publish(channel, message);
-        logger.info("V:"+v);
+        logger.info("************************************************************************************************************************************************V:"+v);
     }
 
     // RedisPubSubListener implementation

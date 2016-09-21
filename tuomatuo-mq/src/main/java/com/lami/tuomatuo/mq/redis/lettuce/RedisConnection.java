@@ -3,11 +3,9 @@ package com.lami.tuomatuo.mq.redis.lettuce;
 import com.lami.tuomatuo.mq.redis.lettuce.codec.RedisCodec;
 import com.lami.tuomatuo.mq.redis.lettuce.output.*;
 import com.lami.tuomatuo.mq.redis.lettuce.protocol.*;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import org.jboss.netty.channel.*;
 
 import java.util.Date;
 import java.util.List;
@@ -29,7 +27,7 @@ import java.util.concurrent.TimeUnit;
  *
  * Created by xjk on 9/17/16.
  */
-public class RedisConnection<K, V> extends SimpleChannelUpstreamHandler {
+public class RedisConnection<K, V> extends SimpleChannelHandler {
 
     private Logger logger = Logger.getLogger(RedisConnection.class);
 
@@ -874,15 +872,16 @@ public class RedisConnection<K, V> extends SimpleChannelUpstreamHandler {
     @Override
     public synchronized void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         channel = ctx.getChannel();
-
         BlockingQueue<Command<?>> tmp = new LinkedBlockingQueue<Command<?>>();
 
-        if (password != null) {
+        if (!StringUtils.isEmpty(password)) {
+            logger.info("channelConnected going AUTH and send passwd");
             CommandArgs<K, V> args = new CommandArgs<K, V>(codec).add(password);
             tmp.put(new Command<String>(CommandType.AUTH, new StatusOutput(codec), args));
         }
 
         if (db != 0) {
+            logger.info("channelConnected going SELECT db number");
             CommandArgs<K, V> args = new CommandArgs<K, V>(codec).add(db);
             tmp.put(new Command<String>(CommandType.SELECT, new StatusOutput(codec), args));
         }
@@ -901,7 +900,7 @@ public class RedisConnection<K, V> extends SimpleChannelUpstreamHandler {
 
     @Override
     public synchronized void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        logger.info("channelClosed " + closed);
+        logger.info("RedisConnection channelClosed " + closed);
         if (closed) {
             for (Command<?> cmd : queue) {
                 cmd.getOutput().setError("Connection closed");
@@ -911,6 +910,20 @@ public class RedisConnection<K, V> extends SimpleChannelUpstreamHandler {
             queue = null;
             channel = null;
         }
+    }
+
+
+
+    @Override
+    public void writeRequested(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+        logger.info(" RedisConnection writeRequested");
+        super.writeRequested(ctx, e);
+    }
+
+    @Override
+    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+        logger.info(" RedisConnection messageReceived");
+        super.messageReceived(ctx, e);
     }
 
     public <T> Command<T> dispatch(CommandType type, CommandOutput<T> output) {

@@ -8,7 +8,7 @@ import org.jboss.netty.channel.*;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * A netty {@link org.jboss.netty.channel.ChannelHandler} responsible for writing redis
+ * A netty {@link org.jboss.netty.channel.ChannelHandler} responsible for encode/decode message for writing
  * Created by xjk on 9/16/16.
  */
 public class CommandHandler extends SimpleChannelHandler {
@@ -39,16 +39,25 @@ public class CommandHandler extends SimpleChannelHandler {
         Channel channel = ctx.getChannel();
         ChannelBuffer buf = ChannelBuffers.dynamicBuffer(channel.getConfig().getBufferFactory());
         cmd.encode(buf);
+        logger.info("CommandHandler writeRequested : " + cmd + " and content : " + new String(buf.copy().array()));
         Channels.write(ctx, e.getFuture(), buf);
     }
 
     @Override
+    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        logger.info("CommandHandler channelClosed");
+        super.channelClosed(ctx, e);
+    }
+
+    @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+        logger.info("CommandHandler messageReceived");
         ChannelBuffer input = (ChannelBuffer)e.getMessage();
         if(!input.readable()) return;
 
         buffer.discardReadBytes();;
         buffer.writeBytes(input);
+        logger.info("CommandHandler messageReceived : " + new String(buffer.array()));
         decode(ctx, buffer);
     }
 

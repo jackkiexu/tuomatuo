@@ -5,6 +5,8 @@ package com.lami.tuomatuo.mq.redis.lettuce.protocol;
  */
 
 import com.lami.tuomatuo.mq.redis.lettuce.RedisException;
+import lombok.Data;
+import org.apache.log4j.Logger;
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import java.nio.ByteBuffer;
@@ -15,9 +17,11 @@ import java.util.LinkedList;
  * <a href="http://redis.io/topics/protocol">Unfield Request protocol</>
  */
 public class RedisStateMachine {
+    private Logger logger = Logger.getLogger(RedisStateMachine.class);
 
     private static final ByteBuffer QUEUED = ByteBuffer.wrap("QUEUED".getBytes());
 
+    @Data
     static class State {
         enum Type { SINGLE, ERROR, INTEGER, BULK, MULTI, BYTES }
         Type type  = null;
@@ -46,6 +50,8 @@ public class RedisStateMachine {
         int length, end;
         ByteBuffer bytes;
 
+        logger.info("decode:"+stack);
+
         if (stack.isEmpty()) {
             stack.add(new State());
         }
@@ -54,7 +60,7 @@ public class RedisStateMachine {
 
         while (!stack.isEmpty()) {
             State state = stack.peek();
-
+            logger.info("state:"+state);
             if (state.type == null) {
                 if (!buffer.readable()) break;
                 state.type = readReplyType(buffer);
@@ -82,7 +88,7 @@ public class RedisStateMachine {
                     if (length == -1) {
                         output.set(null);
                     } else {
-                        state.type = State.Type.BYTES;
+                        state.type = RedisStateMachine.State.Type.BYTES;
                         state.count = length + 2;
                         buffer.markReaderIndex();
                         continue loop;
@@ -127,11 +133,11 @@ public class RedisStateMachine {
 
     private State.Type readReplyType(ChannelBuffer buffer) {
         switch (buffer.readByte()) {
-            case '+': return State.Type.SINGLE;
-            case '-': return State.Type.ERROR;
-            case ':': return State.Type.INTEGER;
-            case '$': return State.Type.BULK;
-            case '*': return State.Type.MULTI;
+            case '+': return RedisStateMachine.State.Type.SINGLE;
+            case '-': return RedisStateMachine.State.Type.ERROR;
+            case ':': return RedisStateMachine.State.Type.INTEGER;
+            case '$': return RedisStateMachine.State.Type.BULK;
+            case '*': return RedisStateMachine.State.Type.MULTI;
             default:  throw new RedisException("Invalid first byte");
         }
     }

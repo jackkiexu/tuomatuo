@@ -1,6 +1,7 @@
 package com.lami.tuomatuo.mq.redis.lettuce.protocol;
 
 import com.lami.tuomatuo.mq.redis.lettuce.codec.RedisCodec;
+import lombok.Data;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -175,4 +176,11 @@ public class CommandArgs<K, V> {
         this.buffer = buffer;
     }
 
+    @Override
+    public String toString() {
+        return "CommandArgs{" +
+                " buffer=" + buffer +
+                ", count=" + count +
+                '}';
+    }
 }

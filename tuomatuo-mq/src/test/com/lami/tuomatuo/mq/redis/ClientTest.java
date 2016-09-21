@@ -17,8 +17,7 @@ public class ClientTest extends AbstractCommandTest{
     public void close() throws Exception{
         redis.set("name", "nomoney");
         String v = redis.get("name");
-        logger.info("V:"+v);
-
+        logger.info("********************************************************************V:"+v);
         redis.close();
     }
 }

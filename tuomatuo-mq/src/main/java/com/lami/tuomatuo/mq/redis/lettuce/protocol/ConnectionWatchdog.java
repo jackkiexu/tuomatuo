@@ -53,8 +53,20 @@ public class ConnectionWatchdog extends SimpleChannelHandler implements TimerTas
     }
 
     @Override
+    public void writeRequested(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+        logger.info("ConnectionWatchdog writeRequested");
+        super.writeRequested(ctx, e);
+    }
+
+    @Override
+    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+        logger.info("ConnectionWatchdog messageReceived");
+        super.messageReceived(ctx, e);
+    }
+
+    @Override
     public synchronized void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        logger.info("channelClosed");
+        logger.info("ConnectionWatchdog channelClosed");
         if (reconnect) {
             logger.info(attempts);
             if (attempts < 8) attempts++;
