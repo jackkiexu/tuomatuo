@@ -65,21 +65,11 @@ public class PubSubCommandTest extends AbstractCommandTest implements RedisPubSu
         redis.close();
     }
 
-    @Test(timeout = 999999)
+    @Test(timeout = 5000)
     public void message() throws Exception{
-/*        redis.set("name", "nomoney");
-        String value = redis.get("name");*/
         pubsub.subscribe(channel);
-        logger.info("************************************sleep1 begin************************************************************************************************************V:");
-//        Thread.sleep(2000);
-        logger.info("************************************sleep1 end************************************************************************************************************V:");
-//        assertEquals(channel, channels.take());
+        redis.publish(channel, message);
 
-        Long v = redis.publish(channel, message);
-        logger.info("************************************sleep2 begin************************************************************************************************************V:");
-//        Thread.sleep(2000);
-        logger.info("************************************sleep2 end************************************************************************************************************V:");
-        logger.info("************************************************************************************************************************************************V:"+v);
     }
 
     // RedisPubSubListener implementation

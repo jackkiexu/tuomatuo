@@ -68,7 +68,7 @@ public class RedisClient {
         bootstrap = new ClientBootstrap(factory);
         bootstrap.setOption("remoteAddress", addr);
 
-        setDefaultTimeout(20, TimeUnit.SECONDS);
+        setDefaultTimeout(5, TimeUnit.SECONDS);
 
         channels = new DefaultChannelGroup();
         timer    = new HashedWheelTimer();
