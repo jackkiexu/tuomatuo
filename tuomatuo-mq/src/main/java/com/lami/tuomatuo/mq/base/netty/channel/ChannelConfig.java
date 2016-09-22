@@ -9,4 +9,16 @@ public interface ChannelConfig {
 
     void setOptions(Map<String, Object> options);
 
+    ChannelPiplineFactory getPipelineFactory();
+
+    void setPiplineFactory(ChannelPiplineFactory piplineFactory);
+
+    int getConnectTimeoutMillis();
+
+    void setConnectTimeoutMillis(int connectTimeoutMillis);
+
+    int getWriteTimeoutMillis();
+
+    void setWriteTimeoutMillis(int writeTimeoutMillis);
+
 }
