@@ -29,6 +29,11 @@ public class IntegerOutput extends CommandOutput {
         return value;
     }
 
+    @Override
+    public void set(long integer) {
+        value = integer;
+    }
+
     public void set(ByteBuffer bytes){
         value = null;
     }

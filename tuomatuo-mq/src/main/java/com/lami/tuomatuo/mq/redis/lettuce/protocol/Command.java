@@ -3,6 +3,7 @@ package com.lami.tuomatuo.mq.redis.lettuce.protocol;
 import com.lami.tuomatuo.mq.redis.lettuce.RedisCommandInterruptedException;
 import com.lami.tuomatuo.mq.redis.lettuce.RedisException;
 import lombok.Data;
+import org.apache.log4j.Logger;
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import java.util.concurrent.*;
@@ -10,7 +11,11 @@ import java.util.concurrent.*;
 /**
  * Created by xjk on 9/16/16.
  */
+
 public class Command<T> implements Future<T> {
+
+    private static Logger logger = Logger.getLogger(Command.class);
+
     protected static final byte[] CRLF = "\r\n".getBytes();
 
     protected final CommandType type;
@@ -129,6 +134,7 @@ public class Command<T> implements Future<T> {
      * Mark this command complete and notify all waiting threads.
      */
     public void complete() {
+        logger.info("complete : " + this );
         latch.countDown();
     }
 

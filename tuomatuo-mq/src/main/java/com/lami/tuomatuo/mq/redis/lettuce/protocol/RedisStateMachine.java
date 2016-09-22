@@ -5,6 +5,7 @@ package com.lami.tuomatuo.mq.redis.lettuce.protocol;
  */
 
 import com.lami.tuomatuo.mq.redis.lettuce.RedisException;
+import com.lami.tuomatuo.mq.redis.lettuce.output.PubSubOutput;
 import lombok.Data;
 import org.apache.log4j.Logger;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -51,7 +52,14 @@ public class RedisStateMachine {
         int length, end;
         ByteBuffer bytes;
 
-        logger.info("decode:"+stack);
+        if(output instanceof PubSubOutput){
+            StringBuilder temp = new StringBuilder();
+            for(byte b : buffer.array()){
+                temp.append(b+",");
+            }
+            logger.info("StringBuilder temp :" + temp);
+        }
+//        logger.info("decode:"+stack);
 
         if (stack.isEmpty()) {
             stack.add(new State());
@@ -60,89 +68,103 @@ public class RedisStateMachine {
         loop:
 
         while (!stack.isEmpty()) {
-            State state = stack.peek();
-            logger.info("state:"+state);
-            if (state.type == null) {
-                logger.info("buffer.readable():" + buffer.readable());
-                if (!buffer.readable()){
-                    break;
+            State state = null;
+            try {
+                state = stack.peek();
+//            logger.info("state:"+state);
+                if (state.type == null) {
+    //                logger.info("buffer.readable():" + buffer.readable());
+                    if (!buffer.readable()){
+                        break;
+                    }
+                    try {
+                        state.type = readReplyType(buffer);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+    //                logger.info("state:"+state);
+                    buffer.markReaderIndex();
                 }
-                try {
-                    state.type = readReplyType(buffer);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                logger.info("state:"+state);
-                buffer.markReaderIndex();
+            } catch (Exception e) {
+                e.printStackTrace();
+                logger.info(e.getMessage());
             }
 
-            switch (state.type) {
-                case SINGLE:
-                    bytes = readLine(buffer);
-                    logger.info("SINGLE bytes : " + bytes);
-                    if (bytes == null) {
-                        break loop;
-                    }
-                    if (!QUEUED.equals(bytes)) {
-                        output.set(bytes);
-                    }
-                    break;
-                case ERROR:
-                    bytes = readLine(buffer);
-                    if (bytes == null) {
-                        break loop;
-                    }
-                    output.setError(bytes);
-                    break;
-                case INTEGER:
-                    end = findLineEnd(buffer);
-                    if (end == -1) {
-                        break loop;
-                    }
-                    long readLong = readLong(buffer, buffer.readerIndex(), end);
-                    output.set(readLong);
-                    break;
-                case BULK:
-                    end = findLineEnd(buffer);
-                    if (end == -1){
-                        break loop;
-                    }
-                    length = (int) readLong(buffer, buffer.readerIndex(), end);
-                    if (length == -1) {
-                        output.set(null);
-                    } else {
-                        state.type = RedisStateMachine.State.Type.BYTES;
-                        state.count = length + 2;
-                        buffer.markReaderIndex();
-                        continue loop;
-                    }
-                    break;
-                case MULTI:
-                    if (state.count == -1) {
-                        if ((end = findLineEnd(buffer)) == -1) break loop;
+            try {
+                switch (state.type) {
+                    case SINGLE:
+                        bytes = readLine(buffer);
+    //                    logger.info("SINGLE bytes : " + bytes);
+                        if (bytes == null) {
+                            break loop;
+                        }
+                        if (!QUEUED.equals(bytes)) {
+                            output.set(bytes);
+                        }
+                        break;
+                    case ERROR:
+                        bytes = readLine(buffer);
+                        if (bytes == null) {
+                            break loop;
+                        }
+                        output.setError(bytes);
+                        break;
+                    case INTEGER:
+                        end = findLineEnd(buffer);
+                        if (end == -1) {
+                            break loop;
+                        }
+                        long readLong = readLong(buffer, buffer.readerIndex(), end);
+                        logger.info("readLong:"+readLong +", output:" + output);
+
+                        output.set(readLong);
+                        break;
+                    case BULK:
+                        end = findLineEnd(buffer);
+                        if (end == -1){
+                            break loop;
+                        }
                         length = (int) readLong(buffer, buffer.readerIndex(), end);
-                        state.count = length;
-                        buffer.markReaderIndex();
-                    }
+                        if (length == -1) {
+                            output.set(null);
+                        } else {
+                            state.type = State.Type.BYTES;
+                            state.count = length + 2;
+                            buffer.markReaderIndex();
+                            continue loop;
+                        }
+                        break;
+                    case MULTI:
+                        if (state.count == -1) {
+                            if ((end = findLineEnd(buffer)) == -1) break loop;
+                            length = (int) readLong(buffer, buffer.readerIndex(), end);
+                            state.count = length;
+                            buffer.markReaderIndex();
+                        }
 
-                    if (state.count == -1) {
-                        output.set(null);
-                        break;
-                    } else if (state.count == 0) {
-                        break;
-                    } else {
-                        state.count--;
-                        stack.addFirst(new State());
-                    }
-                    continue loop;
-                case BYTES:
-                    if ((bytes = readBytes(buffer, state.count)) == null) break loop;
-                    output.set(bytes);
+                        if (state.count == -1) {
+                            output.set(null);
+                            break;
+                        } else if (state.count == 0) {
+                            break;
+                        } else {
+                            state.count--;
+                            stack.addFirst(new State());
+                        }
+                        continue loop;
+                    case BYTES:
+                        if ((bytes = readBytes(buffer, state.count)) == null) break loop;
+                        output.set(bytes);
+                }
+                // Marks the current readerIndex in this buffer
+                buffer.markReaderIndex();
+                stack.remove();
+//            logger.info(output);
+                output.complete(stack.size());
+            } catch (Exception e) {
+                e.printStackTrace();
+                logger.info(e.getMessage());
             }
-            // Marks the current readerIndex in this buffer
-            buffer.markReaderIndex();
-            stack.remove();
-            output.complete(stack.size());
         }
         logger.info("output:"+output.get() + ", stack.isEmpty():"+stack);
         return stack.isEmpty();
@@ -157,7 +179,7 @@ public class RedisStateMachine {
             temp.append(b+",");
         }
         logger.info("StringBuilder temp :" + temp);
-        logger.info("findLineEnd readerIndex:"+start+ "writerIndex :" + buffer.writerIndex() + ", index:"+index +", buffer :" +buffer);
+//        logger.info("findLineEnd readerIndex:"+start+ "writerIndex :" + buffer.writerIndex() + ", index:"+index +", buffer :" +buffer);
         return (index > 0 && buffer.getByte(index - 1) == '\r') ? index : -1;
     }
 
@@ -174,15 +196,20 @@ public class RedisStateMachine {
 
     private long readLong(ChannelBuffer buffer, int start, int end) {
         long value = 0;
+        try {
+            value = 0;
 
-        boolean negative = buffer.getByte(start) == '-';
-        int offset = negative ? start + 1 : start;
-        while (offset < end - 1) {
-            int digit = buffer.getByte(offset++) - '0';
-            value = value * 10 - digit;
+            boolean negative = buffer.getByte(start) == '-';
+            int offset = negative ? start + 1 : start;
+            while (offset < end - 1) {
+                int digit = buffer.getByte(offset++) - '0';
+                value = value * 10 - digit;
+            }
+            if (!negative) value = -value;
+            buffer.readerIndex(end + 1);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        if (!negative) value = -value;
-        buffer.readerIndex(end + 1);
 
         return value;
     }
@@ -204,11 +231,11 @@ public class RedisStateMachine {
         ByteBuffer bytes = null;
         if (buffer.readableBytes() >= count) {
             bytes = buffer.toByteBuffer(buffer.readerIndex(), count - 2);
-            logger.info("toByteBuffer : " + new String(bytes.array()));
+//            logger.info("toByteBuffer : " + new String(bytes.array()));
 
             try {
                 ByteBuffer bytesT = buffer.toByteBuffer(buffer.readerIndex(), count );
-                logger.info("toByteBuffer : " + new String(bytesT.array()));
+//                logger.info("toByteBuffer : " + new String(bytesT.array()));
             } catch (Exception e) {
                 e.printStackTrace();
             }

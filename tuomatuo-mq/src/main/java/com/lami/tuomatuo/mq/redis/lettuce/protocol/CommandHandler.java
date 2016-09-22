@@ -69,9 +69,21 @@ public class CommandHandler extends SimpleChannelHandler {
     }
 
     protected void decode(ChannelHandlerContext ctx, ChannelBuffer buffer) throws InterruptedException{
-        while(!queue.isEmpty() && rsm.decode(buffer, queue.peek().getOutput())){
-            Command<?> cmd = queue.take();
-            cmd.complete();
+        try {
+            if(buffer.array()[0] == 58){
+                logger.info(new String(buffer.array()));
+            }
+            logger.info("queue: " + queue + ", queue() :" + queue.peek().getOutput().getClass());
+            boolean rsmDecode = rsm.decode(buffer, queue.peek().getOutput());
+            logger.info("queue.isEmpty() :" + queue.isEmpty() + ", rsmDecode:"+rsmDecode);
+
+            while(!queue.isEmpty() && rsmDecode){
+                Command<?> cmd = queue.take();
+                cmd.complete();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.info(e.getMessage());
         }
     }
 }

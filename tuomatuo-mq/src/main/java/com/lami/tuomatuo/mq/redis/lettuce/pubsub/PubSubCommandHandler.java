@@ -31,11 +31,14 @@ public class PubSubCommandHandler<K, V> extends CommandHandler {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ChannelBuffer buffer) throws InterruptedException {
-        logger.info("***************************************************messageReceived");
         logger.info("queue.isEmpty() *"+ queue.toString());
         while (!queue.isEmpty()) {
             CommandOutput<?> output = queue.peek().getOutput();
-            if (!rsm.decode(buffer, output)) return;
+            boolean rsmDecode = rsm.decode(buffer, output);
+            logger.info("rsmDecode:"+rsmDecode+", buffer:" + new String(buffer.array()));
+            if (!rsmDecode) {
+                return;
+            }
             queue.take().complete();
             if (output instanceof PubSubOutput) {
                 logger.info(output);
@@ -48,6 +51,6 @@ public class PubSubCommandHandler<K, V> extends CommandHandler {
             Channels.fireMessageReceived(ctx, output);
             output = new PubSubOutput<V>(codec);
         }
-        logger.info("messageReceived : " + new String(buffer.array()));
+        logger.info("PubSubOutput : " + new String(buffer.array()));
     }
 }

@@ -9,7 +9,6 @@ import java.nio.ByteBuffer;
 /**
  * Created by xjk on 9/16/16.
  */
-@Data
 public abstract class CommandOutput<T> {
 
     protected RedisCodec<?, ?> codec;
