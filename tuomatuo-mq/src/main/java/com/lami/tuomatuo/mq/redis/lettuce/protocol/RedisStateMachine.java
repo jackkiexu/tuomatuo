@@ -17,6 +17,7 @@ import java.util.LinkedList;
  * <a href="http://redis.io/topics/protocol">Unfield Request protocol</>
  */
 public class RedisStateMachine {
+
     private Logger logger = Logger.getLogger(RedisStateMachine.class);
 
     private static final ByteBuffer QUEUED = ByteBuffer.wrap("QUEUED".getBytes());
@@ -24,8 +25,8 @@ public class RedisStateMachine {
     @Data
     static class State {
         enum Type { SINGLE, ERROR, INTEGER, BULK, MULTI, BYTES }
-        Type type  = null;
-        int  count = -1;
+        Type type  = null; // msg type
+        int  count = -1; // msg total segement
     }
 
     private LinkedList<State> stack;
@@ -62,28 +63,50 @@ public class RedisStateMachine {
             State state = stack.peek();
             logger.info("state:"+state);
             if (state.type == null) {
-                if (!buffer.readable()) break;
-                state.type = readReplyType(buffer);
+                logger.info("buffer.readable():" + buffer.readable());
+                if (!buffer.readable()){
+                    break;
+                }
+                try {
+                    state.type = readReplyType(buffer);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                logger.info("state:"+state);
                 buffer.markReaderIndex();
             }
 
             switch (state.type) {
                 case SINGLE:
-                    if ((bytes = readLine(buffer)) == null) break loop;
+                    bytes = readLine(buffer);
+                    logger.info("SINGLE bytes : " + bytes);
+                    if (bytes == null) {
+                        break loop;
+                    }
                     if (!QUEUED.equals(bytes)) {
                         output.set(bytes);
                     }
                     break;
                 case ERROR:
-                    if ((bytes = readLine(buffer)) == null) break loop;
+                    bytes = readLine(buffer);
+                    if (bytes == null) {
+                        break loop;
+                    }
                     output.setError(bytes);
                     break;
                 case INTEGER:
-                    if ((end = findLineEnd(buffer)) == -1) break loop;
-                    output.set(readLong(buffer, buffer.readerIndex(), end));
+                    end = findLineEnd(buffer);
+                    if (end == -1) {
+                        break loop;
+                    }
+                    long readLong = readLong(buffer, buffer.readerIndex(), end);
+                    output.set(readLong);
                     break;
                 case BULK:
-                    if ((end = findLineEnd(buffer)) == -1) break loop;
+                    end = findLineEnd(buffer);
+                    if (end == -1){
+                        break loop;
+                    }
                     length = (int) readLong(buffer, buffer.readerIndex(), end);
                     if (length == -1) {
                         output.set(null);
@@ -116,18 +139,25 @@ public class RedisStateMachine {
                     if ((bytes = readBytes(buffer, state.count)) == null) break loop;
                     output.set(bytes);
             }
-
+            // Marks the current readerIndex in this buffer
             buffer.markReaderIndex();
             stack.remove();
             output.complete(stack.size());
         }
-
+        logger.info("output:"+output.get() + ", stack.isEmpty():"+stack);
         return stack.isEmpty();
     }
 
     private int findLineEnd(ChannelBuffer buffer) {
         int start = buffer.readerIndex();
+        // locate the first occurrence of the specified value in this buffer
         int index = buffer.indexOf(start, buffer.writerIndex(), (byte) '\n');
+        StringBuilder temp = new StringBuilder();
+        for(byte b : buffer.array()){
+            temp.append(b+",");
+        }
+        logger.info("StringBuilder temp :" + temp);
+        logger.info("findLineEnd readerIndex:"+start+ "writerIndex :" + buffer.writerIndex() + ", index:"+index +", buffer :" +buffer);
         return (index > 0 && buffer.getByte(index - 1) == '\r') ? index : -1;
     }
 
@@ -160,9 +190,11 @@ public class RedisStateMachine {
     private ByteBuffer readLine(ChannelBuffer buffer) {
         ByteBuffer bytes = null;
         int end = findLineEnd(buffer);
+        logger.info("buffer:" + buffer + ", readLine : end:" + end);
         if (end > -1) {
             int start = buffer.readerIndex();
             bytes = buffer.toByteBuffer(start, end - start - 1);
+            // set the readerIndex of this buffer
             buffer.readerIndex(end + 1);
         }
         return bytes;
@@ -172,6 +204,15 @@ public class RedisStateMachine {
         ByteBuffer bytes = null;
         if (buffer.readableBytes() >= count) {
             bytes = buffer.toByteBuffer(buffer.readerIndex(), count - 2);
+            logger.info("toByteBuffer : " + new String(bytes.array()));
+
+            try {
+                ByteBuffer bytesT = buffer.toByteBuffer(buffer.readerIndex(), count );
+                logger.info("toByteBuffer : " + new String(bytesT.array()));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             buffer.readerIndex(buffer.readerIndex() + count);
         }
         return bytes;

@@ -21,3 +21,4 @@ local.properties
 
 # Except .gitignore
 !.gitignore
+tuomatuo-mq/tuomatuo.log.2016-09-21

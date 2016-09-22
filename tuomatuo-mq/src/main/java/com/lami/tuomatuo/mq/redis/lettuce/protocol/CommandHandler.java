@@ -57,6 +57,13 @@ public class CommandHandler extends SimpleChannelHandler {
 
         buffer.discardReadBytes();;
         buffer.writeBytes(input);
+
+        StringBuilder temp = new StringBuilder();
+        for(byte b : buffer.array()){
+            temp.append(b+",");
+        }
+        logger.info("StringBuilder temp :" + temp);
+
         logger.info("CommandHandler messageReceived : " + new String(buffer.array()));
         decode(ctx, buffer);
     }
