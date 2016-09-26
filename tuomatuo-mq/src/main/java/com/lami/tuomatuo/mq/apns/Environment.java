@@ -10,8 +10,8 @@ public enum Environment {
     SANDBOX ("sandbox.push.apple.com"),
     PRODUCTION ("push.apple.com");
 
-    InetSocketAddress gateway;
-    InetSocketAddress feedback;
+    public InetSocketAddress gateway;
+    public InetSocketAddress feedback;
 
     Environment(String domain) {
         this.gateway = new InetSocketAddress("gateway." + domain, 2195);
