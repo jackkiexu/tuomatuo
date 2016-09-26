@@ -2,14 +2,19 @@ package com.lami.tuomatuo.mq.redis;
 
 import com.lami.tuomatuo.mq.redis.lettuce.RedisClient;
 import com.lami.tuomatuo.mq.redis.lettuce.RedisException;
+import com.lami.tuomatuo.mq.redis.lettuce.pubsub.RedisPubSubAdapter;
 import com.lami.tuomatuo.mq.redis.lettuce.pubsub.RedisPubSubConnection;
 import com.lami.tuomatuo.mq.redis.lettuce.pubsub.RedisPubSubListener;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.lang.Exception;
+import java.lang.Override;
+import java.lang.String;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static junit.framework.Assert.assertEquals;
 
@@ -70,6 +75,21 @@ public class PubSubCommandTest extends AbstractCommandTest implements RedisPubSu
         pubsub.subscribe(channel);
         redis.publish(channel, message);
 
+    }
+
+    @Test(timeout = 100)
+    public void adapter() throws Exception{
+        final BlockingQueue<String> localSubscriptions = new LinkedBlockingQueue<String>();
+        RedisPubSubAdapter<String> adapter = new RedisPubSubAdapter<String>(){
+            @Override
+            public void subscribed(String channel, long count) {
+                super.subscribed(channel, count);
+                localSubscriptions.add(channel);
+            }
+        };
+        pubsub.addListener(adapter);
+        pubsub.subscribe(channel);
+        assertEquals(channel, localSubscriptions.take());
     }
 
     // RedisPubSubListener implementation
