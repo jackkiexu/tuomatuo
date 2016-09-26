@@ -32,53 +32,146 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             new HashMap<String, DefaultChannelHandlerContext>();
 
 
-
     public void addFirst(String name, ChannelHandler handler) {
-
+        if (name2ctx.isEmpty()) {
+            init(name, handler);
+        } else {
+            checkDuplicatename(name);
+            DefaultChannelHandlerContext oldHead = head;
+            DefaultChannelHandlerContext newHead = new DefaultChannelHandlerContext(null, oldHead, name, handler);
+            oldHead.prev = newHead;
+            head = newHead;
+            name2ctx.put(name, newHead);
+        }
     }
 
     public void addLast(String name, ChannelHandler handler) {
-
+        if(name2ctx.isEmpty()){
+            init(name, handler);
+        }else{
+            checkDuplicatename(name);
+            DefaultChannelHandlerContext oldtail = tail;
+            DefaultChannelHandlerContext newTail = new DefaultChannelHandlerContext(oldtail, null, name, handler);
+            oldtail.next = newTail;
+            tail = newTail;
+            name2ctx.put(name, newTail);
+        }
     }
 
     public void addBefore(String baseName, String name, ChannelHandler handler) {
-
+        DefaultChannelHandlerContext ctx = getContextOrDie(baseName);
+        if(ctx == head){
+            addFirst(name, handler);
+        }else{
+            checkDuplicatename(name);
+            DefaultChannelHandlerContext newCtx = new DefaultChannelHandlerContext(ctx.prev, ctx, name, handler);
+            ctx.prev.next = newCtx;
+            ctx.prev = newCtx;
+            name2ctx.put(name, newCtx);
+        }
     }
 
     public void addAfter(String baseName, String name, ChannelHandler handler) {
-
+        DefaultChannelHandlerContext ctx = getContextOrDie(baseName);
+        if(ctx == tail){
+            addLast(name, handler);
+        }else{
+            checkDuplicatename(name);
+            DefaultChannelHandlerContext newCtx = new DefaultChannelHandlerContext(ctx, ctx.next, name, handler);
+            ctx.next.prev = newCtx;
+            ctx.next = newCtx;
+            name2ctx.put(name, newCtx);
+        }
     }
 
     public void remove(ChannelHandler handler) {
-
+        remove(getContextOrDie(handler));
     }
 
     public ChannelHandler remove(String name) {
-        return null;
+        return remove(getContextOrDie(name)).getHandler();
     }
 
     public <T extends ChannelHandler> T remove(Class<T> handlerType) {
-        return null;
+        return (T)remove(getContextOrDie(handlerType)).getHandler();
+    }
+
+    private DefaultChannelHandlerContext remove(DefaultChannelHandlerContext ctx){
+        if(head == tail){
+            head = tail = null;
+            name2ctx.clear();
+        }else if(ctx == head){
+            removeFirst();
+        }else if(ctx == tail){
+            removeLast();
+        }else{
+            DefaultChannelHandlerContext prev = ctx.prev;
+            DefaultChannelHandlerContext next = ctx.next;
+            prev.next = next;
+            next.prev = prev;
+            name2ctx.remove(ctx.getName());
+        }
+        return ctx;
     }
 
     public ChannelHandler removeFirst() {
-        return null;
+        if(name2ctx.isEmpty()){
+            throw new NoSuchElementException();
+        }
+
+        DefaultChannelHandlerContext oldhead = head;
+        oldhead.next.prev = null;
+        head = oldhead.next;
+        name2ctx.remove(oldhead.getName());
+        return oldhead.getHandler();
     }
 
     public ChannelHandler removeLast() {
-        return null;
+        if(name2ctx.isEmpty()){
+            throw new NoSuchElementException();
+        }
+        DefaultChannelHandlerContext oldTail = tail;
+        oldTail.prev.next = null;
+        tail = oldTail.prev;
+        name2ctx.remove(oldTail.getName());
+        return oldTail.getHandler();
     }
 
     public void replace(ChannelHandler oldHandler, String newName, ChannelHandler newHandler) {
-
+        replace(getContextOrDie(oldHandler), newName, newHandler);
     }
 
     public ChannelHandler replace(String oldName, String newName, ChannelHandler newHandler) {
-        return null;
+        return replace(getContextOrDie(oldName), newName, newHandler);
     }
 
     public <T extends ChannelHandler> T replace(Class<T> oldHandlerType, String newName, ChannelHandler newHandler) {
-        return null;
+        return (T) replace(getContextOrDie(oldHandlerType), newName, newHandler);
+    }
+
+    private ChannelHandler replace(DefaultChannelHandlerContext ctx, String newName, ChannelHandler newHandler){
+        if(ctx == head){
+            removeFirst();
+            addFirst(newName, newHandler);
+        }else if(ctx == tail){
+            removeLast();
+            addLast(newName, newHandler);
+        }else{
+            boolean sameName = ctx.getName().equals(newName);
+            if(!sameName){
+                checkDuplicatename(newName);
+            }
+            DefaultChannelHandlerContext prev = ctx.prev;
+            DefaultChannelHandlerContext next = ctx.next;
+            DefaultChannelHandlerContext newCtx = new DefaultChannelHandlerContext(prev, next, newName, newHandler);
+            prev.next = newCtx;
+            next.prev = newCtx;
+            if(!sameName){
+                name2ctx.remove(ctx.getName());
+                name2ctx.put(newName, newCtx);
+            }
+        }
+        return ctx.getHandler();
     }
 
     public ChannelHandler getFirst() {
@@ -178,15 +271,29 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     }
 
     public Channel getChannel() {
-        return null;
+        return channel;
     }
 
     public ChannelSink getSink() {
-        return null;
+        ChannelSink sink = this.sink;
+        if (sink == null) {
+            return discardingSink;
+        }
+        return sink;
     }
 
     public void attach(Channel channel, ChannelSink sink) {
-
+        if (channel == null) {
+            throw new NullPointerException("channel");
+        }
+        if (sink == null) {
+            throw new NullPointerException("sink");
+        }
+        if (this.channel != null || this.sink != null) {
+            throw new IllegalStateException("attached already");
+        }
+        this.channel = channel;
+        this.sink = sink;
     }
 
     public Map<String, ChannelHandler> toMap() {
