@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/tx 
+	http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context-3.0.xsd
+           http://www.springframework.org/schema/aop
+    	   http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+           http://www.springframework.org/schema/mvc
+           http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
+
+	<context:component-scan base-package="me.mhao">
+	</context:component-scan>
+	
+	<bean id="userLogHelper"  class="me.mhao.helper.UserLogHelper" ></bean>
+	<bean id="userNumbersCacheHelper"  class="me.mhao.helper.UserNumbersCacheHelper" />
+	
+	<bean id="hLRNumberEvent" class="me.mhao.service.HLRNumberEvent"></bean>
+	<bean id="iMSNumberEvent" class="me.mhao.service.IMSNumberEvent"></bean>
+	<bean id="numberEventFactory" class="me.mhao.service.NumberEventFactory"></bean>
+
+	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+		<property name="messageConverters">  
+			<list>  
+				<ref bean="byteArray_hmc" />  
+				<ref bean="string_hmc" />  
+				<ref bean="resource_hmc" />  
+				<ref bean="source_hmc" />  
+				<ref bean="xmlAwareForm_hmc" />  
+				<ref bean="jaxb2RootElement_hmc" />  
+				<ref bean="jackson_hmc" />
+			</list>  
+		</property>  
+	</bean>  
+
+	<bean id="byteArray_hmc" class="org.springframework.http.converter.ByteArrayHttpMessageConverter" /><!-- 处理.. -->
+	<bean id="string_hmc" class="org.springframework.http.converter.StringHttpMessageConverter" /><!-- 处理.. -->
+	<bean id="resource_hmc" class="org.springframework.http.converter.ResourceHttpMessageConverter" /><!-- 处理.. -->
+	<bean id="source_hmc" class="org.springframework.http.converter.xml.SourceHttpMessageConverter" /><!-- 处理.. -->
+	<bean id="xmlAwareForm_hmc" class="org.springframework.http.converter.xml.XmlAwareFormHttpMessageConverter" /><!-- 处理.. -->
+	<bean id="jaxb2RootElement_hmc" class="org.springframework.http.converter.xml.Jaxb2RootElementHttpMessageConverter" /><!-- 处理.. -->
+	
+	<!-- 处理json-->
+	<bean id="jackson_hmc" class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter">
+		<property name="supportedMediaTypes">
+			<list>
+				<value>application/json;charset=UTF-8</value>
+			</list>
+		</property>
+		<property name="objectMapper">
+			<bean class="org.codehaus.jackson.map.ObjectMapper">
+				<property name="dateFormat">
+					<bean class="java.text.SimpleDateFormat">
+						<constructor-arg type="java.lang.String" value="yyyy-MM-dd HH:mm:ss"></constructor-arg>
+					</bean>
+				</property>
+			</bean>
+		</property>
+	</bean>
+
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:config_cn.properties</value>
+				<value>classpath:model_cn.properties</value>
+				<value>classpath:comment_cn.properties</value>
+				<value>classpath:jdbc.properties</value>
+			</list>
+		</property>
+	</bean>
+
+	<!-- freemarker的配置 -->
+	<bean id="freemarkerConfigurer"
+		class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+		<property name="templateLoaderPath" value="/WEB-INF/template/" />
+		<property name="freemarkerSettings">
+			<props>
+				<prop key="defaultEncoding">UTF-8</prop>
+				<prop key="template_update_delay">0</prop>
+				<prop key="locale">zh_CN</prop>
+				<prop key="datetime_format">yyyy-MM-dd HH:mm:ss</prop>
+				<prop key="date_format">yyyy-MM-dd</prop>
+				<prop key="number_format">#.##</prop>
+			</props>
+		</property>
+		<property name="freemarkerVariables">
+			<map>
+				<entry key="webRoot" value="${webRoot}"></entry>
+				<entry key="projectName" value="${projectName}"></entry>
+				<entry key="cmessage"><ref bean="cmessage"/></entry>
+				<entry key="comment"><ref bean="comment"/></entry>
+				<entry key="cmodel"><ref bean="cmodel"/></entry>
+			</map>
+		</property>
+	</bean>
+
+	<!-- FreeMarker视图解析 -->
+	<bean id="viewResolver"
+		class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+		<property name="viewClass"
+			value="org.springframework.web.servlet.view.freemarker.FreeMarkerView" />
+		<property name="contentType" value="text/html;charset=utf-8" />
+		<property name="exposeRequestAttributes" value="true" />
+		<property name="exposeSessionAttributes" value="true" />
+		<property name="exposeSpringMacroHelpers" value="true" />
+		<property name="cache" value="true" />
+		<property name="prefix" value="" />
+		<property name="suffix" value=".ftl" />
+		<property name="requestContextAttribute" value="request" />
+	</bean>
+
+	<!-- 利用Spring MVC上传文件时需要的配置 -->
+	<bean id="multipartResolver"  
+        class="org.springframework.web.multipart.commons.CommonsMultipartResolver">  
+        <!-- set the max upload size100MB -->  
+        <property name="maxUploadSize">  
+            <value>104857600</value>  
+        </property>  
+        <property name="maxInMemorySize">  
+            <value>4096</value>  
+        </property>  
+    </bean>
+    
+    
+    <bean id="cmessage" class="me.mhao.bean.ConstantMessage"/>
+    <bean id="cmodel" class="me.mhao.bean.ConstantModel"/>
+    <bean id="comment" class="me.mhao.bean.Comment"/>
+    
+    <bean id="master"   class="org.apache.commons.dbcp.BasicDataSource"  destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driverClassName}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="maxActive" value="100"/>
+        <property name="maxIdle" value="30"/>
+        <property name="maxWait" value="5000"/>
+        <property name="minIdle" value="10" />
+        <property name="testOnBorrow" value="true"/> 
+    	<property name="testWhileIdle" value="true"/> 
+        <property name="validationQuery">
+            <value>select 1 from dual</value>
+        </property>
+    </bean>
+    
+    <bean id="dwh"   class="org.apache.commons.dbcp.BasicDataSource"  destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driverClassName}"/>
+        <property name="url" value="${jdbc.url_dwh}"/>
+        <property name="username" value="${jdbc.username_dwh}"/>
+        <property name="password" value="${jdbc.password_dwh}"/>
+        <property name="maxActive" value="100"/>
+        <property name="maxIdle" value="30"/>
+        <property name="maxWait" value="5000"/>
+        <property name="minIdle" value="10" />
+        <property name="testOnBorrow" value="true"/> 
+    	<property name="testWhileIdle" value="true"/> 
+        <property name="validationQuery">
+            <value>select 1 from dual</value>
+        </property>
+    </bean>
+    
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="master"/>
+	</bean>
+	
+	<bean id="dwhJdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="dwh"/>
+	</bean>
+      
+    <!-- 配置事物 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">  
+    	<property name="dataSource" ref="master"></property>  
+	</bean>
+	
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">  
+        <tx:attributes>  
+            <tx:method name="add*" propagation="REQUIRED" />  
+            <tx:method name="save*" propagation="REQUIRED" />  
+            <tx:method name="update*" propagation="REQUIRED" />  
+            <tx:method name="delete*" propagation="REQUIRED" />  
+            <tx:method name="*" read-only="true" />  
+        </tx:attributes>  
+    </tx:advice> 
+    <aop:config>  
+    	<aop:pointcut id="masterService" expression="execution(* com.mhao.service..*.*(..))" />  
+        <aop:pointcut id="dwhService" expression="execution(* com.mhao.dwhService..*.*(..))" /> 
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="masterService"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="dwhService"/>
+    </aop:config>
+</beans>

@@ -1,0 +1,32 @@
+@CHARSET "UTF-8";
+/**************************公共 by 磊子**************************/
+body,h1,h2,h3,h4,h5,h6,hr,p,blockquote,dl,dt,dd,ul,ol,li,pre,form,fieldset,legend,button,input,textarea,th,td{margin:0;padding:0}
+body{ font-size:12px;font-family: \5FAE\8F6F\96C5\9ED1; color:#333; line-height:150%; background:#d8e7ca url(../images/bg.png) no-repeat center 80px}
+h1,h2,h3,h4,h5,h6{font-size:100%}
+address,cite,dfn,em,var,i{font-style:normal}
+code,kbd,pre,samp{font-family:courier new,courier,monospace}
+form{display:inline}
+ul,ol{list-style:none}
+a{text-decoration:none;color:#333}
+a:hover, a:active, a:focus{color:#000;text-decoration: underline;}
+a:active{color:#aaa;}
+a.greenlink{ color:#3f8700}
+a.orangelink{ color:#ff7602}
+img{vertical-align:middle;border:0;-ms-interpolation-mode:bicubic}
+button,input,select,textarea{font-size:100%; vertical-align:middle;outline:none;}
+table{border-collapse:collapse;border-spacing:0}
+textarea{resize:none}
+.fl{ float:left; display:inline}
+.fr{ float:right; display:inline}
+.radius_4{-webkit-border-radius:4px;-moz-border-radius:4px;border-radius:4px;}
+.hidden{display:none}
+/**************************首页内容 by 磊子**************************/
+.warpper{ clear:both; overflow:hidden;*zoom:1; }
+.contnav{ clear:both; overflow:hidden; *zoom:1; margin:10px 0; border:1px solid #f0f0f0; background:#f7f7f7; padding:10px 35px; font-size:13px; color:#666}
+.contnav dl{clear:both; overflow:hidden; *zoom:1; margin:5px 0; line-height:22px}
+.contnav dt{ float:left; width:90px; display:inline}
+.contnav dd{ float:left; margin-right:10px; display:inline; padding:0 15px; height:22px; line-height:22px; cursor:pointer}
+.contnav dd.on{ background:#729f32; color:#fff}
+
+.contlist{ margin:15px 0;clear:both; overflow:hidden; *zoom:1;}
+.contlist h2{ font-weight:normal; color:#2e2e2e; font-size:14px; border:1px solid #eff9e6; height:32px; line-height:32px; background:#f1ffdf; padding:0 35px;}

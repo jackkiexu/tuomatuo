@@ -15,4 +15,6 @@ public class Constant {
 
     /** 针对单个号码获取验证码的次数 */
     public static final int  GET_CODE_LIMIT_FOR_MOBILE = 10;
+
+    public static final String SESSION_USER = "smSessionUser";
 }

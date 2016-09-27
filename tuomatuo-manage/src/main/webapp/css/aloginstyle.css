@@ -1,0 +1,62 @@
+body,h1,h2,h3,h4,h5,h6,hr,p,blockquote,dl,dt,dd,ul,ol,li,pre,form,fieldset,legend,button,input,textarea,th,td{
+margin:0;
+padding:0;
+}
+body{ 
+font-size:12px;font-family:'Microsoft Yahei','Simsun';
+line-height:150%;
+color:#666;
+background:#e6f5ff;
+}
+.login_box {
+margin:150px auto 0px;
+width:687px;
+height:384px;
+background:url(../images/bg.gif) top left no-repeat;
+overflow:hidden;
+}
+.login_box table {
+float:left;
+width:380px;
+margin-left:180px;
+display:inline;
+margin-top:130px;
+}
+.login_box table td {
+padding:5px;
+font-size:14px;
+text-align:left;
+color:#0d73b2;
+}
+.login_box table td span {
+float:left
+width:auto;
+font-size:12px;
+padding-top:5px;
+display:block;
+}
+.login_box table td span a {
+color:#0d73b2;
+text-decoration:none;
+}
+.login_box table td img {
+float:left;
+margin-left:5px;
+display:inline;
+margin-right:5px;
+}
+.ipt_001 {
+float:left;
+border:1px solid #d4d4d4;
+padding:4px;
+width:200px;
+}
+.ipt_002 {
+float:left;
+border:1px solid #d4d4d4;
+padding:4px;
+width:80px;
+}
+.btn_001 {
+float:left;
+}
