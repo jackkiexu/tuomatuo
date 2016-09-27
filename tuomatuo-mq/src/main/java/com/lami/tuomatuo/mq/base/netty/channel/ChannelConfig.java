@@ -9,9 +9,9 @@ public interface ChannelConfig {
 
     void setOptions(Map<String, Object> options);
 
-    ChannelPiplineFactory getPipelineFactory();
+    ChannelPipelineFactory getPipelineFactory();
 
-    void setPiplineFactory(ChannelPiplineFactory piplineFactory);
+    void setPiplineFactory(ChannelPipelineFactory piplineFactory);
 
     int getConnectTimeoutMillis();
 
