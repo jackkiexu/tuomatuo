@@ -39,14 +39,14 @@ import org.springframework.jdbc.core.support.JdbcDaoSupport;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
-public abstract class BaseDaoMysqlImpl<T,ID extends Serializable> extends JdbcDaoSupport implements BaseDao<T,ID>{
+public abstract class MySqlBaseDao<T,ID extends Serializable> extends JdbcDaoSupport implements BaseDao<T,ID>{
 	public final Log log = LogFactory.getLog(this.getClass());
 	private Class<T> persistentClass;
 	private String tableName = "";
 	private String pk = "";
 	private GenerationType strategy;
 	protected List<String> transientPropertys=new ArrayList<String>();
-	protected BaseDaoMysqlImpl(Class<T> persistentClass){
+	protected MySqlBaseDao(Class<T> persistentClass){
 		this.persistentClass=persistentClass;
 		Table table = AnnotationUtils.findAnnotation(persistentClass, Table.class);
 		if(table==null){
@@ -80,7 +80,7 @@ public abstract class BaseDaoMysqlImpl<T,ID extends Serializable> extends JdbcDa
 			throw new RuntimeException(persistentClass+"类型中没有在get方法上定义@Id");
 		}
 	}
-	protected BaseDaoMysqlImpl(){
+	protected MySqlBaseDao(){
 	}
 	public String getTableName() {
 		return tableName.toLowerCase();
