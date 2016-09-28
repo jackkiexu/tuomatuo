@@ -5,6 +5,7 @@ import com.lami.tuomatuo.mq.base.netty.util.NamePreservingRunnable;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -29,11 +30,89 @@ public class NioClientSocketPipelineSink extends AbstractChannelSink {
     NioWorker[] workers;
     AtomicInteger workerIndex = new AtomicInteger();
 
-
-    public void eventSunk(ChannelPipeline pipline, ChannelEvent e) throws Exception {
-
+    public NioClientSocketPipelineSink(Executor bossExecutor, Executor workerExecutor, int workerCount) {
+        this.bossExecutor = bossExecutor;
+        workers = new NioWorker[workerCount];
+        for(int i = 0; i < workers.length; i++){
+            workers[i] = new NioWorker(id, i+1, workerExecutor);
+        }
     }
 
+    public void eventSunk(ChannelPipeline pipline, ChannelEvent e) throws Exception {
+        if(e instanceof ChannelStateEvent){
+            ChannelStateEvent event = (ChannelStateEvent) e;
+            NioClientSocketChannel channel = (NioClientSocketChannel)event.getChannel();
+            ChannelFuture future = event.getFuture();
+            ChannelState state = event.getState();
+            Object value = event.getValue();
+
+            switch (state){
+                case OPEN:
+                    if(Boolean.FALSE.equals(value)){
+                        NioWorker.close(channel, future);
+                    }
+                    break;
+                case BOUND:
+                    if(value != null){
+                        bind(channel, future, (SocketAddress) value);
+                    }else{
+                        NioWorker.close(channel, future);
+                    }
+                    break;
+                case CONNECTED:
+                    if(value != null){
+                        connect(channel, future, (SocketAddress)value);
+                    }else{
+                        NioWorker.close(channel, future);
+                    }
+                    break;
+                case INTEREST_OPS:
+                    NioWorker.setInterestOps(channel, future, (Integer)value);
+                    break;
+            }
+        }else if(e instanceof MessageEvent){
+            MessageEvent event = (MessageEvent)e;
+            NioSocketChannel channel = (NioSocketChannel)event.getChannel();
+            channel.writeBuffer.offer(event);
+            NioWorker.write(channel);
+        }
+    }
+
+    private void bind(NioClientSocketChannel channel, ChannelFuture future, SocketAddress localAddress){
+        try {
+            channel.socket.socket().bind(localAddress);
+            channel.boundManually = true;
+            future.setSuccess();
+            Channels.fireChannelBound(channel, channel.getLocalAddress());
+        } catch (IOException e) {
+            future.setFailure(e);
+            Channels.fireExceptionCaught(channel, e);
+        }
+    }
+
+    private void connect(final NioClientSocketChannel channel, ChannelFuture future, SocketAddress remoteAddress){
+        try {
+            if(channel.socket.connect(remoteAddress)){
+                NioWorker worker = nextWorker();
+                channel.setWork(worker);
+                worker.register(channel, future);
+            }else{
+                future.addListener(new ChannelFutureListener() {
+                    public void operationComplete(ChannelFuture future) throws Exception {
+                        if(future.isCancelled()){
+                            channel.close();
+                        }
+                    }
+                });
+                channel.connectFuture = future;
+                boss.register(channel);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            future.setFailure(e);
+            Channels.fireExceptionCaught(channel, e);
+        }
+    }
 
     NioWorker nextWorker(){
         return workers[Math.abs(workerIndex.getAndIncrement() % workers.length)];
@@ -102,9 +181,37 @@ public class NioClientSocketPipelineSink extends AbstractChannelSink {
                             processSelectorKeys(selector.selectedKeys());
                         }
 
-                        /**
-                         *
+                        /** Exit the loop when there's nothing to handle
+                         *  The shutdown flag is used to delay the shutdown of this loop to avoid
+                         *  Selector creation when connection attempts are made in a one by one manner
+                         *  instead of concurrent manner
                          */
+                        if(selector.keys().isEmpty()){
+                            if(shutdown){
+                                synchronized (selectorGuard) {
+                                    if (selector.keys().isEmpty()) {
+
+                                        try {
+                                            if (selector.keys().isEmpty()) {
+                                                selector.close();
+                                            }
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        } finally {
+                                            this.selector = null;
+                                        }
+                                        started.set(false);
+                                        break;
+
+                                    } else {
+                                        shutdown = false;
+                                    }
+                                }
+                            }else{
+                                // Give one more second
+                                shutdown = false;
+                            }
+                        }
 
                     } catch (IOException e) {
                         e.printStackTrace();
