@@ -17,15 +17,8 @@
            http://www.springframework.org/schema/mvc
            http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
 
-	<context:component-scan base-package="me.mhao">
+	<context:component-scan base-package="com.lami.tuomatuo">
 	</context:component-scan>
-	
-	<bean id="userLogHelper"  class="me.mhao.helper.UserLogHelper" ></bean>
-	<bean id="userNumbersCacheHelper"  class="me.mhao.helper.UserNumbersCacheHelper" />
-	
-	<bean id="hLRNumberEvent" class="me.mhao.service.HLRNumberEvent"></bean>
-	<bean id="iMSNumberEvent" class="me.mhao.service.IMSNumberEvent"></bean>
-	<bean id="numberEventFactory" class="me.mhao.service.NumberEventFactory"></bean>
 
 	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
 		<property name="messageConverters">  
@@ -35,28 +28,21 @@
 				<ref bean="resource_hmc" />  
 				<ref bean="source_hmc" />  
 				<ref bean="xmlAwareForm_hmc" />  
-				<ref bean="jaxb2RootElement_hmc" />  
+				<ref bean="jaxb2RootElement_hmc" />
 				<ref bean="jackson_hmc" />
 			</list>  
 		</property>  
-	</bean>  
+	</bean>
 
-	<bean id="byteArray_hmc" class="org.springframework.http.converter.ByteArrayHttpMessageConverter" /><!-- 处理.. -->
-	<bean id="string_hmc" class="org.springframework.http.converter.StringHttpMessageConverter" /><!-- 处理.. -->
-	<bean id="resource_hmc" class="org.springframework.http.converter.ResourceHttpMessageConverter" /><!-- 处理.. -->
-	<bean id="source_hmc" class="org.springframework.http.converter.xml.SourceHttpMessageConverter" /><!-- 处理.. -->
-	<bean id="xmlAwareForm_hmc" class="org.springframework.http.converter.xml.XmlAwareFormHttpMessageConverter" /><!-- 处理.. -->
-	<bean id="jaxb2RootElement_hmc" class="org.springframework.http.converter.xml.Jaxb2RootElementHttpMessageConverter" /><!-- 处理.. -->
-	
 	<!-- 处理json-->
-	<bean id="jackson_hmc" class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter">
+	<bean id="jackson_hmc" class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
 		<property name="supportedMediaTypes">
 			<list>
 				<value>application/json;charset=UTF-8</value>
 			</list>
 		</property>
 		<property name="objectMapper">
-			<bean class="org.codehaus.jackson.map.ObjectMapper">
+			<bean class="com.fasterxml.jackson.databind.ObjectMapper">
 				<property name="dateFormat">
 					<bean class="java.text.SimpleDateFormat">
 						<constructor-arg type="java.lang.String" value="yyyy-MM-dd HH:mm:ss"></constructor-arg>
@@ -65,6 +51,13 @@
 			</bean>
 		</property>
 	</bean>
+
+	<bean id="byteArray_hmc" class="org.springframework.http.converter.ByteArrayHttpMessageConverter" /><!-- 处理.. -->
+	<bean id="string_hmc" class="org.springframework.http.converter.StringHttpMessageConverter" /><!-- 处理.. -->
+	<bean id="resource_hmc" class="org.springframework.http.converter.ResourceHttpMessageConverter" /><!-- 处理.. -->
+	<bean id="source_hmc" class="org.springframework.http.converter.xml.SourceHttpMessageConverter" /><!-- 处理.. -->
+	<bean id="xmlAwareForm_hmc" class="org.springframework.http.converter.xml.XmlAwareFormHttpMessageConverter" /><!-- 处理.. -->
+	<bean id="jaxb2RootElement_hmc" class="org.springframework.http.converter.xml.Jaxb2RootElementHttpMessageConverter" /><!-- 处理.. -->
 
 	<bean id="propertyConfigurer"
 		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
@@ -131,11 +124,11 @@
     </bean>
     
     
-    <bean id="cmessage" class="me.mhao.bean.ConstantMessage"/>
-    <bean id="cmodel" class="me.mhao.bean.ConstantModel"/>
-    <bean id="comment" class="me.mhao.bean.Comment"/>
+    <bean id="cmessage" class="com.lami.tuomatuo.manage.bean.ConstantMessage"/>
+    <bean id="cmodel" class="com.lami.tuomatuo.manage.bean.ConstantModel"/>
+    <bean id="comment" class="com.lami.tuomatuo.manage.bean.Comment"/>
     
-    <bean id="master"   class="org.apache.commons.dbcp.BasicDataSource"  destroy-method="close">
+    <bean id="dataSource"   class="org.apache.commons.dbcp.BasicDataSource"  destroy-method="close">
         <property name="driverClassName" value="${jdbc.driverClassName}"/>
         <property name="url" value="${jdbc.url}"/>
         <property name="username" value="${jdbc.username}"/>
@@ -151,48 +144,9 @@
         </property>
     </bean>
     
-    <bean id="dwh"   class="org.apache.commons.dbcp.BasicDataSource"  destroy-method="close">
-        <property name="driverClassName" value="${jdbc.driverClassName}"/>
-        <property name="url" value="${jdbc.url_dwh}"/>
-        <property name="username" value="${jdbc.username_dwh}"/>
-        <property name="password" value="${jdbc.password_dwh}"/>
-        <property name="maxActive" value="100"/>
-        <property name="maxIdle" value="30"/>
-        <property name="maxWait" value="5000"/>
-        <property name="minIdle" value="10" />
-        <property name="testOnBorrow" value="true"/> 
-    	<property name="testWhileIdle" value="true"/> 
-        <property name="validationQuery">
-            <value>select 1 from dual</value>
-        </property>
-    </bean>
-    
     <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
-		<property name="dataSource" ref="master"/>
-	</bean>
-	
-	<bean id="dwhJdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
-		<property name="dataSource" ref="dwh"/>
+		<property name="dataSource" ref="dataSource"/>
 	</bean>
       
-    <!-- 配置事物 -->
-    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">  
-    	<property name="dataSource" ref="master"></property>  
-	</bean>
-	
-    <tx:advice id="txAdvice" transaction-manager="transactionManager">  
-        <tx:attributes>  
-            <tx:method name="add*" propagation="REQUIRED" />  
-            <tx:method name="save*" propagation="REQUIRED" />  
-            <tx:method name="update*" propagation="REQUIRED" />  
-            <tx:method name="delete*" propagation="REQUIRED" />  
-            <tx:method name="*" read-only="true" />  
-        </tx:attributes>  
-    </tx:advice> 
-    <aop:config>  
-    	<aop:pointcut id="masterService" expression="execution(* com.mhao.service..*.*(..))" />  
-        <aop:pointcut id="dwhService" expression="execution(* com.mhao.dwhService..*.*(..))" /> 
-        <aop:advisor advice-ref="txAdvice" pointcut-ref="masterService"/>
-        <aop:advisor advice-ref="txAdvice" pointcut-ref="dwhService"/>
-    </aop:config>
+
 </beans>

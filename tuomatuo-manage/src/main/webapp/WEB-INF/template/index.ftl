@@ -326,66 +326,7 @@ permissionList.push("{\"path\":\"${pl.path}\",\"method\":\"${pl.methods}\"}");
 				<p>欢迎访问${projectName}管理平台！您好！</p>
 <#if Session["admin"].login=="root">
 				<table id="customers" style="float:left; margin-right:20px;width:200px;">  
-					<tr>  
-						<th width="140px">对应项</th>  
-						<th>数据</th>  
-					</tr>
-					<tr>  
-						<td>用户总数</td>  
-						<td>${map.user_count}</td>
-					</tr>
-					<tr>  
-						<td>用户号码</td>  
-						<td>${map.user}(${map.user_distinct})</td>  
-					</tr>
-					<tr class="alt">  
-						<td>今日新增用户总数</td>  
-						<td>${map.user_count_today}</td>  
-					</tr>  
-					<tr class="alt">  
-						<td>今日成功订单数</td>  
-						<td>${map.today_order_count}</td>  
-					</tr>
-					<tr class="alt">  
-						<td>用户占用多号码</td>  
-						<td>${map.user_multiple_mobile}</td>  
-					</tr>
-					<tr class="alt">  
-						<td>号码被多用户占用</td>  
-						<td>${map.mobile_multiple_user}</td>  
-					</tr>
-					<tr class="alt">  
-						<td>使用但空闲的号码</td>  
-						<td>${map.active_number_but_used}</td>  
-					</tr>
-					<tr class="alt">  
-						<td>免费号码池</td>  
-						<td>${map.number_pool_free_count}</td>  
-					</tr>
-					<tr class="alt">  
-						<td>收费号码池</td>  
-						<td>${map.number_pool_pay_count}</td>  
-					</tr>
-					<tr class="alt">  
-						<td>管理员手工投放池</td>  
-						<td>${map.number_pool_manager_count}</td>  
-					</tr>
-					<tr class="alt">  
-						<td>短信密号号码池</td>  
-						<td>${map.number_pool_sms_count}</td>  
-					</tr>
-					<tr class="alt">  
-						<td>滴滴业务号码池</td>  
-						<td>${map.didi_number_pool_count}</td>  
-					</tr>
-					<tr class="alt">  
-						<td>滴滴专车号码池</td>  
-						<td>${map.didiZhuanche_number_pool_count}</td>  
-					</tr>
-					<tr class="alt">  
-						<td>珍爱网号码池</td>  
-						<td>${map.zhenai_number_pool_count}</td>  
-					</tr>
+
 				</table>
 </#if>
 				<div style="clear:both;"></div>

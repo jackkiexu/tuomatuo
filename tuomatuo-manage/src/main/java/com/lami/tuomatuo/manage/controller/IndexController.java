@@ -215,6 +215,60 @@ public class IndexController {
 		return ("index");
 	}
 
+	@SuppressWarnings("unused")
+	@RequestMapping(value="upSystemAnnounce.do", method=RequestMethod.POST)
+	@ResponseBody
+	public Result upSystemAnnounce(HttpServletRequest request,HttpServletResponse response){
+		String system_announce_category = request.getParameter("system_announce_category");
+		String system_announce_theme = request.getParameter("system_announce_theme");
+		String system_announce_content = request.getParameter("system_announce_content");
+		String system_announce_receive_category = request.getParameter("system_announce_receive_category");
+		String system_announce_receive_ids = request.getParameter("system_announce_receive_ids");
+		String system_announce_push_start_time = request.getParameter("system_announce_push_start_time");
+		String system_announce_push_end_time = request.getParameter("system_announce_push_end_time");
+		if(system_announce_category == null ||
+				system_announce_theme == null ||
+				system_announce_content == null ||
+				system_announce_receive_category == null ||
+				system_announce_push_start_time == null ||
+				system_announce_push_end_time == null){
+			return new Result(Result.PARAMCHECKERROR);
+		}
+		SysOperator operator = (SysOperator)request.getSession().getAttribute("admin");
+		if(operator.getId() != Constant.TRUE_INT)return new Result(Result.PERMISSIONS_DENY);
+		SysOperatorLog sysOperatorLog = new SysOperatorLog();
+		sysOperatorLog.setActive(system_announce_category+"|"+system_announce_theme+"|"+system_announce_content+"|"+
+				system_announce_receive_category + "|" + system_announce_receive_ids + "|" + system_announce_push_start_time + "|"+
+				system_announce_push_end_time);
+		sysOperatorLog.setCreateTime(new Date());
+		if(operator!=null)sysOperatorLog.setOperatorId(operator.getId());
+		sysOperatorLogService.save(sysOperatorLog);
+
+		SystemAnnounce systemAnnounce = new SystemAnnounce(Integer.parseInt(system_announce_category), system_announce_theme, system_announce_content);
+		Date pushTime = DateUtils.parser(system_announce_push_start_time, "yyyy-MM-dd HH:mm:ss");
+		Date endTime = DateUtils.parser(system_announce_push_end_time, "yyyy-MM-dd HH:mm:ss");
+		if(pushTime == null || endTime == null)new Result(Result.PARAMCHECKERROR);
+		Integer category = Integer.parseInt(system_announce_receive_category);
+		String[] ids = null;
+		if(category == Constant.NOTIFY_SCOPE_PART){
+			ids = system_announce_receive_ids.split(",");
+		}
+		try {
+			Set<Integer> list = new HashSet<Integer>();
+			if(ids != null){
+				for(String id : ids){
+					if(StringUtil.isNumeric(id)){
+						list.add(Integer.parseInt(id));
+					}
+				}
+			}
+			//sendDueNotify(category, Constant.NOTIFY_CATEGORY_SYSTEM_NOTICE, list, pushTime, endTime, systemAnnounce);  此功能会将生成两个 嵌套的 json 字符串 -> 引起 cpu 过高, 线程挂起
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		}
+		return new Result(Result.SUCCESS);
+	}
+
 	private List<Menu> getMenuList(List<SysPermission> pList){
 		
 		List<Menu> list = new ArrayList<Menu>();

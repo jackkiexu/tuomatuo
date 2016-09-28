@@ -17,4 +17,9 @@ public class Constant {
     public static final int  GET_CODE_LIMIT_FOR_MOBILE = 10;
 
     public static final String SESSION_USER = "smSessionUser";
+
+    public static final int TRUE_INT = 1;
+
+    public static final int NOTIFY_SCOPE_UNIT = 1; // 信息作用于所有人
+    public static final int NOTIFY_SCOPE_PART = 2; // 信息作用于单个(个别, 或几个)
 }

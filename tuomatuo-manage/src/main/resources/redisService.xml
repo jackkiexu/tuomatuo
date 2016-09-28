@@ -40,48 +40,6 @@
 	        <constructor-arg index="0" ref="jedisPoolConfig" />
 	        <constructor-arg index="1"><list><ref bean="writeInfo" /></list></constructor-arg>
 	    </bean>
-	    <bean id="userInfoCache" class="me.mhao.cache.impl.UserInfoCacheImpl">
-	    	<property name="readPool"><ref bean="readPool"/></property>
-	    	<property name="writePool"><ref bean="writePool"/></property>
-	    </bean>
-	    <bean id="callCache" class="me.mhao.cache.impl.CallCacheImpl">
-	    	<property name="readPool"><ref bean="readPool"/></property>
-	    	<property name="writePool"><ref bean="writePool"/></property>
-	    </bean>
-	    <bean id="numberCache" class="me.mhao.cache.impl.NumberCacheImpl">
-	    	<property name="readPool"><ref bean="readPool"/></property>
-	    	<property name="writePool"><ref bean="writePool"/></property>
-	    </bean>
-	    <bean id="notificationCache" class="me.mhao.cache.impl.NotificationCacheImpl">
-	    	<property name="readPool"><ref bean="readPool"/></property>
-	    	<property name="writePool"><ref bean="writePool"/></property>
-	    </bean>
-	    <bean id="smsCache" class="me.mhao.cache.impl.SmsCacheImpl">
-	    	<property name="readPool"><ref bean="readPool"/></property>
-	    	<property name="writePool"><ref bean="writePool"/></property>
-	    </bean>
-	    <bean id="spCache" class="me.mhao.cache.impl.SpCacheImpl">
-	    	<property name="readPool"><ref bean="readPool"/></property>
-	    	<property name="writePool"><ref bean="writePool"/></property>
-	    </bean>
-	    <bean id="dbCache" class="me.mhao.cache.impl.DbCacheImpl">
-	    	<property name="readPool"><ref bean="readPool"/></property>
-	    	<property name="writePool"><ref bean="writePool"/></property>
-	    </bean>
-	    <bean id="monitorCache" class="me.mhao.cache.impl.MonitorCacheImpl">
-	    	<property name="readPool"><ref bean="readPool"/></property>
-	    	<property name="writePool"><ref bean="writePool"/></property>
-	    </bean>
-	    
-	    <bean id="cacheFactory" class="me.mhao.cache.CacheFactory">
-	    	<property name="userInfoCache"><ref bean="userInfoCache"/></property>
-	    	<property name="callCache"><ref bean="callCache"/></property>
-	    	<property name="numberCache"><ref bean="numberCache"/></property>
-	    	<property name="notificationCache"><ref bean="notificationCache"/></property>
-	    	<property name="spCache"><ref bean="spCache"/></property>
-	    	<property name="smsCache"><ref bean="smsCache"/></property>
-	    	<property name="dbCache"><ref bean="dbCache"/></property>
-	    	<property name="monitorCache"><ref bean="monitorCache"/></property>
-	    </bean>
+
 	    
     </beans>
