@@ -20,6 +20,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.util.WebUtils;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
@@ -52,20 +53,6 @@ public class IndexController {
 
 	@RequestMapping("login.do")
 	public String login(HttpServletRequest request,HttpServletResponse response) throws Exception{
-		HttpSession session = request.getSession();
-		/**修复会话标识未更新漏洞*/
-		session.invalidate();
-		Cookie[] cookies=request.getCookies();
-		if(null!=cookies){
-		    for(int i=0;i<cookies.length;i++){
-		        if(("JSESSIONID").equalsIgnoreCase(cookies[i].getName())){
-		            cookies[i].setMaxAge(0);
-		            response.addCookie(cookies[i]);
-		        }
-		    }
-		}	
-		/**修复会话标识未更新漏洞 结束*/
-		
 		request.setAttribute("sessionId", request.getSession().getId());
 		return ("login");
 	}
@@ -74,26 +61,11 @@ public class IndexController {
 		HttpSession session = request.getSession();
 		session.setAttribute("admin",null);
 		
-		/**修复会话标识未更新漏洞*/
-		session.invalidate();
-		Cookie[] cookies=request.getCookies();
-		if(null!=cookies){
-		    for(int i=0;i<cookies.length;i++){
-		        if(("JSESSIONID").equalsIgnoreCase(cookies[i].getName())){
-		            cookies[i].setMaxAge(0);
-		            response.addCookie(cookies[i]);
-		        }
-		    }
-		}	
-		/**修复会话标识未更新漏洞 结束*/
-		
-		/**修复会话标识未更新漏洞*/
 		session=request.getSession(true);
-		session.invalidate();
 		/**修复会话标识未更新漏洞 结束*/
 		response.addHeader("Cache-Control", "no-store");
 		response.addHeader("Pragma", "no-cache");
-		response.addDateHeader("Expires", 0);
+		response.addDateHeader("Expires", 30);
 		/**浏览器端不缓冲页面*/
 		return ("login.do");
 	}
@@ -101,7 +73,7 @@ public class IndexController {
 	public void vn(HttpServletRequest request,HttpServletResponse response) throws Exception{
 		response.addHeader("Cache-Control", "no-store");
 		response.addHeader("Pragma", "no-cache");
-		response.addDateHeader("Expires", 0);
+		response.addDateHeader("Expires", 30);
 		/**浏览器端不缓冲页面*/
 		
 		HttpSession session = request.getSession();
@@ -122,7 +94,7 @@ public class IndexController {
 			result.put("errorInfo", "session校验错误！");
 			logger.error(result.toString());
 			return result;
-        } 
+        }
         /**防止跨站点请求伪造结束*/
 		
 		String login = request.getParameter("login");
@@ -170,10 +142,11 @@ public class IndexController {
 		
 		result.put("result", true);
 		result.put("errorInfo", "通过验证");
-		session.setAttribute("admin",operator);
+		session.setAttribute("admin", operator);
 		
 		operator.setLastLoginTime(new Date());
 		sysOperatorService.update(operator);
+		WebUtils.setSessionAttribute(request, "username", t.getName());
 		logger.info(result.toString());
 		return result;
 	}
@@ -189,7 +162,6 @@ public class IndexController {
 			return ("login.do");
 		}
 		//获取全局的数据
-//		Map<String, Object> map = userService.getLoadPartParameter();
 		Map<String, Object> map = new HashMap<String, Object>();
 
 		logger.info("" + map);
@@ -262,7 +234,6 @@ public class IndexController {
 					}
 				}
 			}
-			//sendDueNotify(category, Constant.NOTIFY_CATEGORY_SYSTEM_NOTICE, list, pushTime, endTime, systemAnnounce);  此功能会将生成两个 嵌套的 json 字符串 -> 引起 cpu 过高, 线程挂起
 		} catch (NumberFormatException e) {
 			e.printStackTrace();
 		}

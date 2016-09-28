@@ -245,8 +245,10 @@ public abstract class BaseAction<T, ID extends Serializable> {
 				Object valueObj = entry.getValue();
 				if (null == valueObj) {
 					value = "";
+					continue;
 				} else if (valueObj instanceof String[]) {
 					String[] values = (String[]) valueObj;
+					if(values == null || values.length == 0) continue;
 					for (int i = 0; i < values.length; i++) {
 						value = values[i] + ",";
 					}
@@ -254,6 +256,7 @@ public abstract class BaseAction<T, ID extends Serializable> {
 				} else {
 					value = valueObj.toString();
 				}
+				if(StringUtil.isEmpty(value)) continue;
 				param.put(key, value);
 			}
 		}

@@ -8,9 +8,9 @@ import com.lami.tuomatuo.model.manage.SysPermission;
 import com.lami.tuomatuo.service.manage.SysOperatorLogService;
 import com.lami.tuomatuo.utils.StringUtil;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.web.util.WebUtils;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
 
 public class AuthorizationFilter implements Filter {
 	
-	private final static Logger logger = LoggerFactory.getLogger(AuthorizationFilter.class);
+	private final static Logger logger = org.apache.log4j.Logger.getLogger(AuthorizationFilter.class);
 	static ExecutorService pool = Executors.newSingleThreadExecutor(); 
 	private String loginUrl;
 	private List<String> ignoreURIs = new ArrayList<String>();
@@ -64,6 +64,8 @@ public class AuthorizationFilter implements Filter {
 		
 		String path = request.getContextPath();
 		String req_uri = request.getRequestURI();
+		Object username = WebUtils.getSessionAttribute(request, "operator");
+		logger.info("path:" + path + ", req_uri:" + req_uri + ", username:" + username);
 		try {
 			//过滤URL前缀
 			for(String ignoreURI : ignoreURIs){
@@ -77,12 +79,13 @@ public class AuthorizationFilter implements Filter {
 			HttpSession session = request.getSession();
 			
 			List<SysPermission> plist = (List<SysPermission>)session.getAttribute("permissionList");
+			logger.info(plist);
 			if(plist!=null&&plist.size()>0){
 				for(int i=0;i<plist.size();i++){
 					SysPermission sp = plist.get(i);
 					if(sp!=null&&sp.getPath()!=null&&sp.getMethods()!=null){
 						String purl = "/"+sp.getPath()+"/"+sp.getMethods()+".do";
-						//logger.info(purl);
+						logger.info(purl);
 						if(req_uri.indexOf(purl)>=0){
 							logger.info(request.getRemoteAddr()+":"+req_uri+" pass!");
 							try{
@@ -106,15 +109,15 @@ public class AuthorizationFilter implements Filter {
 								e.printStackTrace();
 							}
 							chain.doFilter(request, response);
+							logger.info("chain.doFilter(request, response)");
 							return ;
 						}
 					}
 				}
 			}
-			//chain.doFilter(request, response);
-			logger.info(req_uri+" prevent!"+request.getHeader("x-requested-with"));
-			if((request.getHeader("Accept")!=null&&request.getHeader("Accept").toLowerCase().indexOf("/json")>0)
-					||(request.getHeader("x-requested-with")!=null&&request.getHeader("x-requested-with").toLowerCase().indexOf("xmlhttprequest")>=0)){
+
+			logger.info("username:"+username +", SysPermissionList is null");
+			if(StringUtils.isEmpty(username.toString()) && (request.getHeader("x-requested-with")!=null&&request.getHeader("x-requested-with").toLowerCase().indexOf("xmlhttprequest")>=0)){
 				Map<String, Object> result = new HashMap<String, Object>();
 				result.put("result", false);
 				result.put("msg", "登录超时，请重新登录");
@@ -125,32 +128,13 @@ public class AuthorizationFilter implements Filter {
 				out.write(mapper.writeValueAsString(result));
 				out.flush();
 				out.close();
-				return;			
+				return;
 			}else{
 				response.sendRedirect(path+loginUrl);
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
-			logger.error("检查时间发生错误:"+ex.getMessage());
-			if(request!=null
-					&&((request.getHeader("Accept")!=null&&request.getHeader("Accept").toLowerCase().indexOf("/json")>0)
-					||(request.getHeader("x-requested-with")!=null&&request.getHeader("x-requested-with").toLowerCase().indexOf("xmlhttprequest")>=0))){
-				Map<String, Object> result = new HashMap<String, Object>();
-				result.put("result", false);
-				result.put("msg", "访问异常，联系管理员");
-				result.put("value", "nologin");
-				response.setContentType("application/json;charset=UTF-8");
-				response.setCharacterEncoding("UTF-8");
-				PrintWriter out = response.getWriter();
-				out.write(mapper.writeValueAsString(result));
-				out.flush();
-				out.close();
-				return;			
-			}else{
-				response.sendRedirect(path+loginUrl);
-			}
+			response.sendRedirect(path+loginUrl);
 		}
-
 	}
 	private String getParam(HttpServletRequest request){
 		Map<String, Object> map = request.getParameterMap();

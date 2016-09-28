@@ -1,8 +1,10 @@
 package com.lami.tuomatuo.manage.controller;
 
+import com.lami.tuomatuo.base.PageBean;
 import com.lami.tuomatuo.model.base.Result;
 import com.lami.tuomatuo.model.manage.User;
 import com.lami.tuomatuo.service.manage.UserService;
+import com.lami.tuomatuo.utils.StringUtil;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -38,5 +40,4 @@ public class UserController extends BaseAction<User,Integer>{
 	public Result validate(User form, HttpServletRequest request) {
 		return new Result(Result.SUCCESS);
 	}
-
 }
