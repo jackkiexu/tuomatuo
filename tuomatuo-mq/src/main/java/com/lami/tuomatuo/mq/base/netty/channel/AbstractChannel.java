@@ -52,6 +52,10 @@ public abstract class AbstractChannel implements Channel, Comparable<Channel> {
         return successedFuture;
     }
 
+    protected ChannelFuture getSucceededFuture() {
+        return successedFuture;
+    }
+
     protected ChannelFuture getUnsupportedOperationFuture(){
         return new FailedChannelFuture(this, new UnsupportedOperationException());
     }

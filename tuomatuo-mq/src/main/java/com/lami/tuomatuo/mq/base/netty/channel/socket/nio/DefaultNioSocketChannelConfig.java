@@ -1,6 +1,7 @@
 package com.lami.tuomatuo.mq.base.netty.channel.socket.nio;
 
 import com.lami.tuomatuo.mq.base.netty.channel.socket.DefaultSocketChannelConfig;
+import com.lami.tuomatuo.mq.base.netty.util.ConvertUtil;
 
 import java.net.Socket;
 
@@ -18,6 +19,24 @@ public class DefaultNioSocketChannelConfig extends DefaultSocketChannelConfig im
         super(socket);
     }
 
+    @Override
+    protected boolean setOption(String key, Object value) {
+        if(super.setOption(key, value)){
+            return true;
+        }
+
+        if(key.equals("readWriteFair")){
+            setReadWriteFair(ConvertUtil.toBoolean(value));
+        }else if(key.equals("writeSpinCount")){
+            setWriteSpinCount(ConvertUtil.toInt(value));
+        }else if(key.equals("receiveBufferSizePredictor")){
+            setReceiveBufferSizePredictor((ReceiveBufferSizePredictor)value);
+        }else{
+            return false;
+        }
+        return true;
+    }
+
     public int getWriteSpinCount() {
         return writeSpinCount;
     }
@@ -32,6 +51,7 @@ public class DefaultNioSocketChannelConfig extends DefaultSocketChannelConfig im
 
     public void setReceiveBufferSizePredictor(ReceiveBufferSizePredictor predictor) {
         if(predictor == null) throw new NullPointerException();
+        this.predictor = predictor;
     }
 
     public boolean isReadWriteFair() {
@@ -39,6 +59,6 @@ public class DefaultNioSocketChannelConfig extends DefaultSocketChannelConfig im
     }
 
     public void setReadWriteFair(boolean fair) {
-
+        this.readWriterFair = readWriterFair;
     }
 }

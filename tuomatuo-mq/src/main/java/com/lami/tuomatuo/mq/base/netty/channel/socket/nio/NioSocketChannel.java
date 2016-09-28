@@ -4,7 +4,9 @@ import com.lami.tuomatuo.mq.base.netty.channel.*;
 import com.lami.tuomatuo.mq.base.netty.channel.socket.SocketChannel;
 import com.lami.tuomatuo.mq.base.netty.channel.socket.SocketChannelConfig;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -13,21 +15,24 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public abstract class NioSocketChannel extends AbstractChannel implements SocketChannel {
 
-    SocketChannel socket;
+    java.nio.channels.SocketChannel socket;
     private NioSocketChannelConfig config;
 
     Queue<MessageEvent> writeBuffer = new ConcurrentLinkedQueue<MessageEvent>();
     MessageEvent currentWriteEvent;
     int currentWriteIndex;
 
-    public NioSocketChannel(Channel parent, ChannelFactory factory, ChannelPipeline pipeline, ChannelSink sink, SocketChannel socket) {
+    public NioSocketChannel(Channel parent, ChannelFactory factory, ChannelPipeline pipeline, ChannelSink sink, java.nio.channels.SocketChannel socket) {
         super(parent, factory, pipeline, sink);
         this.socket = socket;
-//        config = ne
+        config = new DefaultNioSocketChannelConfig(socket.socket());
     }
 
-    public SocketChannelConfig getConfig() {
-        return null;
+    abstract NioWorker getWorker();
+    abstract void setWork(NioWorker worker);
+
+    public NioSocketChannelConfig getConfig(){
+        return config;
     }
 
     public ChannelPipeline getPipline() {
@@ -35,18 +40,41 @@ public abstract class NioSocketChannel extends AbstractChannel implements Socket
     }
 
     public boolean isBound() {
-        return false;
+        return isOpen() && socket.socket().isBound();
     }
 
-    public boolean isConnected() {
-        return false;
+    public boolean isConnected(){
+        return isOpen() && socket.socket().isConnected();
     }
 
     public InetSocketAddress getLocalAddress() {
-        return null;
+        return (InetSocketAddress) socket.socket().getLocalSocketAddress();
     }
 
     public InetSocketAddress getRemoteAddress() {
-        return null;
+        return (InetSocketAddress) socket.socket().getRemoteSocketAddress();
+    }
+
+    @Override
+    public boolean setClosed() {
+        return super.setClosed();
+    }
+
+    @Override
+    protected void setInterestOpsNow(int interestOps) {
+        super.setInterestOpsNow(interestOps);
+    }
+
+    @Override
+    protected ChannelFuture getSucceededFuture() {
+        return super.getSucceededFuture();
+    }
+
+    @Override
+    public ChannelFuture write(Object message, SocketAddress remoteAddress) {
+        if(remoteAddress == null || remoteAddress.equals(getRemoteAddress())){
+            return super.write(message);
+        }
+        return getUnsupportedOperationFuture();
     }
 }
