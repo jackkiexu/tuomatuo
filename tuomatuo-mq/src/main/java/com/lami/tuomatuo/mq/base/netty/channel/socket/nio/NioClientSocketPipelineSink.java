@@ -154,7 +154,7 @@ public class NioClientSocketPipelineSink extends AbstractChannelSink {
                 } catch (ClosedChannelException e) {
                     throw new ChannelException("Failed to register a socket to the selector");
                 }
-                bossExecutor.execute(new NamePreservingRunnable("NEW I/O client boss #" + id, this));
+                bossExecutor.execute(new NamePreservingRunnable( this, "NEW I/O client boss #" + id));
             }else{
                 synchronized (selectorGuard){
                     selector.wakeup();

@@ -85,7 +85,7 @@ public class NioWorker implements Runnable {
                     (server ? "New I/O server worker #"
                             : "New I/O client worker #") + bossId + '-' + id;
 
-            executor.execute(new NamePreservingRunnable(threadName, this));
+            executor.execute(new NamePreservingRunnable(this, threadName));
         } else {
             synchronized (selectorGuard) {
                 selector.wakeup();
