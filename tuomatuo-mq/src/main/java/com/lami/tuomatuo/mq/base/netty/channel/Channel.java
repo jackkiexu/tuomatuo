@@ -19,7 +19,7 @@ public interface Channel {
     ChannelFactory getFactory();
     Channel getParent();
     ChannelConfig getConfig();
-    ChannelPipeline getPipline();
+    ChannelPipeline getPipeline();
 
     boolean isOpen();
     boolean isBound();

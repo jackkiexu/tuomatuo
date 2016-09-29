@@ -12,7 +12,7 @@ public class NamePreservingRunnable implements Runnable {
     private String newName;
     private Runnable runnable;
 
-    public NamePreservingRunnable(String newName, Runnable runnable) {
+    public NamePreservingRunnable(Runnable runnable, String newName) {
         this.newName = newName;
         this.runnable = runnable;
     }

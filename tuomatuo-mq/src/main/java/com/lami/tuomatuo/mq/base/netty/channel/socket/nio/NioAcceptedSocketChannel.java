@@ -12,11 +12,11 @@ public class NioAcceptedSocketChannel extends NioSocketChannel {
 
     private NioWorker worker;
 
-    public NioAcceptedSocketChannel(Channel parent, ChannelFactory factory, ChannelPipeline pipeline, ChannelSink sink, java.nio.channels.SocketChannel socket) {
+    public NioAcceptedSocketChannel( ChannelFactory factory, ChannelPipeline pipeline, Channel parent, ChannelSink sink, java.nio.channels.SocketChannel socket) {
         super(parent, factory, pipeline, sink, socket);
     }
 
-    public NioAcceptedSocketChannel(Channel parent, ChannelFactory factory, ChannelPipeline pipeline, ChannelSink sink, java.nio.channels.SocketChannel socket, NioWorker nioWorker) {
+    public NioAcceptedSocketChannel(ChannelFactory factory, ChannelPipeline pipeline, Channel parent, ChannelSink sink, java.nio.channels.SocketChannel socket, NioWorker nioWorker) {
         super(parent, factory, pipeline, sink, socket);
 
         this.worker = worker;
