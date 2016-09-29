@@ -69,7 +69,7 @@ public class NioServerSocketPipelineSink extends AbstractChannelSink {
         } catch (IOException e) {
             e.printStackTrace();
             future.setFailure(e);
-            Channels.fireExceptionCaught(channel, t);
+            Channels.fireExceptionCaught(channel, e);
         }
     }
 
