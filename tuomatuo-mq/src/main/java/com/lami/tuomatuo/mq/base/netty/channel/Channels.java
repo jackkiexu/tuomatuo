@@ -127,6 +127,11 @@ public class Channels {
         ctx.sendUpstream(new DefaultChannelStateEvent(channel, successedFuture(channel), ChannelState.CONNECTED, null));
     }
 
+    public static void fireChannelUnbound(Channel channel) {
+        channel.getPipline().sendUpstream(new DefaultChannelStateEvent(
+                channel, successedFuture(channel), ChannelState.BOUND, null));
+    }
+
     public static void fireChannelUnbound(ChannelHandlerContext ctx, Channel channel){
         ctx.sendUpstream(new DefaultChannelStateEvent(channel, successedFuture(channel), ChannelState.BOUND, null));
     }

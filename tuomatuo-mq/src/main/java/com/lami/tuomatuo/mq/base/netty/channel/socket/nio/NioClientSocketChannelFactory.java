@@ -25,7 +25,7 @@ public class NioClientSocketChannelFactory implements ClientSocketChannelFactory
         if(workerCount <= 0){
             throw new IllegalArgumentException("wokerCount(" + workerCount + ")" + " must be a positive integer" );
         }
-        sink = new NioClientSocketPipelineSink();
+        sink = new NioClientSocketPipelineSink(bossExecutor, workerExecutor, workerCount);
     }
 
     public SocketChannel newChannel(ChannelPipeline pipeline) {
