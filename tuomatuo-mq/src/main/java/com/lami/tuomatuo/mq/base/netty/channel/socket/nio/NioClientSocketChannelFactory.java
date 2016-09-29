@@ -4,6 +4,7 @@ import com.lami.tuomatuo.mq.base.netty.channel.Channel;
 import com.lami.tuomatuo.mq.base.netty.channel.ChannelPipeline;
 import com.lami.tuomatuo.mq.base.netty.channel.ChannelSink;
 import com.lami.tuomatuo.mq.base.netty.channel.socket.ClientSocketChannelFactory;
+import com.lami.tuomatuo.mq.base.netty.channel.socket.ServerSocketChannel;
 import com.lami.tuomatuo.mq.base.netty.channel.socket.SocketChannel;
 
 import java.util.concurrent.Executor;
@@ -13,7 +14,13 @@ import java.util.concurrent.Executor;
  */
 public class NioClientSocketChannelFactory implements ClientSocketChannelFactory {
 
+    Executor bossExecutor;
     private ChannelSink sink;
+
+    public NioClientSocketChannelFactory(
+            Executor bossExecutor, Executor workerExecutor) {
+        this(bossExecutor, workerExecutor, Runtime.getRuntime().availableProcessors());
+    }
 
     public NioClientSocketChannelFactory(Executor bossExecutor, Executor workerExecutor, int workerCount){
         if(bossExecutor == null){
@@ -25,14 +32,12 @@ public class NioClientSocketChannelFactory implements ClientSocketChannelFactory
         if(workerCount <= 0){
             throw new IllegalArgumentException("wokerCount(" + workerCount + ")" + " must be a positive integer" );
         }
+
+        this.bossExecutor = bossExecutor;
         sink = new NioClientSocketPipelineSink(bossExecutor, workerExecutor, workerCount);
     }
 
-    public SocketChannel newChannel(ChannelPipeline pipeline) {
-        return null;
-    }
-
-    public Channel newChannel(io.netty.channel.ChannelPipeline pipline) {
-        return null;
+    public ServerSocketChannel newChannel(ChannelPipeline pipeline) {
+        return new NioServerSocketChannel(this, pipeline, sink);
     }
 }

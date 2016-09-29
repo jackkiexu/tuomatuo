@@ -8,6 +8,6 @@ import com.lami.tuomatuo.mq.base.netty.channel.ChannelPipeline;
  */
 public interface ClientSocketChannelFactory extends ChannelFactory {
 
-    SocketChannel newChannel(ChannelPipeline pipeline);
+    ServerSocketChannel newChannel(ChannelPipeline pipeline);
 
 }

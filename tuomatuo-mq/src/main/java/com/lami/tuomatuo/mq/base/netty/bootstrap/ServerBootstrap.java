@@ -21,6 +21,10 @@ public class ServerBootstrap extends Bootstrap {
         super();
     }
 
+    public ServerBootstrap(ChannelFactory channelFactory) {
+        super(channelFactory);
+    }
+
     public ChannelHandler getParentHandler() {
         return parentHandler;
     }
