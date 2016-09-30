@@ -411,6 +411,42 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
+
+        <!-- jdfka -->
+        <dependency>
+            <groupId>com.github.adyliu</groupId>
+            <artifactId>zkclient</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>1.8.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+            <version>3.3.3</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jline</artifactId>
+                    <groupId>jline</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>mx4j</groupId>
+            <artifactId>mx4j-tools</artifactId>
+            <version>3.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jopt-simple</groupId>
+            <artifactId>jopt-simple</artifactId>
+            <version>4.3</version>
+            <optional>true</optional>
+        </dependency>
+
     </dependencies>
 
     <build>
