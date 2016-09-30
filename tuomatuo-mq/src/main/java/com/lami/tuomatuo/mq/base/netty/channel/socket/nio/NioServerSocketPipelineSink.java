@@ -30,7 +30,71 @@ public class NioServerSocketPipelineSink extends AbstractChannelSink {
     }
 
     public void eventSunk(ChannelPipeline pipline, ChannelEvent e) throws Exception {
+        Channel channel = e.getChannel();
+        if(channel instanceof NioServerSocketChannel){
+            handleServerSocket(e);
+        }else if(channel instanceof NioSocketChannel){
+            handleAcceptedSocket(e);
+        }
+    }
 
+    private void handleServerSocket(ChannelEvent e){
+        if(!(e instanceof  ChannelStateEvent)){
+            return ;
+        }
+
+        ChannelStateEvent event = (ChannelStateEvent)e;
+        NioServerSocketChannel channel = (NioServerSocketChannel)event.getChannel();
+        ChannelFuture future = event.getFuture();
+        ChannelState state = event.getState();
+        Object value = event.getValue();
+
+        switch(state){
+            case OPEN:
+                if(Boolean.FALSE.equals(value)){
+                    close(channel, future);
+                }
+                break;
+            case BOUND:
+                if(value != null){
+                    bind(channel, future, (SocketAddress)value);
+                }else{
+                    close(channel, future);
+                }
+                break;
+        }
+    }
+
+    private void handleAcceptedSocket(ChannelEvent e){
+        if(e instanceof ChannelStateEvent){
+            ChannelStateEvent event = (ChannelStateEvent) e;
+            NioSocketChannel channel = (NioSocketChannel)event.getChannel();
+            ChannelFuture future = event.getFuture();
+            ChannelState state = event.getState();
+            Object value = event.getValue();
+
+            switch (state){
+                case OPEN:
+                    if(Boolean.FALSE.equals(value)){
+                        NioWorker.close(channel, future);
+                    }
+                    break;
+                case BOUND:
+                case CONNECTED:
+                    if(value == null){
+                        NioWorker.close(channel, future);
+                    }
+                    break;
+                case INTEREST_OPS:
+                    NioWorker.setInterestOps(channel, future, (Integer)value);
+                    break;
+            }
+        }else if(e instanceof MessageEvent){
+            MessageEvent event = (MessageEvent) e;
+            NioSocketChannel channel = (NioSocketChannel)event.getChannel();
+            channel.writeBuffer.offer(event);
+            NioWorker.write(channel);
+        }
     }
 
     private void bind (NioServerSocketChannel channel, ChannelFuture future, SocketAddress localAddress){

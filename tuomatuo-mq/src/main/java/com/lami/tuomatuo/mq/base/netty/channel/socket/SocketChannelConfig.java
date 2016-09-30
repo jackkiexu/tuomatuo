@@ -37,7 +37,4 @@ public interface SocketChannelConfig extends ChannelConfig {
 
     void setPerformancePreferences(int connectionTime, int latancy, int bandwidth);
 
-
-
-
 }
