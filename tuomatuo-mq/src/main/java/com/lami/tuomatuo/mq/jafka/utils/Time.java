@@ -19,5 +19,5 @@ public interface Time {
 
     long UsPerSec  = UsPerMs * MsPerSec;
 
-    
+
 }
