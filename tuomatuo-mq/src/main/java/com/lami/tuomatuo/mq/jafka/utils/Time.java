@@ -19,5 +19,38 @@ public interface Time {
 
     long UsPerSec  = UsPerMs * MsPerSec;
 
+    long SecsPerMin = 60;
+
+    long MinsPerHour = 60;
+
+    long HoursPerDay = 24;
+
+    long SecsPerHour = SecsPerMin * MinsPerHour;
+
+    long SecsPerDay = SecsPerHour * HoursPerDay;
+
+    long MinsPerDay = MinsPerHour * HoursPerDay;
+
+    long milliseconds();
+
+    long nanoseconds();
+
+    void sleep(long ms) throws InterruptedException;
+
+    public static final Time SystemTime = new Time(){
+
+        public long milliseconds() {
+            return System.currentTimeMillis();
+        }
+
+        public long nanoseconds(){
+            return System.nanoTime();
+        }
+
+        public void sleep(long ms) throws InterruptedException{
+            Thread.sleep(ms);
+        }
+    };
+
 
 }
