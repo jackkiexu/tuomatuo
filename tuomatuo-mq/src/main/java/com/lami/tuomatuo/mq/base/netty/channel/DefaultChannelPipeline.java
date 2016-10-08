@@ -25,11 +25,11 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
     };
 
-    private volatile Channel channel;
-    private volatile ChannelSink sink;
-    private volatile DefaultChannelHandlerContext head;
-    private volatile DefaultChannelHandlerContext tail;
-    private Map<String, DefaultChannelHandlerContext> name2ctx =
+    public volatile Channel channel;
+    public volatile ChannelSink sink;
+    public volatile DefaultChannelHandlerContext head;
+    public volatile DefaultChannelHandlerContext tail;
+    public Map<String, DefaultChannelHandlerContext> name2ctx =
             new HashMap<String, DefaultChannelHandlerContext>();
 
 
@@ -248,7 +248,12 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     }
 
     public void sendUpstream(ChannelEvent e) {
-
+        DefaultChannelHandlerContext head = getActualUpstreamContext(this.head);
+        if(head == null){
+            logger.info("The pipeline contains no upstream handlers; discarding :" + e);
+            return;
+        }
+        sendUpstream(head, e);
     }
 
     void sendUpstream(DefaultChannelHandlerContext ctx, ChannelEvent e){
@@ -260,7 +265,18 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     }
 
     public void sendDownstream(ChannelEvent e) {
+        DefaultChannelHandlerContext tail = getActualDownstreamContext(this.tail);
+        if(tail == null){
+            try {
+                getSink().eventSunk(this, e);
+                return ;
+            } catch (Exception e1) {
+                e1.printStackTrace();
+                notifyException(e, e1);
+            }
+        }
 
+        sendDownstream(tail, e);
     }
 
     void sendDownstream(DefaultChannelHandlerContext ctx, ChannelEvent e){
@@ -410,15 +426,15 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
         public DefaultChannelHandlerContext(DefaultChannelHandlerContext next, DefaultChannelHandlerContext prev, String name, ChannelHandler handler) {
 
+            logger.info("next: " + next + ", prev:" + prev + ", name:"+ name + ", handler:"+ handler);
             if(name == null) throw new NullPointerException("name is null");
             if(handler == null) throw new NullPointerException("handler is null");
 
+            // check handler type
             canHandleUpstream = handler instanceof ChannelUpstreamHandler;
             canHandleDownstream = handler instanceof ChannelDownstreamHandler;
 
-            if(!canHandleDownstream && !canHandleUpstream){
-                throw new IllegalArgumentException("handler must be either" + ChannelUpstreamHandler.class.getName() + "or"+ ChannelDownstreamHandler.class.getName());
-            }
+            if(!canHandleDownstream && !canHandleUpstream) throw new IllegalArgumentException("handler must be either" + ChannelUpstreamHandler.class.getName() + "or"+ ChannelDownstreamHandler.class.getName());
 
             ChannelPipelineCoverage coverage = handler.getClass().getAnnotation(ChannelPipelineCoverage.class);
             if(coverage == null){

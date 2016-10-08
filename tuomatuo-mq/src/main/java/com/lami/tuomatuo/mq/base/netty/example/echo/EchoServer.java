@@ -3,6 +3,7 @@ package com.lami.tuomatuo.mq.base.netty.example.echo;
 import com.lami.tuomatuo.mq.base.netty.bootstrap.ServerBootstrap;
 import com.lami.tuomatuo.mq.base.netty.channel.ChannelFactory;
 import com.lami.tuomatuo.mq.base.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import com.lami.tuomatuo.mq.base.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
@@ -17,7 +18,7 @@ public class EchoServer {
 
     public static void main(String[] args) {
         // Start server
-        ChannelFactory factory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool());
+        ChannelFactory factory = new NioServerSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool());
 
         EchoHandler handler = new EchoHandler(20);
         ServerBootstrap bootstrap = new ServerBootstrap(factory);

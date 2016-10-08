@@ -34,8 +34,8 @@ public class GsonUtils {
         return gson.toJson(obj, targetType);
     }
 
-    public static Object getObjectFromJson(String json, Class classOfT){
-        Object result = null;
+    public static <E extends Object> E getObjectFromJson(String json, Class<E> classOfT){
+        E result = null;
         try {
             result = getGson().fromJson(json, classOfT);
         } catch (JsonSyntaxException e) {

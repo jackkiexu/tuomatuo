@@ -7,15 +7,15 @@ import java.nio.channels.GatheringByteChannel;
 /**
  * Created by xjk on 9/25/16.
  */
-public class ByteBUfferSend extends AbstractSend{
+public class ByteBufferSend extends AbstractSend{
 
     ByteBuffer buffer;
 
-    public ByteBUfferSend(int size) {
+    public ByteBufferSend(int size) {
         this(ByteBuffer.allocate(size));
     }
 
-    public ByteBUfferSend(ByteBuffer buffers) {
+    public ByteBufferSend(ByteBuffer buffers) {
         this.buffer = buffers;
     }
 

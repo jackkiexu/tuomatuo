@@ -51,7 +51,7 @@ public class ServerBootstrap extends Bootstrap {
             bossPipeline.addLast("userHandler", parentHandler);
         }
 
-        Channel channel = getFactory().newChannel(bossPipeline);
+        Channel channel = this.factory.newChannel(bossPipeline);
 
         // Wait until the future is available
         ChannelFuture future = null;

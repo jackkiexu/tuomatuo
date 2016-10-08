@@ -2,8 +2,6 @@ package com.lami.tuomatuo.mq.jafka.utils;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Spliterator;
-import java.util.function.Consumer;
 
 /**
  * Created by xjk on 10/1/16.

@@ -36,7 +36,7 @@ public class UserCacheImpl implements UserCache {
         try {
             redis = readPool.getResource();
             String json = redis.hget(RedisConstant.USER_CACHE_HASH_SET, userId + "");
-            if(json != null) return (UserCo)GsonUtils.getObjectFromJson(json, UserCo.class);
+            if(json != null) return GsonUtils.getObjectFromJson(json, UserCo.class);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
