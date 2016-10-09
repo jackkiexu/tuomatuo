@@ -6,7 +6,7 @@ import java.util.NoSuchElementException;
 /**
  * Created by xjk on 10/1/16.
  */
-public abstract class IteratorTemplate<T> implements Iterable<T> {
+public abstract class IteratorTemplate<T> implements Iterator<T> {
 
     enum State {
         DONE, READY, NOT_READY, FAILED;

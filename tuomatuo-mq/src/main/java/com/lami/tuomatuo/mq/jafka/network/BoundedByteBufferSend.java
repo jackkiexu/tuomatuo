@@ -23,8 +23,28 @@ public class BoundedByteBufferSend extends AbstractSend{
         this(ByteBuffer.allocate(size));
     }
 
+    public BoundedByteBufferSend(Request request) {
+        this(request.getSizeInBytes() + 2);
+        buffer.putShort((short) request.getRequestKey().value);
+        request.writeTo(buffer);
+        buffer.rewind();
+    }
+
+    public ByteBuffer getBuffer(){
+        return buffer;
+    }
 
     public int writeTo(GatheringByteChannel channel) throws IOException {
-        return 0;
+        expectIncomplete();
+        int written = 0;
+        // try to write the size if we haven't already
+        if(sizeBuffer.hasRemaining()) written += channel.write(sizeBuffer);
+        // try to write the actual buffer itself
+        if(!sizeBuffer.hasRemaining() && buffer.hasRemaining()) written += channel.write(buffer);
+        // if we are done, mark it off
+        if(!buffer.hasRemaining()){
+            setCompleted();
+        }
+        return written;
     }
 }

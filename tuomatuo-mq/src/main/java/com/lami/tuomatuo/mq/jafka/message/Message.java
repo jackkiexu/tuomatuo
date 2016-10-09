@@ -103,7 +103,18 @@ public class Message implements ICalculable {
 
     }
 
-    public int getSizeInBytes() {
-        return 0;
+    public void serializeTo(ByteBuffer serBuffer){
+        serBuffer.putInt(buffer.limit());
+        serBuffer.put(buffer.duplicate());
     }
+
+    public int serializedSize(){
+        return 4 /* int size */ + buffer.limit();
+    }
+
+    public int getSizeInBytes() {
+        return messageSize;
+    }
+
+
 }
