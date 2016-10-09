@@ -1,5 +1,6 @@
 package com.lami.tuomatuo.mq.jafka.utils;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -22,6 +23,10 @@ public class SnapshotStats {
 
     public SnapshotStats(long monitorDurationNs) {
         this.monitorDurationNs = monitorDurationNs;
+    }
+
+    public SnapshotStats() {
+        this(TimeUnit.MINUTES.toNanos(10));
     }
 
     public long getTotalMetric(){

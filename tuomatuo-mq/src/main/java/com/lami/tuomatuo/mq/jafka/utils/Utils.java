@@ -1,8 +1,7 @@
 package com.lami.tuomatuo.mq.jafka.utils;
 
-import com.sohu.jafka.mx.IMBeanName;
-import com.sohu.jafka.utils.*;
-import com.sohu.jafka.utils.KV;
+
+import com.lami.tuomatuo.mq.jafka.mx.IMBeanName;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -125,7 +124,7 @@ public class Utils {
         return getCSVMap(allIntervals, exceptionMsg, successMsg);
     }
 
-    public static com.sohu.jafka.utils.KV<String, Integer> getTopicPartition(String topicPartition) {
+    public static KV<String, Integer> getTopicPartition(String topicPartition) {
         int index = topicPartition.lastIndexOf('-');
         return new KV<String, Integer>(topicPartition.substring(0, index),//
                 Integer.valueOf(topicPartition.substring(index + 1)));
@@ -145,7 +144,6 @@ public class Utils {
 
     /**
      * @param channel
-     * @param sizeBuffer
      * @return
      * @throws IOException
      */
@@ -160,7 +158,6 @@ public class Utils {
      * short
      *
      * @param buffer The buffer to write to
-     * @param string The string to write
      */
     public static void writeShortString(ByteBuffer buffer, String s) {
         if (s == null) {
@@ -202,7 +199,6 @@ public class Utils {
      * Read an unsigned integer from the current position in the buffer,
      * incrementing the position by 4 bytes
      *
-     * @param The buffer to read from
      * @return The integer read, as a long to avoid signedness
      */
     public static long getUnsignedInt(ByteBuffer buffer) {
@@ -213,7 +209,6 @@ public class Utils {
      * Read an unsigned integer from the given position without modifying
      * the buffers position
      *
-     * @param The buffer to read from
      * @param index the index from which to read the integer
      * @return The integer read, as a long to avoid signedness
      */
@@ -259,8 +254,6 @@ public class Utils {
      * specificed size and offset
      *
      * @param bytes The bytes to checksum
-     * @param the offset at which to begin checksumming
-     * @param the number of bytes to checksum
      * @return The CRC32
      */
     public static long crc32(byte[] bytes, int offset, int size) {
@@ -287,7 +280,6 @@ public class Utils {
      * read bytes with a short sign prefix(mark the size of bytes)
      *
      * @param buffer data buffer
-     * @param string the result
      * @return string result(encoding with UTF-8)
      * @see #writeShortString(ByteBuffer, String)
      */
