@@ -1,6 +1,6 @@
 package com.lami.tuomatuo.mq.redis;
 
-import com.lami.tuomatuo.mq.redis.lettuce.RedisException;
+import com.lami.tuomatuo.mq.lettuce.RedisException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

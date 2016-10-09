@@ -2,7 +2,11 @@ package com.lami.tuomatuo.mq.apns.protocol;
 
 import org.apache.log4j.Logger;
 import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.channel.*;
+import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ChannelStateEvent;
+import org.jboss.netty.channel.ExceptionEvent;
+import org.jboss.netty.channel.SimpleChannelHandler;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.util.Timeout;
 import org.jboss.netty.util.Timer;
@@ -10,7 +14,7 @@ import org.jboss.netty.util.TimerTask;
 
 import java.util.concurrent.TimeUnit;
 
-/** A netty {@link com.lami.tuomatuo.mq.base.netty.channel.ChannelHandler} responsible for monitor the channel and reconnecting when the connection is lost
+/** A netty {@link com.lami.tuomatuo.mq.netty.channel.ChannelHandler} responsible for monitor the channel and reconnecting when the connection is lost
  *
  * Created by xujiankang on 2016/9/26.
  */

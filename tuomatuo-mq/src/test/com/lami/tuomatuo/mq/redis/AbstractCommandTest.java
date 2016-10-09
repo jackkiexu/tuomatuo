@@ -1,8 +1,8 @@
 package com.lami.tuomatuo.mq.redis;
 
-import com.lami.tuomatuo.mq.redis.lettuce.RedisClient;
-import com.lami.tuomatuo.mq.redis.lettuce.RedisConnection;
-import com.lami.tuomatuo.mq.redis.lettuce.ScoredValue;
+import com.lami.tuomatuo.mq.lettuce.RedisClient;
+import com.lami.tuomatuo.mq.lettuce.RedisConnection;
+import com.lami.tuomatuo.mq.lettuce.ScoredValue;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;

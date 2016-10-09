@@ -1,6 +1,6 @@
 package com.lami.tuomatuo.mq.redis;
 
-import com.lami.tuomatuo.mq.redis.lettuce.RedisAsyncConnection;
+import com.lami.tuomatuo.mq.lettuce.RedisAsyncConnection;
 import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;

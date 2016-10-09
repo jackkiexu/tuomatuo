@@ -1,10 +1,10 @@
 package com.lami.tuomatuo.mq.redis;
 
-import com.lami.tuomatuo.mq.redis.lettuce.RedisClient;
-import com.lami.tuomatuo.mq.redis.lettuce.RedisException;
-import com.lami.tuomatuo.mq.redis.lettuce.pubsub.RedisPubSubAdapter;
-import com.lami.tuomatuo.mq.redis.lettuce.pubsub.RedisPubSubConnection;
-import com.lami.tuomatuo.mq.redis.lettuce.pubsub.RedisPubSubListener;
+import com.lami.tuomatuo.mq.lettuce.RedisClient;
+import com.lami.tuomatuo.mq.lettuce.RedisException;
+import com.lami.tuomatuo.mq.lettuce.pubsub.RedisPubSubAdapter;
+import com.lami.tuomatuo.mq.lettuce.pubsub.RedisPubSubConnection;
+import com.lami.tuomatuo.mq.lettuce.pubsub.RedisPubSubListener;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

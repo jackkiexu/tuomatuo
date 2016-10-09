@@ -1,6 +1,6 @@
 package com.lami.tuomatuo.mq.redisson;
 
-import com.lami.tuomatuo.mq.redis.lettuce.RedisConnection;
+import com.lami.tuomatuo.mq.lettuce.RedisConnection;
 import org.apache.log4j.Logger;
 
 import java.util.Collection;
