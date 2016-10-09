@@ -1,14 +1,52 @@
-[2016-09-15 00:36:40,115] INFO  Thread-0 (PPubSubTestMain.java:23) - ----------subscribe operation begin-------
-[2016-09-15 00:36:40,805] INFO  Thread-0 (PPrintListener.java:48) - subscribe:pubsub-channel-p;total channels : 1
-[2016-09-15 00:37:29,593] INFO  Thread-0 (PPrintListener.java:36) - message receive:702/1k3vFe5TvUvx5pXAAChF1zgBMpwLh44VETFe0pjDoamddMjmjN5lLEUEJUZ8hHew,channel:pubsub-channel-p...2016-09-15 00:37:29
-[2016-09-15 00:37:38,501] INFO  Thread-0 (PPrintListener.java:36) - message receive:703/vaV3yXq2eHCfnAxLJfS9J2mDafpueiRhmxmM3tsRaHcmHxfk3er01HSL0zAO1V2u,channel:pubsub-channel-p...2016-09-15 00:37:38
-[2016-09-15 00:37:47,784] INFO  Thread-0 (PPrintListener.java:36) - message receive:704/PtzCHbdsryPsknFe8EnTRLGhy3TD97WTtspUITYBMMnhzjIOYWZs7Yc8St3vLtPr,channel:pubsub-channel-p...2016-09-15 00:37:47
-[2016-09-15 00:37:48,264] INFO  Thread-0 (PPrintListener.java:36) - message receive:705/pAQzxuY7PlW8P5pC5GmdbhRfuAWuSnbJ4cOPBTHj76BngpOnhRRQ67cJv7Bhi4Ne,channel:pubsub-channel-p...2016-09-15 00:37:48
-[2016-09-15 00:37:48,742] INFO  Thread-0 (PPrintListener.java:36) - message receive:706/A5Cr3mZBTC0R1UgerwFhqhpahuBTselONH9YeE4SEj3coURCPxNCcbqwrcAAf4n5,channel:pubsub-channel-p...2016-09-15 00:37:48
-[2016-09-15 00:37:49,223] INFO  Thread-0 (PPrintListener.java:36) - message receive:707/T5Z89RsYqIIqC2r5avW0TicMTcKai0YvD5rgU0qLztCrzLfFfoOdWdHM6i3A8dQY,channel:pubsub-channel-p...2016-09-15 00:37:49
-[2016-09-15 00:37:49,700] INFO  Thread-0 (PPrintListener.java:36) - message receive:708/JMAexbn1RfZhJ6Hld9vTlbnDnO2TX5Uy1CCY3Aj17IeG0GvHimFHOpiwarGMjDny,channel:pubsub-channel-p...2016-09-15 00:37:49
-[2016-09-15 00:37:50,178] INFO  Thread-0 (PPrintListener.java:36) - message receive:709/0amlbOidZqKulS3n8MKL71leCH7dzTIYNLw7CwseEgmCKE2d7ZtN1uXcm7L7svZw,channel:pubsub-channel-p...2016-09-15 00:37:50
-[2016-09-15 00:37:51,019] INFO  Thread-0 (PPrintListener.java:36) - message receive:710/TfoGwIau0butqns6anTJ7VlEqLM0hpm6vUrmceamXQdwCGuo63Fsnb5kqJcofgFF,channel:pubsub-channel-p...2016-09-15 00:37:51
-[2016-09-15 00:37:51,497] INFO  Thread-0 (PPrintListener.java:36) - message receive:711/SYnn7IlMDfy1pM8Zf6RV37yrBxv39lZyzl77r7JMDZ4AvhEgbQI8RDpKdhoyfkMZ,channel:pubsub-channel-p...2016-09-15 00:37:51
-[2016-09-15 00:37:51,975] INFO  Thread-0 (PPrintListener.java:36) - message receive:712/lDJPRb4p2SabjPG2ODzrQzBhi7bMi4Bq1J2j4cq5eDEdC8AWUsTyCaCCLkK4K57s,channel:pubsub-channel-p...2016-09-15 00:37:51
-[2016-09-15 00:37:52,453] INFO  Thread-0 (PPrintListener.java:36) - message receive:713/WH9Y9P7V4pubPYG9qShHYhENziXP7ADNRslzvulncd8nmBXyuc7hLHM1q3I06qj1,channel:pubsub-channel-p...2016-09-15 00:37:52
+[2016-10-09 16:45:33,111] INFO  main (TestFile.java:24) - bytesRead:-1
+[2016-10-09 16:46:03,077] INFO  main (TestFile.java:24) - bytesRead:2
+[2016-10-09 16:46:03,080] INFO  main (TestFile.java:32) - F
+[2016-10-09 16:46:03,080] INFO  main (TestFile.java:32) - l
+[2016-10-09 16:46:03,080] INFO  main (TestFile.java:32) - a
+[2016-10-09 16:46:03,080] INFO  main (TestFile.java:32) - g
+[2016-10-09 16:46:03,081] INFO  main (TestFile.java:32) - (
+[2016-10-09 16:46:03,081] INFO  main (TestFile.java:32) - 1
+[2016-10-09 16:46:03,081] INFO  main (TestFile.java:32) - )
+[2016-10-09 16:46:03,081] INFO  main (TestFile.java:32) - 
+[2016-10-09 16:46:03,082] INFO  main (TestFile.java:32) - 
+
+[2016-10-09 16:46:03,082] INFO  main (TestFile.java:32) - F
+[2016-10-09 16:46:03,082] INFO  main (TestFile.java:32) - l
+[2016-10-09 16:46:03,082] INFO  main (TestFile.java:32) - a
+[2016-10-09 16:46:03,083] INFO  main (TestFile.java:32) - g
+[2016-10-09 16:46:03,083] INFO  main (TestFile.java:32) - (
+[2016-10-09 16:46:03,083] INFO  main (TestFile.java:32) - 2
+[2016-10-09 16:46:03,083] INFO  main (TestFile.java:32) - )
+[2016-10-09 16:46:03,084] INFO  main (TestFile.java:32) - 
+[2016-10-09 16:46:03,084] INFO  main (TestFile.java:32) - 
+
+[2016-10-09 16:46:03,084] INFO  main (TestFile.java:32) - F
+[2016-10-09 16:46:03,084] INFO  main (TestFile.java:32) - l
+[2016-10-09 16:46:03,085] INFO  main (TestFile.java:32) - a
+[2016-10-09 16:46:03,085] INFO  main (TestFile.java:32) - g
+[2016-10-09 16:46:03,085] INFO  main (TestFile.java:32) - (
+[2016-10-09 16:46:03,085] INFO  main (TestFile.java:32) - 3
+[2016-10-09 16:46:03,086] INFO  main (TestFile.java:32) - )
+[2016-10-09 16:46:03,086] INFO  main (TestFile.java:32) - 
+[2016-10-09 16:46:03,086] INFO  main (TestFile.java:32) - 
+
+[2016-10-09 16:46:03,086] INFO  main (TestFile.java:32) - F
+[2016-10-09 16:46:03,087] INFO  main (TestFile.java:32) - l
+[2016-10-09 16:46:03,087] INFO  main (TestFile.java:32) - a
+[2016-10-09 16:46:03,087] INFO  main (TestFile.java:32) - g
+[2016-10-09 16:46:03,088] INFO  main (TestFile.java:32) - (
+[2016-10-09 16:46:03,088] INFO  main (TestFile.java:32) - 4
+[2016-10-09 16:46:03,088] INFO  main (TestFile.java:32) - )
+[2016-10-09 16:46:03,088] INFO  main (TestFile.java:32) - 
+[2016-10-09 16:46:03,088] INFO  main (TestFile.java:32) - 
+
+[2016-10-09 16:46:03,088] INFO  main (TestFile.java:32) - F
+[2016-10-09 16:46:03,089] INFO  main (TestFile.java:32) - l
+[2016-10-09 16:46:03,089] INFO  main (TestFile.java:32) - a
+[2016-10-09 16:46:03,089] INFO  main (TestFile.java:32) - g
+[2016-10-09 16:46:03,089] INFO  main (TestFile.java:32) - (
+[2016-10-09 16:46:03,089] INFO  main (TestFile.java:32) - 5
+[2016-10-09 16:46:03,090] INFO  main (TestFile.java:32) - )
+[2016-10-09 16:46:03,090] INFO  main (TestFile.java:32) - 
+[2016-10-09 16:46:03,090] INFO  main (TestFile.java:32) - 
+

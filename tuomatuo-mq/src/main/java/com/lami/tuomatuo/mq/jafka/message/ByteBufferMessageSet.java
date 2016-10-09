@@ -65,6 +65,11 @@ public class ByteBufferMessageSet extends MessageSet {
 
     }
 
+    @Override
+    public long getSizeInBytes() {
+        return 0;
+    }
+
     class Iter extends IteratorTemplate<MessageAndOffset>{
 
         boolean isShallow;

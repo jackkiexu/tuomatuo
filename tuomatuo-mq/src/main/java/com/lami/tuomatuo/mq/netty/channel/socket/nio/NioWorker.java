@@ -63,7 +63,9 @@ public class NioWorker implements Runnable {
 
         if (firstChannel) {
             try {
-                channel.socket.register(selector, SelectionKey.OP_READ, channel);
+                SelectionKey selectionKey = channel.socket.register(selector, SelectionKey.OP_READ, channel);
+
+
                 if (future != null) {
                     future.setSuccess();
                 }

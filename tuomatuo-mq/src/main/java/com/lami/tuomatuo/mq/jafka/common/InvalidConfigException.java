@@ -17,22 +17,21 @@
 
 package com.lami.tuomatuo.mq.jafka.common;
 
+
 /**
- * Indicates the client has requested a range no longer available on the
- * server
- * 
+ * Indicates that the given config parameter has invalid value
  * @author adyliu (imxylz@gmail.com)
  * @since 2012-4-5
  */
-public class OffsetOutOfRangeException extends RuntimeException {
+public class InvalidConfigException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    public OffsetOutOfRangeException() {
+    public InvalidConfigException() {
         super();
     }
 
-    public OffsetOutOfRangeException(String message) {
+    public InvalidConfigException(String message) {
         super(message);
     }
 

@@ -18,21 +18,20 @@
 package com.lami.tuomatuo.mq.jafka.common;
 
 /**
- * Indicates the client has requested a range no longer available on the
- * server
+ * Thrown when a request is made for broker but no brokers with that topic
+ * exist.
  * 
  * @author adyliu (imxylz@gmail.com)
- * @since 2012-4-5
+ * @since 2012-4-6
  */
-public class OffsetOutOfRangeException extends RuntimeException {
+public class ConsumerRebalanceFailedException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    public OffsetOutOfRangeException() {
-        super();
+    public ConsumerRebalanceFailedException() {
     }
 
-    public OffsetOutOfRangeException(String message) {
+    public ConsumerRebalanceFailedException(String message) {
         super(message);
     }
 

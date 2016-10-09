@@ -18,21 +18,20 @@
 package com.lami.tuomatuo.mq.jafka.common;
 
 /**
- * Indicates the client has requested a range no longer available on the
- * server
+ * Indicates a producer pool initialization problem
  * 
  * @author adyliu (imxylz@gmail.com)
  * @since 2012-4-5
  */
-public class OffsetOutOfRangeException extends RuntimeException {
+public class UnavaliableProducerException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    public OffsetOutOfRangeException() {
+    public UnavaliableProducerException() {
         super();
     }
 
-    public OffsetOutOfRangeException(String message) {
+    public UnavaliableProducerException(String message) {
         super(message);
     }
 

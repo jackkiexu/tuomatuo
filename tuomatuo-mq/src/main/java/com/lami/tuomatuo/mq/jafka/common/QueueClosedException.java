@@ -18,22 +18,38 @@
 package com.lami.tuomatuo.mq.jafka.common;
 
 /**
- * Indicates the client has requested a range no longer available on the
- * server
+ * Indicates that client is sending event to a closed queue
  * 
  * @author adyliu (imxylz@gmail.com)
- * @since 2012-4-5
+ * @since 2012-4-11
  */
-public class OffsetOutOfRangeException extends RuntimeException {
+public class QueueClosedException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    public OffsetOutOfRangeException() {
-        super();
+    public QueueClosedException() {
     }
 
-    public OffsetOutOfRangeException(String message) {
+    /**
+     * @param message
+     */
+    public QueueClosedException(String message) {
         super(message);
+    }
+
+    /**
+     * @param cause
+     */
+    public QueueClosedException(Throwable cause) {
+        super(cause);
+    }
+
+    /**
+     * @param message
+     * @param cause
+     */
+    public QueueClosedException(String message, Throwable cause) {
+        super(message, cause);
     }
 
 }

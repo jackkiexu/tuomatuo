@@ -18,22 +18,26 @@
 package com.lami.tuomatuo.mq.jafka.common;
 
 /**
- * Indicates the client has requested a range no longer available on the
- * server
- * 
  * @author adyliu (imxylz@gmail.com)
- * @since 2012-4-5
+ * @since 2012-4-11
  */
-public class OffsetOutOfRangeException extends RuntimeException {
+public class QueueFullException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    public OffsetOutOfRangeException() {
-        super();
+    public QueueFullException() {
     }
 
-    public OffsetOutOfRangeException(String message) {
+    public QueueFullException(String message) {
         super(message);
+    }
+
+    public QueueFullException(Throwable cause) {
+        super(cause);
+    }
+
+    public QueueFullException(String message, Throwable cause) {
+        super(message, cause);
     }
 
 }
