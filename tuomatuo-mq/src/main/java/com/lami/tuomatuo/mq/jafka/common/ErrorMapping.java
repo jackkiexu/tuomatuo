@@ -48,7 +48,7 @@ public enum ErrorMapping {
         this.code = (short) code;
     }
 
-    public static com.sohu.jafka.common.ErrorMapping valueOf(Exception e) {
+    public static ErrorMapping valueOf(Exception e) {
         Class<?> clazz = e.getClass();
         if (clazz == OffsetOutOfRangeException.class) {
             return OffsetOutOfRangeCode;
@@ -65,7 +65,7 @@ public enum ErrorMapping {
         return UnkonwCode;
     }
 
-    public static com.sohu.jafka.common.ErrorMapping valueOf(short code) {
+    public static ErrorMapping valueOf(short code) {
         switch (code) {
             case 0:
                 return NoError;

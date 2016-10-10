@@ -42,7 +42,7 @@ public class ServerBootstrap extends Bootstrap {
     public Channel bind(final SocketAddress localAddress){
         BlockingQueue<ChannelFuture> futureQueue = new LinkedBlockingQueue<ChannelFuture>();
 
-        ChannelPipeline bossPipeline = pipeline();
+        ChannelPipeline bossPipeline = pipeline(); // create another pipeline
         bossPipeline.addLast("binder", new Binder(localAddress, futureQueue));
 
         ChannelHandler parentHandler = getParentHandler();

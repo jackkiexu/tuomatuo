@@ -39,6 +39,6 @@ public class NioServerSocketChannelFactory implements ServerSocketChannelFactory
     }
 
     public ServerSocketChannel newChannel(ChannelPipeline pipeline) {
-        return new NioServerSocketChannel(this, pipeline, sink);
+        return new NioServerSocketChannel(this, pipeline, sink); // sink that created in Construct
     }
 }

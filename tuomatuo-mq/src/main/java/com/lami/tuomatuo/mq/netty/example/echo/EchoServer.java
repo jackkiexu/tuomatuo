@@ -20,9 +20,10 @@ public class EchoServer {
         ChannelFactory factory = new NioServerSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool());
 
         EchoHandler handler = new EchoHandler(20);
+        // ChannelPipeline init in the Bootstrap
         ServerBootstrap bootstrap = new ServerBootstrap(factory);
 
-        bootstrap.getPipeline().addLast("handler", handler);
+        bootstrap.pipeline.addLast("handler", handler);
         bootstrap.setOption("child.tcpNoDelay", true);
         bootstrap.setOption("child.keepAlive", true);
         bootstrap.bind(new InetSocketAddress(11027));
