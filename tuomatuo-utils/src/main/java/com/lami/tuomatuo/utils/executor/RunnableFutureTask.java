@@ -93,7 +93,7 @@ public class RunnableFutureTask {
                         public Integer call() throws Exception {
                             int result =  fibc(20);
                             try {
-                                Thread.sleep(3000);
+                                Thread.sleep(5000);
                                 logger.info("futureTask OK");
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
@@ -103,12 +103,14 @@ public class RunnableFutureTask {
                     });
             // 提交futureTask
             mExecutor.submit(futureTask);
-            logger.info("future result from futureTask : " + futureTask.get());
+//            logger.info("future result from futureTask : " + futureTask.get());
 
             mExecutor.shutdown();
             logger.info("mExecutor.isTerminated():"+mExecutor.isTerminated());
             if(!mExecutor.isTerminated()){
-                mExecutor.awaitTermination(1, TimeUnit.NANOSECONDS);
+                logger.info("mExecutor.awaitTermination beging");
+                mExecutor.awaitTermination(1, TimeUnit.DAYS);
+                logger.info("mExecutor.awaitTermination end");
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
