@@ -12,7 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/8/23.
+ * Created by xjk on 2016/8/23.
  */
 @Service("dictWordService")
 public class DictWordService extends BaseService<DictWord, Long> {

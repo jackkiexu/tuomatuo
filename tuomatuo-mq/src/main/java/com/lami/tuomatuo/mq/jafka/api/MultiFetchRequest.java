@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/10/9.
+ * Created by xjk on 2016/10/9.
  */
 public class MultiFetchRequest implements Request{
 

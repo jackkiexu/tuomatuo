@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Created by xujiankang on 2016/9/19.
+ * Created by xjk on 2016/9/19.
  */
 public abstract class AbstractCommandTest {
 

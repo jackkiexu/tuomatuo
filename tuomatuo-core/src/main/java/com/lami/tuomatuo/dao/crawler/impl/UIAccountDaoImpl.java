@@ -6,7 +6,7 @@ import com.lami.tuomatuo.model.crawler.UIAccount;
 import org.springframework.stereotype.Repository;
 
 /**
- * Created by xujiankang on 2016/3/21.
+ * Created by xjk on 2016/3/21.
  */
 @Repository("uiAccountDaoInterface")
 public class UIAccountDaoImpl extends MySqlBaseDao<UIAccount, Long> implements UIAccountDaoInterface {

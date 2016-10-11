@@ -11,7 +11,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.solr.client.solrj.util.ClientUtils;
 
 /**
- * Created by xujiankang on 2016/4/14.
+ * Created by xjk on 2016/4/14.
  */
 public class SolrStatementUtils
 {

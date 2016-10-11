@@ -6,7 +6,7 @@ import com.lami.tuomatuo.mq.jafka.api.RequestKeys;
 import java.nio.ByteBuffer;
 
 /**
- * Created by xujiankang on 2016/10/8.
+ * Created by xjk on 2016/10/8.
  */
 public interface Request extends ICalculable {
 

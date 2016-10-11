@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
 import java.util.Iterator;
 
 /**
- * Created by xujiankang on 2016/10/9.
+ * Created by xjk on 2016/10/9.
  */
 public class ByteBufferMessageSet extends MessageSet {
 

@@ -14,7 +14,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/3/29.
+ * Created by xjk on 2016/3/29.
  */
 public class SearchServer {
 

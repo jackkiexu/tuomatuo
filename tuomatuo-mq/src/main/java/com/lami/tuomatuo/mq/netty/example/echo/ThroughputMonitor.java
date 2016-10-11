@@ -3,7 +3,7 @@ package com.lami.tuomatuo.mq.netty.example.echo;
 import org.apache.log4j.Logger;
 
 /**
- * Created by xujiankang on 2016/9/29.
+ * Created by xjk on 2016/9/29.
  */
 public class ThroughputMonitor extends Thread {
 

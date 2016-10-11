@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 /**
- * Created by xujiankang on 2016/8/23.
+ * Created by xjk on 2016/8/23.
  */
 @Service("dictReviceUnitService")
 public class DictReviceUnitService extends BaseService<DictReviewUnit, Long> {

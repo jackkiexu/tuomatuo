@@ -10,7 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by xujiankang on 2016/9/29.
+ * Created by xjk on 2016/9/29.
  */
 public class ServerBootstrap extends Bootstrap {
 

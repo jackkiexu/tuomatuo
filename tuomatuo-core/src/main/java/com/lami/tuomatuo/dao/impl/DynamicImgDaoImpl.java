@@ -6,7 +6,7 @@ import com.lami.tuomatuo.model.DynamicImg;
 import org.springframework.stereotype.Repository;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 @Repository("dynamicImgDaoInterface")
 public class DynamicImgDaoImpl  extends MySqlBaseDao<DynamicImg, Long> implements DynamicImgDaoInterface {

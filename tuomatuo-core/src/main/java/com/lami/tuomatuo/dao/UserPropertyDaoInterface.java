@@ -5,7 +5,7 @@ import com.lami.tuomatuo.model.UserPosition;
 import com.lami.tuomatuo.model.UserProperty;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 public interface UserPropertyDaoInterface extends BaseDao<UserProperty, Long> {
 }

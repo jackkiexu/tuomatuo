@@ -3,7 +3,7 @@ package com.lami.tuomatuo.mq.apns;
 import java.net.InetSocketAddress;
 
 /**
- * Created by xujiankang on 2016/9/23.
+ * Created by xjk on 2016/9/23.
  */
 public enum Environment {
 

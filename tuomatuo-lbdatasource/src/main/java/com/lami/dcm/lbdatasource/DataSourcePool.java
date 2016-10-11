@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Created by xujiankang on 2016/9/9.
+ * Created by xjk on 2016/9/9.
  */
 public class DataSourcePool extends AbstractDataSource implements InitializingBean {
 

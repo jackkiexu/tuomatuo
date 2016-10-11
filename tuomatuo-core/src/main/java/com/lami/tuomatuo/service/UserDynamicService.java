@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 @Service("userDynamicService")
 public class UserDynamicService extends BaseService<UserDynamic, Long> {

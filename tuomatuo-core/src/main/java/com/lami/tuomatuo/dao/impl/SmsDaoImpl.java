@@ -6,7 +6,7 @@ import com.lami.tuomatuo.model.Sms;
 import org.springframework.stereotype.Repository;
 
 /**
- * Created by xujiankang on 2016/1/25.
+ * Created by xjk on 2016/1/25.
  */
 @Repository("smsDaoInterface")
 public class SmsDaoImpl extends MySqlBaseDao<Sms, Long> implements SmsDaoInterface {

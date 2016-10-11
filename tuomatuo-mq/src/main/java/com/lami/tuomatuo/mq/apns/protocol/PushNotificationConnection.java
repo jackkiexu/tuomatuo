@@ -10,7 +10,7 @@ import org.jboss.netty.channel.SimpleChannelHandler;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * Created by xujiankang on 2016/9/26.
+ * Created by xjk on 2016/9/26.
  */
 public class PushNotificationConnection extends SimpleChannelHandler {
 

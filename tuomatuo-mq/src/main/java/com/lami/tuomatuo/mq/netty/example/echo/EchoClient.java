@@ -8,7 +8,7 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 
 /**
- * Created by xujiankang on 2016/9/29.
+ * Created by xjk on 2016/9/29.
  */
 public class EchoClient {
 

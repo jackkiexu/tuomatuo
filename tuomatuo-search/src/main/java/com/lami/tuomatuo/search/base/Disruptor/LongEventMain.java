@@ -8,7 +8,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /**
- * Created by xujiankang on 2016/4/20.
+ * Created by xjk on 2016/4/20.
  */
 public class LongEventMain {
 

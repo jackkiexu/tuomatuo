@@ -6,7 +6,7 @@ import org.apache.log4j.Logger;
 import java.nio.ByteBuffer;
 
 /**
- * Created by xujiankang on 2016/4/20.
+ * Created by xjk on 2016/4/20.
  */
 public class LongEventProducer {
 

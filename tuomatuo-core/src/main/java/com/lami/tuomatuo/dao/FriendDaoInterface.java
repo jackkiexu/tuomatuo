@@ -4,7 +4,7 @@ import com.lami.tuomatuo.base.BaseDao;
 import com.lami.tuomatuo.model.Friend;
 
 /**
- * Created by xujiankang on 2016/1/20.
+ * Created by xjk on 2016/1/20.
  */
 public interface FriendDaoInterface extends BaseDao<Friend, Long> {
 }

@@ -3,7 +3,7 @@ package com.lami.tuomatuo.mq.netty.util;
 import org.apache.log4j.Logger;
 
 /**
- * Created by xujiankang on 2016/9/28.
+ * Created by xjk on 2016/9/28.
  */
 public class NamePreservingRunnable implements Runnable {
 

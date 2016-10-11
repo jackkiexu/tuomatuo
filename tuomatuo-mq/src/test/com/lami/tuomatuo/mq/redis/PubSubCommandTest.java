@@ -19,7 +19,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import static junit.framework.Assert.assertEquals;
 
 /**
- * Created by xujiankang on 2016/9/19.
+ * Created by xjk on 2016/9/19.
  */
 public class PubSubCommandTest extends AbstractCommandTest implements RedisPubSubListener<String> {
 

@@ -3,7 +3,7 @@ package com.lami.tuomatuo.mq.netty.channel.socket;
 import com.lami.tuomatuo.mq.netty.channel.ChannelConfig;
 
 /**
- * Created by xujiankang on 2016/9/27.
+ * Created by xjk on 2016/9/27.
  */
 public interface SocketChannelConfig extends ChannelConfig {
 

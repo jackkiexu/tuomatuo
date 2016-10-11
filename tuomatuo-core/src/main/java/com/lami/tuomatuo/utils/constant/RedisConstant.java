@@ -1,7 +1,7 @@
 package com.lami.tuomatuo.utils.constant;
 
 /**
- * Created by xujiankang on 2016/1/20.
+ * Created by xjk on 2016/1/20.
  */
 public class RedisConstant {
 

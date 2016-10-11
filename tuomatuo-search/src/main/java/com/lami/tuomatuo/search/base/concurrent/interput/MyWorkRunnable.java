@@ -1,7 +1,7 @@
 package com.lami.tuomatuo.search.base.concurrent.interput;
 
 /**
- * Created by xujiankang on 2016/5/11.
+ * Created by xjk on 2016/5/11.
  */
 public abstract class MyWorkRunnable implements Runnable{
 

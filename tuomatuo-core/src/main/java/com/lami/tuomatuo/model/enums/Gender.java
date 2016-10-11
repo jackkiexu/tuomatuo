@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by xujiankang on 2016/1/25.
+ * Created by xjk on 2016/1/25.
  */
 public enum Gender {
 

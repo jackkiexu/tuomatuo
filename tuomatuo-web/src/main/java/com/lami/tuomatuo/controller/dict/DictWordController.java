@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * Created by xujiankang on 2016/8/23.
+ * Created by xjk on 2016/8/23.
  */
 @Controller
 @RequestMapping(value = "/dict/word")

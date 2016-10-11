@@ -15,7 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by xujiankang on 2016/4/19.
+ * Created by xjk on 2016/4/19.
  */
 public class NativeConsumer {
 

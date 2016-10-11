@@ -3,7 +3,7 @@ package com.lami.tuomatuo.mq.jafka.api;
 /**
  * Request Type
  *
- * Created by xujiankang on 2016/9/30.
+ * Created by xjk on 2016/9/30.
  */
 public enum RequestKeys {
 

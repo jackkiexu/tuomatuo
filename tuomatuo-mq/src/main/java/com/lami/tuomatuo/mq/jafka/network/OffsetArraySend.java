@@ -9,7 +9,7 @@ import java.nio.channels.GatheringByteChannel;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/10/8.
+ * Created by xjk on 2016/10/8.
  */
 public class OffsetArraySend extends AbstractSend {
 

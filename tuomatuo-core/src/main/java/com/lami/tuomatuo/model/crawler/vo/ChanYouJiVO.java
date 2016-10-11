@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/3/24.
+ * Created by xjk on 2016/3/24.
  */
 @Data
 public class ChanYouJiVO {

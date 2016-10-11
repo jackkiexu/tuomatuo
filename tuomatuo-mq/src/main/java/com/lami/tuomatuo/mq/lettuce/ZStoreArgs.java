@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/9/14.
+ * Created by xjk on 2016/9/14.
  */
 public class ZStoreArgs {
     private static enum Aggregate { SUM, MIN, MAX }

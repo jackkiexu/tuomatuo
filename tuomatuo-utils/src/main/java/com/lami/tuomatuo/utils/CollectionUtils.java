@@ -3,7 +3,7 @@ package com.lami.tuomatuo.utils;
 import java.util.*;
 
 /**
- * Created by xujiankang on 2016/4/14.
+ * Created by xjk on 2016/4/14.
  */
 public class CollectionUtils {
 

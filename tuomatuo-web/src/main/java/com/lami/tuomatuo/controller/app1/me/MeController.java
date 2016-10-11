@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** http://www.wubiao.info/401
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 @Controller
 @RequestMapping(value = "/app1/me")

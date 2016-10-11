@@ -3,7 +3,7 @@ package com.lami.tuomatuo.model;
 import javax.persistence.*;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 @Entity
 @Table(name = "dynamic_img")

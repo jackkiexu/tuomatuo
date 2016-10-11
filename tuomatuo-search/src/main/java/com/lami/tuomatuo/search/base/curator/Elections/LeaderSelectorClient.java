@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by xujiankang on 2016/4/15.
+ * Created by xjk on 2016/4/15.
  */
 public class LeaderSelectorClient extends LeaderSelectorListenerAdapter implements Closeable{
 

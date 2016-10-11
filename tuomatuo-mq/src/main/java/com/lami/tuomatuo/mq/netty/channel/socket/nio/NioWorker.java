@@ -21,7 +21,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Created by xujiankang on 2016/9/28.
+ * Created by xjk on 2016/9/28.
  */
 public class NioWorker implements Runnable {
 

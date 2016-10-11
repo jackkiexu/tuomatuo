@@ -11,7 +11,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketException;
 
 /**
- * Created by xujiankang on 2016/9/28.
+ * Created by xjk on 2016/9/28.
  */
 public class NioServerSocketChannel  extends AbstractServerChannel implements ServerSocketChannel {
 

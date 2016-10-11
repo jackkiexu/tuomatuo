@@ -6,7 +6,7 @@ import com.lami.tuomatuo.model.dict.DictWord;
 import org.springframework.stereotype.Repository;
 
 /**
- * Created by xujiankang on 2016/8/23.
+ * Created by xjk on 2016/8/23.
  */
 @Repository("wordDaoInterface")
 public class DictWordDaoImpl extends MySqlBaseDao<DictWord, Long> implements DictWordDaoInterface {

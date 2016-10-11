@@ -5,7 +5,7 @@ import org.apache.log4j.Logger;
 import java.util.concurrent.locks.LockSupport;
 
 /**
- * Created by xujiankang on 2016/5/11.
+ * Created by xjk on 2016/5/11.
  */
 public class BoundedBuffer1 {
 

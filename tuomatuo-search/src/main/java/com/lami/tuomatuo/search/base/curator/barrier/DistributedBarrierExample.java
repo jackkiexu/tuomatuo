@@ -14,7 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by xujiankang on 2016/4/15.
+ * Created by xjk on 2016/4/15.
  */
 public class DistributedBarrierExample {
 

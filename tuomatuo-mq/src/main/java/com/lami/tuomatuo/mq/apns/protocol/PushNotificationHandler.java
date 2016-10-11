@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * Created by xujiankang on 2016/9/26.
+ * Created by xjk on 2016/9/26.
  */
 public class PushNotificationHandler extends SimpleChannelHandler implements ChannelFutureListener {
 

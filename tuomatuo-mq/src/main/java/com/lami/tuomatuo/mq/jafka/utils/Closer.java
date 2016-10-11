@@ -9,7 +9,7 @@ import java.nio.channels.Selector;
 /**
  * an useful tools to close some atreams or file descriptions
  *
- * Created by xujiankang on 2016/9/30.
+ * Created by xjk on 2016/9/30.
  */
 public class Closer {
 

@@ -7,7 +7,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Created by xujiankang on 2016/9/26.
+ * Created by xjk on 2016/9/26.
  */
 public abstract class AbstractChannel implements Channel, Comparable<Channel> {
 

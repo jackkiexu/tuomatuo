@@ -8,7 +8,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 
 /**
- * Created by xujiankang on 2016/5/4.
+ * Created by xjk on 2016/5/4.
  */
 public class Mutex implements Lock, java.io.Serializable{
 

@@ -8,7 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * Created by xujiankang on 2016/10/9.
+ * Created by xjk on 2016/10/9.
  */
 public abstract class CompressionFacade implements Closeable {
 

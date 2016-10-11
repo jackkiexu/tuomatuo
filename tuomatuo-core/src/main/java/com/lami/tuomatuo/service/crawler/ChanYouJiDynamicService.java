@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 
 /**
- * Created by xujiankang on 2016/3/24.
+ * Created by xjk on 2016/3/24.
  */
 @Service("chanYouJiDynamicService")
 public class ChanYouJiDynamicService extends BaseService<ChanYoujiDynamic, Long> {

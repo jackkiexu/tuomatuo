@@ -4,7 +4,7 @@ import com.lami.tuomatuo.base.BaseDao;
 import com.lami.tuomatuo.model.DynamicImg;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 public interface DynamicImgDaoInterface extends BaseDao<DynamicImg, Long> {
 }

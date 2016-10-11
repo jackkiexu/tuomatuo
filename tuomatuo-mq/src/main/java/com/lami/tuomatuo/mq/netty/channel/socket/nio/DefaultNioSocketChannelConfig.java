@@ -6,7 +6,7 @@ import com.lami.tuomatuo.mq.netty.util.ConvertUtil;
 import java.net.Socket;
 
 /**
- * Created by xujiankang on 2016/9/27.
+ * Created by xjk on 2016/9/27.
  */
 public class DefaultNioSocketChannelConfig extends DefaultSocketChannelConfig implements NioSocketChannelConfig{
 

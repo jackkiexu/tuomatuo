@@ -8,7 +8,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/10/8.
+ * Created by xjk on 2016/10/8.
  */
 @Data
 public class OffsetRequest implements Request {

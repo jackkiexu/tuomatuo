@@ -6,7 +6,7 @@ import java.util.Iterator;
 /**
  * Message set helper function
  *
- * Created by xujiankang on 2016/10/9.
+ * Created by xjk on 2016/10/9.
  */
 public abstract class MessageSet implements Iterator<MessageAndOffset> {
 

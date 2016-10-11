@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
 /**
- * Created by xujiankang on 2016/5/31.
+ * Created by xjk on 2016/5/31.
  */
 public class LockSupportAndWait {
 

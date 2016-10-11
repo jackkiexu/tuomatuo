@@ -6,7 +6,7 @@ import com.lami.tuomatuo.model.UserPosition;
 import org.springframework.stereotype.Repository;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 @Repository("userPositionDaoInterface")
 public class UserPositionDaoImpl extends MySqlBaseDao<UserPosition, Long> implements UserPositionDaoInterface {

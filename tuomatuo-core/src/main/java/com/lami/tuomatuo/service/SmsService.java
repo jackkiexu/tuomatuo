@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 
 /**
- * Created by xujiankang on 2016/1/25.
+ * Created by xjk on 2016/1/25.
  */
 @Service("smsService")
 public class SmsService extends BaseService<Sms, Long> {

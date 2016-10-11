@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Created by xujiankang on 2016/9/28.
+ * Created by xjk on 2016/9/28.
  */
 public class NioClientSocketPipelineSink extends AbstractChannelSink {
 

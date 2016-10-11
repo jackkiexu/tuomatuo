@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/3/22.
+ * Created by xjk on 2016/3/22.
  */
 public class CrawlerChanYouJiAccountHelper {
     private static final Logger logger = Logger.getLogger(CrawlerChanYouJiAccountHelper.class);

@@ -9,7 +9,7 @@ import org.apache.log4j.Logger;
 import java.util.Collection;
 
 /**
- * Created by xujiankang on 2016/4/18.
+ * Created by xjk on 2016/4/18.
  */
 public class TransactionExample {
 

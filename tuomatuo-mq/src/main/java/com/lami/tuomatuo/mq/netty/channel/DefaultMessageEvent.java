@@ -5,7 +5,7 @@ import lombok.Data;
 import java.net.SocketAddress;
 
 /**
- * Created by xujiankang on 2016/9/26.
+ * Created by xjk on 2016/9/26.
  */
 @Data
 public class DefaultMessageEvent extends DefaultChannelEvent implements MessageEvent {

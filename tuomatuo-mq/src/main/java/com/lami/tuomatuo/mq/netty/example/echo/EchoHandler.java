@@ -8,7 +8,7 @@ import org.apache.log4j.Logger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Created by xujiankang on 2016/9/29.
+ * Created by xjk on 2016/9/29.
  */
 @ChannelPipelineCoverage("all")
 public class EchoHandler extends SimpleChannelHandler {

@@ -8,7 +8,7 @@ import com.lami.tuomatuo.mq.jafka.utils.Utils;
 import java.nio.ByteBuffer;
 
 /**
- * Created by xujiankang on 2016/10/9.
+ * Created by xjk on 2016/10/9.
  */
 @ClientSide
 @ServerSide

@@ -1,7 +1,7 @@
 package com.lami.tuomatuo.mq.lettuce.example;
 
 /**
- * Created by xujiankang on 2016/9/12.
+ * Created by xjk on 2016/9/12.
  */
 public class Constants {
 

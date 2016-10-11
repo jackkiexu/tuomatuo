@@ -9,7 +9,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * Created by xujiankang on 2016/9/27.
+ * Created by xjk on 2016/9/27.
  */
 public abstract class NioSocketChannel extends AbstractChannel implements SocketChannel {
 

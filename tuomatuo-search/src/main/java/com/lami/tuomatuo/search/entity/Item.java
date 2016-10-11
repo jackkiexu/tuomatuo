@@ -6,7 +6,7 @@ import org.apache.solr.client.solrj.beans.Field;
 import java.util.Date;
 
 /**
- * Created by xujiankang on 2016/4/12.
+ * Created by xjk on 2016/4/12.
  */
 @Data
 public class Item {

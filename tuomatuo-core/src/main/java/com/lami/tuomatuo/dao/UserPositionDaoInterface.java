@@ -5,7 +5,7 @@ import com.lami.tuomatuo.model.UserDynamicLove;
 import com.lami.tuomatuo.model.UserPosition;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 public interface UserPositionDaoInterface extends BaseDao<UserPosition, Long> {
 }

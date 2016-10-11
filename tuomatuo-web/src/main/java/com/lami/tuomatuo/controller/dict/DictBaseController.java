@@ -1,7 +1,7 @@
 package com.lami.tuomatuo.controller.dict;
 
 /**
- * Created by xujiankang on 2016/8/23.
+ * Created by xjk on 2016/8/23.
  */
 import com.lami.tuomatuo.model.User;
 import com.lami.tuomatuo.model.base.Result;

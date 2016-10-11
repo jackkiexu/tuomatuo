@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by xujiankang on 2016/4/29.
+ * Created by xjk on 2016/4/29.
  */
 public class TestMyHashMap {
 

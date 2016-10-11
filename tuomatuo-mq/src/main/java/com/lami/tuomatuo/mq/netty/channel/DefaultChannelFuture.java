@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by xujiankang on 2016/9/22.
+ * Created by xjk on 2016/9/22.
  */
 public class DefaultChannelFuture implements ChannelFuture {
 

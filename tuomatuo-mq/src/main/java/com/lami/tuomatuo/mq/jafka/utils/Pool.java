@@ -6,7 +6,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by xujiankang on 2016/9/30.
+ * Created by xjk on 2016/9/30.
  */
 public class Pool<K, V> implements Map<K, V> {
 

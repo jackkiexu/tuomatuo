@@ -3,7 +3,7 @@ package com.lami.sms.pipe.yupian;
 import lombok.Data;
 
 /**云片 发送短信的结果
- * Created by xujiankang on 2016/1/25.
+ * Created by xjk on 2016/1/25.
  */
 @Data
 public class SendResult {

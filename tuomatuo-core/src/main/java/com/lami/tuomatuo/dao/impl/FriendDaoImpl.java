@@ -6,7 +6,7 @@ import com.lami.tuomatuo.model.Friend;
 import org.springframework.stereotype.Repository;
 
 /**
- * Created by xujiankang on 2016/1/20.
+ * Created by xjk on 2016/1/20.
  */
 @Repository("friendDaoInterface")
 public class FriendDaoImpl  extends MySqlBaseDao<Friend, Long> implements FriendDaoInterface {

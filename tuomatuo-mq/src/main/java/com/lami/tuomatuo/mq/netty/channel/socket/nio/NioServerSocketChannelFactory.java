@@ -8,7 +8,7 @@ import com.lami.tuomatuo.mq.netty.channel.socket.ServerSocketChannelFactory;
 import java.util.concurrent.Executor;
 
 /**
- * Created by xujiankang on 2016/9/28.
+ * Created by xjk on 2016/9/28.
  */
 public class NioServerSocketChannelFactory implements ServerSocketChannelFactory {
 

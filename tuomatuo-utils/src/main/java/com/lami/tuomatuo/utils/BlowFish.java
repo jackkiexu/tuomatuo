@@ -1,7 +1,7 @@
 package com.lami.tuomatuo.utils;
 
 /**
- * Created by xujiankang on 2016/1/29.
+ * Created by xjk on 2016/1/29.
  */
 import org.apache.axis.encoding.Base64;
 

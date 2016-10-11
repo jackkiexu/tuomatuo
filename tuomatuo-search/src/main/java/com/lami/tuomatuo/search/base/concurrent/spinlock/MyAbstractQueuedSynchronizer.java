@@ -15,7 +15,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.LockSupport;
 
 /**
- * Created by xujiankang on 2016/5/25.
+ * Created by xjk on 2016/5/25.
  */
 public abstract class MyAbstractQueuedSynchronizer extends AbstractOwnableSynchronizer implements java.io.Serializable {
 

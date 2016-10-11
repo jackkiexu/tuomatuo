@@ -1,7 +1,7 @@
 package com.lami.tuomatuo.utils;
 
 /**
- * Created by xujiankang on 2016/1/11.
+ * Created by xjk on 2016/1/11.
  * http://iamzhongyong.iteye.com/blog/1399333
  * http://www.cnblogs.com/dengxinglin/archive/2012/12/14/2817761.html#d
  * http://www.wubiao.info/401

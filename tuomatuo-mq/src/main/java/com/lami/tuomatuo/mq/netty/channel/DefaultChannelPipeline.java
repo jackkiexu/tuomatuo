@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 /**
- * Created by xujiankang on 2016/9/26.
+ * Created by xjk on 2016/9/26.
  */
 public class DefaultChannelPipeline implements ChannelPipeline {
 

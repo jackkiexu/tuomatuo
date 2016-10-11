@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.util.*;
 
 /**
- * Created by xujiankang on 2016/4/28.
+ * Created by xjk on 2016/4/28.
  */
     public class LearnHashMap<K,V>
             extends AbstractMap<K,V>

@@ -5,7 +5,7 @@ import com.lami.tuomatuo.model.crawler.HuPuAccount;
 import com.lami.tuomatuo.model.crawler.UIAccount;
 
 /**
- * Created by xujiankang on 2016/3/22.
+ * Created by xjk on 2016/3/22.
  */
 public interface HuPuAccountDaoInterface extends BaseDao<HuPuAccount, Long> {
 }

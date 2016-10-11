@@ -6,7 +6,7 @@ import com.lami.tuomatuo.model.crawler.ChanYouJiAccount;
 import org.springframework.stereotype.Repository;
 
 /**
- * Created by xujiankang on 2016/3/22.
+ * Created by xjk on 2016/3/22.
  */
 @Repository("chanYouJiAccountDaoInterface")
 public class ChanYouJiAccountDaoImpl extends MySqlBaseDao<ChanYouJiAccount, Long> implements ChanYouJiAccountDaoInterface {

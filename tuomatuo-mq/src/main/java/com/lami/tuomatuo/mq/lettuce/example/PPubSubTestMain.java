@@ -4,7 +4,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.log4j.Logger;
 
 /**
- * Created by xujiankang on 2016/9/12.
+ * Created by xjk on 2016/9/12.
  */
 public class PPubSubTestMain {
 

@@ -3,7 +3,7 @@ package com.lami.tuomatuo.utils.help;
 /**
  * {ln(views) + recommendScore + dynamicLoves + ln(articleComments) +ln(dynamicLoves) } / (age/2+update/2+1)i
  * http://segmentfault.com/a/1190000004253816?_ea=546109
- * Created by xujiankang on 2016/1/20.
+ * Created by xjk on 2016/1/20.
  */
 public class HotAlgorithmHelper {
 

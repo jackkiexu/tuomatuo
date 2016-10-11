@@ -1,7 +1,7 @@
 package com.lami.tuomatuo.utils;
 
 /**
- * Created by xujiankang on 2016/1/20.
+ * Created by xjk on 2016/1/20.
  */
 import java.lang.reflect.Type;
 import java.util.ArrayList;

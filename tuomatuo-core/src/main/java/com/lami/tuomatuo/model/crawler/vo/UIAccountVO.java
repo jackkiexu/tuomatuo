@@ -5,7 +5,7 @@ import lombok.Data;
 import org.apache.commons.beanutils.BeanUtils;
 
 /**
- * Created by xujiankang on 2016/3/21.
+ * Created by xjk on 2016/3/21.
  */
 @Data
 public class UIAccountVO {

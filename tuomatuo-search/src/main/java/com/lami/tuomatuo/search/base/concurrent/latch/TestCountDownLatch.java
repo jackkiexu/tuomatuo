@@ -6,7 +6,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by xujiankang on 2016/5/9.
+ * Created by xjk on 2016/5/9.
  */
 public class TestCountDownLatch {
 

@@ -7,7 +7,7 @@ import com.lami.tuomatuo.model.enums.UserStatus;
 import java.util.Date;
 
 /**
- * Created by xujiankang on 2016/1/25.
+ * Created by xjk on 2016/1/25.
  */
 public class InitHelper {
 

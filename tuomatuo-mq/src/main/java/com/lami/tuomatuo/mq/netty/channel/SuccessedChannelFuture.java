@@ -1,7 +1,7 @@
 package com.lami.tuomatuo.mq.netty.channel;
 
 /**
- * Created by xujiankang on 2016/9/27.
+ * Created by xjk on 2016/9/27.
  */
 public class SuccessedChannelFuture extends CompleteChannelFuture{
     public SuccessedChannelFuture(Channel channel) {

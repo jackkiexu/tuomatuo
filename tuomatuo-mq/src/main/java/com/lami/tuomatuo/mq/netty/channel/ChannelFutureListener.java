@@ -3,7 +3,7 @@ package com.lami.tuomatuo.mq.netty.channel;
 import java.util.EventListener;
 
 /**
- * Created by xujiankang on 2016/9/21.
+ * Created by xjk on 2016/9/21.
  */
 public interface ChannelFutureListener extends EventListener {
 

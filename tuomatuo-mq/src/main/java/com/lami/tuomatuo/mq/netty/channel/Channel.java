@@ -4,7 +4,7 @@ import java.net.SocketAddress;
 import java.util.UUID;
 
 /**
- * Created by xujiankang on 2016/9/21.
+ * Created by xjk on 2016/9/21.
  */
 public interface Channel {
 

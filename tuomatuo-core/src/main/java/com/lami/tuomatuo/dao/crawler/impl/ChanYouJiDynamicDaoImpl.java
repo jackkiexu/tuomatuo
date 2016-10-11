@@ -6,7 +6,7 @@ import com.lami.tuomatuo.model.crawler.ChanYoujiDynamic;
 import org.springframework.stereotype.Repository;
 
 /**
- * Created by xujiankang on 2016/3/24.
+ * Created by xjk on 2016/3/24.
  */
 @Repository("chanYoujiDynamicDaoInterface")
 public class ChanYouJiDynamicDaoImpl extends MySqlBaseDao<ChanYoujiDynamic, Long> implements ChanYoujiDynamicDaoInterface {

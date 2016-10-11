@@ -13,7 +13,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 @Service("dynamicCommentService")
 public class DynamicCommentService extends BaseService<DynamicComment, Long> {

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/3/18.
+ * Created by xjk on 2016/3/18.
  */
 public class CrawlerUIAccountHelper {
 

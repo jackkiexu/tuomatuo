@@ -6,7 +6,7 @@ import com.lami.tuomatuo.model.UserDynamic;
 import org.springframework.stereotype.Repository;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 @Repository("userDynamicDaoInterface")
 public class UserDynamicDaoImpl extends MySqlBaseDao<UserDynamic, Long> implements UserDynamicDaoInterface {

@@ -5,7 +5,7 @@ import sun.misc.Unsafe;
 import java.lang.reflect.Field;
 
 /**
- * Created by xujiankang on 2016/5/13.
+ * Created by xjk on 2016/5/13.
  */
 public class UnSafeClass {
     private static Unsafe unsafe;

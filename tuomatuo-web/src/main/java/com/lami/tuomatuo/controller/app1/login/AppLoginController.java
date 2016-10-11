@@ -31,7 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 @Controller
 @RequestMapping(value = "/app1/login")

@@ -5,7 +5,7 @@ import com.lmax.disruptor.EventHandler;
 import org.apache.log4j.Logger;
 
 /**
- * Created by xujiankang on 2016/4/20.
+ * Created by xjk on 2016/4/20.
  */
 public class LongEventHandler implements EventHandler<LongEvent> {
 

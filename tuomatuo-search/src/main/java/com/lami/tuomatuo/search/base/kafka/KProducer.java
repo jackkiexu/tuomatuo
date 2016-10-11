@@ -9,7 +9,7 @@ import java.util.Properties;
 import java.util.Random;
 
 /**
- * Created by xujiankang on 2016/4/19.
+ * Created by xjk on 2016/4/19.
  */
 public class KProducer {
 

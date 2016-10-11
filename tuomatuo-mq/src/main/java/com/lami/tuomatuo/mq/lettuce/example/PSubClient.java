@@ -4,7 +4,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
 /**
- * Created by xujiankang on 2016/9/12.
+ * Created by xjk on 2016/9/12.
  */
 public class PSubClient {
 

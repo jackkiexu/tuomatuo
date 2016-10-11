@@ -4,7 +4,7 @@ import com.lami.tuomatuo.model.po.BaseParam;
 import lombok.Data;
 
 /**
- * Created by xujiankang on 2016/9/5.
+ * Created by xjk on 2016/9/5.
  */
 @Data
 public class AddWordParam extends BaseParam {

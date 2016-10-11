@@ -14,7 +14,7 @@ import org.apache.log4j.Logger;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by xujiankang on 2016/4/15.
+ * Created by xjk on 2016/4/15.
  */
 public class PersistentEphemeralNodeExample {
 

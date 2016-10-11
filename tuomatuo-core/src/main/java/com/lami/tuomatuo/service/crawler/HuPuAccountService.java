@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/3/22.
+ * Created by xjk on 2016/3/22.
  */
 @Service("huPuAccountService")
 public class HuPuAccountService extends BaseService<UIAccount, Long> {

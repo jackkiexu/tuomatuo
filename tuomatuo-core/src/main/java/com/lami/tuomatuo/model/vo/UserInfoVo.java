@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/1/19.
+ * Created by xjk on 2016/1/19.
  */
 @Data
 public class UserInfoVo {

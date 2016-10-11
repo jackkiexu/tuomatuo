@@ -9,7 +9,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
 /**
- * Created by xujiankang on 2016/8/25.
+ * Created by xjk on 2016/8/25.
  */
 
 public class InitServlet extends HttpServlet {

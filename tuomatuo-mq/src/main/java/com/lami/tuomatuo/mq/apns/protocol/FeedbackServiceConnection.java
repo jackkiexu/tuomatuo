@@ -18,7 +18,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by xujiankang on 2016/9/26.
+ * Created by xjk on 2016/9/26.
  */
 public class FeedbackServiceConnection extends SimpleChannelHandler implements TimerTask {
 

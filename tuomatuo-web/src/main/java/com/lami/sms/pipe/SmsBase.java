@@ -7,7 +7,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by xujiankang on 2016/1/22.
+ * Created by xjk on 2016/1/22.
  */
 public  class SmsBase {
     protected Logger logger = Logger.getLogger(getClass());

@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * Push notification
  *
- * Created by xujiankang on 2016/9/26.
+ * Created by xjk on 2016/9/26.
  */
 public class PushNotification {
 

@@ -6,7 +6,7 @@ import com.lami.tuomatuo.model.DynamicComment;
 import org.springframework.stereotype.Repository;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 @Repository("dynamicCommentDaoInterface")
 public class DynamicCommentDaoImpl extends MySqlBaseDao<DynamicComment, Long> implements DynamicCommentDaoInterface {

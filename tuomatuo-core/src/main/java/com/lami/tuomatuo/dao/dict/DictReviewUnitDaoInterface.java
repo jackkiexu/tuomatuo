@@ -5,7 +5,7 @@ import com.lami.tuomatuo.model.dict.DictReviewUnit;
 import com.lami.tuomatuo.model.dict.DictUser;
 
 /**
- * Created by xujiankang on 2016/8/23.
+ * Created by xjk on 2016/8/23.
  */
 public interface DictReviewUnitDaoInterface extends BaseDao<DictReviewUnit, Long> {
 }

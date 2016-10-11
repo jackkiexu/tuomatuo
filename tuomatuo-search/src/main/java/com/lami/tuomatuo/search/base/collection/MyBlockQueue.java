@@ -5,7 +5,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Created by xujiankang on 2016/5/4.
+ * Created by xjk on 2016/5/4.
  */
 public class MyBlockQueue {
 

@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/1/26.
+ * Created by xjk on 2016/1/26.
  */
 @Controller
 @RequestMapping(value = "/app1/dynamicComment")

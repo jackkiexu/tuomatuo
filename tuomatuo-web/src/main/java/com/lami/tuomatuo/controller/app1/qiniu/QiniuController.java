@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/2/1.
+ * Created by xjk on 2016/2/1.
  */
 @Controller
 @RequestMapping(value = "/app1/qiniu")

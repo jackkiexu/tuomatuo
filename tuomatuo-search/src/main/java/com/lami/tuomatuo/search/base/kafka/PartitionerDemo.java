@@ -4,7 +4,7 @@ import kafka.producer.Partitioner;
 import kafka.utils.VerifiableProperties;
 
 /**
- * Created by xujiankang on 2016/4/19.
+ * Created by xjk on 2016/4/19.
  */
 public class PartitionerDemo implements Partitioner{
 

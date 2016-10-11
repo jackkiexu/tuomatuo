@@ -6,7 +6,7 @@ import com.lami.tuomatuo.model.dict.DictReviewUnit;
 import org.springframework.stereotype.Repository;
 
 /**
- * Created by xujiankang on 2016/8/23.
+ * Created by xjk on 2016/8/23.
  */
 @Repository("dictReviewUnitDaoInterface")
 public class DictReviewUnitDaoimpl extends MySqlBaseDao<DictReviewUnit, Long> implements DictReviewUnitDaoInterface {

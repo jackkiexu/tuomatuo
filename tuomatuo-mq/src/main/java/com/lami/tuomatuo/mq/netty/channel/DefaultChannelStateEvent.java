@@ -1,7 +1,7 @@
 package com.lami.tuomatuo.mq.netty.channel;
 
 /**
- * Created by xujiankang on 2016/9/26.
+ * Created by xjk on 2016/9/26.
  */
 public class DefaultChannelStateEvent extends DefaultChannelEvent implements ChannelStateEvent {
 

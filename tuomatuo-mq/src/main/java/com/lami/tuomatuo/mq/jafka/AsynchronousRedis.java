@@ -6,7 +6,7 @@ import com.lambdaworks.redis.pubsub.RedisPubSubListener;
 import org.apache.log4j.Logger;
 
 /**
- * Created by xujiankang on 2016/9/14.
+ * Created by xjk on 2016/9/14.
  */
 public class AsynchronousRedis {
 

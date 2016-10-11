@@ -3,7 +3,7 @@ package com.lami.tuomatuo.cache;
 import com.lami.tuomatuo.model.base.Result;
 
 /**
- * Created by xujiankang on 2016/1/25.
+ * Created by xjk on 2016/1/25.
  */
 public interface SmsCache {
 

@@ -14,7 +14,7 @@ import org.apache.curator.utils.CloseableUtils;
 import org.apache.log4j.Logger;
 
 /**
- * Created by xujiankang on 2016/4/14.
+ * Created by xjk on 2016/4/14.
  */
 public class queue {
 

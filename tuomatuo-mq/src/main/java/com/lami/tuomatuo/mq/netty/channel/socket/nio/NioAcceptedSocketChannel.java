@@ -6,7 +6,7 @@ import com.lami.tuomatuo.mq.netty.channel.ChannelPipeline;
 import com.lami.tuomatuo.mq.netty.channel.ChannelSink;
 
 /**
- * Created by xujiankang on 2016/9/28.
+ * Created by xjk on 2016/9/28.
  */
 public class NioAcceptedSocketChannel extends NioSocketChannel {
 

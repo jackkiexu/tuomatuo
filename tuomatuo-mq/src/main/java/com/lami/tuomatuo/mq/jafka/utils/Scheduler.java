@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A scheduler for running jobs in the background
- * Created by xujiankang on 2016/9/30.
+ * Created by xjk on 2016/9/30.
  */
 public class Scheduler {
 

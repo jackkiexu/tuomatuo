@@ -4,7 +4,7 @@ import lombok.Data;
 import org.codehaus.jackson.map.annotate.JsonRootName;
 
 /**
- * Created by xujiankang on 2016/4/18.
+ * Created by xjk on 2016/4/18.
  */
 @JsonRootName("details")
 @Data

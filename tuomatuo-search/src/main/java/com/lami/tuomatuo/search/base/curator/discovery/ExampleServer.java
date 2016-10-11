@@ -12,7 +12,7 @@ import java.io.Closeable;
 import java.io.IOException;
 
 /**
- * Created by xujiankang on 2016/4/18.
+ * Created by xjk on 2016/4/18.
  * This show a very simplified method of registering an instance with the
  * service discovery. Each individual instance in your distributed set of
  * application would create an instance of something similar to ExampleServer

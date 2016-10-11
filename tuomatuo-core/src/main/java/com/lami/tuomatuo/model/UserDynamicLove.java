@@ -4,7 +4,7 @@ import javax.persistence.*;
 import java.util.Date;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 @Entity
 @Table(name = "dynamic_love")

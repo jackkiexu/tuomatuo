@@ -17,7 +17,7 @@ import java.util.Set;
 
 
 /**
- * Created by xujiankang on 2016/1/20.
+ * Created by xjk on 2016/1/20.
  */
 @Component( value = "userCache")
 public class UserCacheImpl implements UserCache {

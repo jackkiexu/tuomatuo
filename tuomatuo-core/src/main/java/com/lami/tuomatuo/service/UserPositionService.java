@@ -17,7 +17,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 @Service("userPositionService")
 public class UserPositionService  extends BaseService<UserPosition, Long> {

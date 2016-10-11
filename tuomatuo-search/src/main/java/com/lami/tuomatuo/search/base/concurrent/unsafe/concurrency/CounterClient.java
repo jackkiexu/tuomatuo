@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- * Created by xujiankang on 2016/5/13.
+ * Created by xjk on 2016/5/13.
  */
 public class CounterClient implements Runnable{
 

@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.Date;
 
 /**
- * Created by xujiankang on 2016/3/25.
+ * Created by xjk on 2016/3/25.
  */
 @Data
 public class TopitAccountVO {

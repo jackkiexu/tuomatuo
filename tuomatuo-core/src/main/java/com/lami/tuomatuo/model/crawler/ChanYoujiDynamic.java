@@ -4,7 +4,7 @@ import javax.persistence.*;
 import java.util.Date;
 
 /**
- * Created by xujiankang on 2016/3/24.
+ * Created by xjk on 2016/3/24.
  */
 @Entity
 @Table(name = "crawler_chanyouji_dynamic")

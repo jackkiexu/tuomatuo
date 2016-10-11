@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Created by xujiankang on 2016/9/30.
+ * Created by xjk on 2016/9/30.
  */
 public class SnapshotStats {
 

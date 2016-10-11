@@ -3,7 +3,7 @@ package com.lami.tuomatuo.mq.netty.channel;
 import lombok.Data;
 
 /**
- * Created by xujiankang on 2016/9/21.
+ * Created by xjk on 2016/9/21.
  */
 @Data
 public class DefaultChannelEvent implements ChannelEvent {

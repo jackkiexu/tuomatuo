@@ -5,7 +5,7 @@ import org.apache.log4j.Logger;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
 /**
- * Created by xujiankang on 2016/5/12.
+ * Created by xjk on 2016/5/12.
  */
 public class SimpleLock extends MyAbstractQueuedSynchronizer{
 

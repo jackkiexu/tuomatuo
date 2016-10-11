@@ -4,7 +4,7 @@ import java.net.SocketAddress;
 import java.util.Map;
 
 /**
- * Created by xujiankang on 2016/9/27.
+ * Created by xjk on 2016/9/27.
  */
 public class Channels {
 

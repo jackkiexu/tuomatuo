@@ -1,7 +1,7 @@
 package com.lami.tuomatuo.utils.constant;
 
 /**
- * Created by xujiankang on 2016/1/25.
+ * Created by xjk on 2016/1/25.
  */
 public class Constant {
 

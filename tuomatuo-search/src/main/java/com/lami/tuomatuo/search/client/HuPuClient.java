@@ -13,7 +13,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/4/12.
+ * Created by xjk on 2016/4/12.
  */
 public class HuPuClient {
 

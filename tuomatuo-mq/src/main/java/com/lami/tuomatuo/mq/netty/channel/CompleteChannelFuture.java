@@ -5,7 +5,7 @@ import org.apache.log4j.Logger;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by xujiankang on 2016/9/22.
+ * Created by xjk on 2016/9/22.
  */
 public class CompleteChannelFuture implements ChannelFuture {
 

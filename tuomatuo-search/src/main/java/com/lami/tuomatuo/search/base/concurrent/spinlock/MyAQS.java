@@ -14,7 +14,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.LockSupport;
 
 /**
- * Created by xujiankang on 2016/5/26.
+ * Created by xjk on 2016/5/26.
  */
 public class MyAQS extends AbstractOwnableSynchronizer implements java.io.Serializable {
 

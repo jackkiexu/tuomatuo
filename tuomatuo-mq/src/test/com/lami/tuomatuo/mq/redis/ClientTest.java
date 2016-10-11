@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 /**
- * Created by xujiankang on 2016/9/19.
+ * Created by xjk on 2016/9/19.
  */
 public class ClientTest extends AbstractCommandTest{
 

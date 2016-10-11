@@ -4,7 +4,7 @@ import org.redisson.Config;
 import org.redisson.Redisson;
 
 /**
- * Created by xujiankang on 2016/4/27.
+ * Created by xjk on 2016/4/27.
  */
 public class RedissonClient {
 

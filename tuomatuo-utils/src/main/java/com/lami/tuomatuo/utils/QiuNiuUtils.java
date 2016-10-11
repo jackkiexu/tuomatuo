@@ -10,7 +10,7 @@ import lombok.Data;
 import org.apache.log4j.Logger;
 
 /**
- * Created by xujiankang on 2016/1/7.
+ * Created by xjk on 2016/1/7.
  */
 public class QiuNiuUtils {
     private static final Logger log = Logger.getLogger(QiuNiuUtils.class);

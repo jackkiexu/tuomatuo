@@ -16,7 +16,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by xujiankang on 2016/3/18.
+ * Created by xjk on 2016/3/18.
  */
 public class CrawlerUtils {
 

@@ -1,7 +1,7 @@
 package com.lami.tuomatuo.search.base.solr;
 
 /**
- * Created by xujiankang on 2016/4/14.
+ * Created by xjk on 2016/4/14.
  */
 public interface SolrSynaxConstant
 {

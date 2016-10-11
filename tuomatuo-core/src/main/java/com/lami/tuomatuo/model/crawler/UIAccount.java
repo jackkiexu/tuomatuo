@@ -3,7 +3,7 @@ package com.lami.tuomatuo.model.crawler;
 import javax.persistence.*;
 
 /**
- * Created by xujiankang on 2016/3/21.
+ * Created by xjk on 2016/3/21.
  */
 @Entity
 @Table(name = "crawler_ui_account")

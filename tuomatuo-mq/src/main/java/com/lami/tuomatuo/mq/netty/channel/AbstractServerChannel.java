@@ -3,7 +3,7 @@ package com.lami.tuomatuo.mq.netty.channel;
 import java.net.SocketAddress;
 
 /**
- * Created by xujiankang on 2016/9/27.
+ * Created by xjk on 2016/9/27.
  */
 public abstract class AbstractServerChannel extends AbstractChannel {
 

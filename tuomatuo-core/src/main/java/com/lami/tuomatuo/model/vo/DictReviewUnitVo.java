@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.Date;
 
 /**
- * Created by xujiankang on 2016/8/23.
+ * Created by xjk on 2016/8/23.
  */
 @Data
 public class DictReviewUnitVo {

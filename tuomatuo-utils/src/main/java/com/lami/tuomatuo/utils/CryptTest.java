@@ -1,7 +1,7 @@
 package com.lami.tuomatuo.utils;
 
 /**
- * Created by xujiankang on 2016/2/1.
+ * Created by xjk on 2016/2/1.
  */
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

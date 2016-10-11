@@ -8,7 +8,7 @@ import redis.clients.jedis.JedisPubSub;
 import java.util.Date;
 
 /**
- * Created by xujiankang on 2016/9/12.
+ * Created by xjk on 2016/9/12.
  */
 public class PPrintListener extends JedisPubSub{
 

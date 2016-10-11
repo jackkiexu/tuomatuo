@@ -6,7 +6,7 @@ import com.lami.tuomatuo.model.WeiXinAccount;
 import org.springframework.stereotype.Repository;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 @Repository("weiXinAccountDaoInterface")
 public class WeXinAccountDaoImpl extends MySqlBaseDao<WeiXinAccount, Long> implements WeiXinAccountDaoInterface {

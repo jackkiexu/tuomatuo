@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 @Service("userDynamicLoveService")
 public class UserDynamicLoveService  extends BaseService<UserDynamicLove, Long> {

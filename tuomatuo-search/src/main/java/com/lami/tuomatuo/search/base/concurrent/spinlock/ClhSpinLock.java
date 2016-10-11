@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Created by xujiankang on 2016/5/12.
+ * Created by xjk on 2016/5/12.
  */
 public class ClhSpinLock {
 

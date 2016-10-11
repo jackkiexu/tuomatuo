@@ -7,7 +7,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by xujiankang on 2016/4/15.
+ * Created by xjk on 2016/4/15.
  */
 public class MutexJob implements Runnable{
     private static final Logger logger = Logger.getLogger(ParallelJob.class);

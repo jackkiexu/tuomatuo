@@ -6,7 +6,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 /**
- * Created by xujiankang on 2016/9/12.
+ * Created by xjk on 2016/9/12.
  */
 public class ConnectionFactory extends BasePoolableObjectFactory {
 

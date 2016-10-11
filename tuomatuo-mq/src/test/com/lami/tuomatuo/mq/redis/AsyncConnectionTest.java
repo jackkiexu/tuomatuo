@@ -7,7 +7,7 @@ import org.junit.Test;
 
 /**
  * 2
- * Created by xujiankang on 2016/9/23.
+ * Created by xjk on 2016/9/23.
  */
 public class AsyncConnectionTest extends AbstractCommandTest {
 

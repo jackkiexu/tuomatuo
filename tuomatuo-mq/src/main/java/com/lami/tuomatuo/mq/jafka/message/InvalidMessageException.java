@@ -1,7 +1,7 @@
 package com.lami.tuomatuo.mq.jafka.message;
 
 /**
- * Created by xujiankang on 2016/10/8.
+ * Created by xjk on 2016/10/8.
  */
 public class InvalidMessageException extends RuntimeException {
 

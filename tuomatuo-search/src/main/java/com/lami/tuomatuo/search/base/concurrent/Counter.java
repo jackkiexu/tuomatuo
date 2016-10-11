@@ -3,7 +3,7 @@ package com.lami.tuomatuo.search.base.concurrent;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Created by xujiankang on 2016/5/9.
+ * Created by xjk on 2016/5/9.
  */
 public class Counter {
 

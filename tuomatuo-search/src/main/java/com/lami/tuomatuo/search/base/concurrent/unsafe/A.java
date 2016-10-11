@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.Objects;
 
 /**
- * Created by xujiankang on 2016/5/12.
+ * Created by xjk on 2016/5/12.
  */
 public class A {
     private long a; // not initialized value

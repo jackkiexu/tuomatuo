@@ -6,7 +6,7 @@ import com.lami.tuomatuo.model.UserProperty;
 import org.springframework.stereotype.Repository;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 @Repository("userPropertyDaoInterface")
 public class UserPropertyDaoImpl extends MySqlBaseDao<UserProperty, Long> implements UserPropertyDaoInterface {

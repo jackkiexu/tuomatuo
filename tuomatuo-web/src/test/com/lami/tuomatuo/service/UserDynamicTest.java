@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 
 /**
- * Created by xujiankang on 2016/1/21.
+ * Created by xjk on 2016/1/21.
  */
 public class UserDynamicTest extends AbstractBaseTest {
 

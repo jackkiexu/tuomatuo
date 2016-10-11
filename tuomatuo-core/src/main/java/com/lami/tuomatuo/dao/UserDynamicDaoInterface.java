@@ -5,7 +5,7 @@ import com.lami.tuomatuo.model.QQAccount;
 import com.lami.tuomatuo.model.UserDynamic;
 
 /**
- * Created by xujiankang on 2016/1/18.
+ * Created by xjk on 2016/1/18.
  */
 public interface UserDynamicDaoInterface extends BaseDao<UserDynamic, Long> {
 }

@@ -3,7 +3,7 @@ package com.lami.tuomatuo.mq.netty.channel;
 import java.lang.annotation.*;
 
 /**
- * Created by xujiankang on 2016/9/22.
+ * Created by xjk on 2016/9/22.
  */
 @Inherited
 @Documented

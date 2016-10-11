@@ -3,7 +3,7 @@ package com.lami.tuomatuo.search.base.collection;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Created by xujiankang on 2016/5/4.
+ * Created by xjk on 2016/5/4.
  */
 public class NonLockMap {
 

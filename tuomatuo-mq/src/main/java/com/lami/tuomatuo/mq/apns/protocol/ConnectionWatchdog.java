@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 /** A netty {@link com.lami.tuomatuo.mq.netty.channel.ChannelHandler} responsible for monitor the channel and reconnecting when the connection is lost
  *
- * Created by xujiankang on 2016/9/26.
+ * Created by xjk on 2016/9/26.
  */
 public class ConnectionWatchdog extends SimpleChannelHandler implements TimerTask {
 

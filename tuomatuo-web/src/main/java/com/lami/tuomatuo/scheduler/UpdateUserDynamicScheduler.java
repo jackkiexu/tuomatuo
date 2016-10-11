@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.TimerTask;
 
 /** 更新所用用户动态的 hot 值
- * Created by xujiankang on 2016/1/21.
+ * Created by xjk on 2016/1/21.
  */
 public class UpdateUserDynamicScheduler{
 
