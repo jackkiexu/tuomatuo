@@ -3,6 +3,8 @@ package com.lami.tuomatuo.mq.jafka.mx;
 import com.lami.tuomatuo.mq.jafka.utils.Pool;
 import com.lami.tuomatuo.mq.jafka.utils.Utils;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * Created by xjk on 2016/10/10.
  */
@@ -18,29 +20,83 @@ public class BrokerTopicStat implements BrokerTopicStatMBean, IMBeanName {
         }
     }
 
+    public static BrokerTopicStat getBrokerAllTopicStat(){
+        return BrokerTopicStatHolder.allTopicState;
+    }
+
+    public static BrokerTopicStat getBrokerTopicStat(String topic){
+        BrokerTopicStat state = BrokerTopicStatHolder.states.get(topic);
+        if(state == null){
+            state = new BrokerTopicStat();
+            state.mBeanName = "jafka:type=jafka.BrokerTopicStat." + topic;
+            if(null == BrokerTopicStatHolder.states.putIfNotExists(topic, state)){
+                Utils.registerMBean(state);
+            }
+            state = BrokerTopicStatHolder.states.get(topic);
+        }
+
+        return state;
+    }
+
+
+
     private String mBeanName;
 
+    private final AtomicLong numCumulatedBytesIn = new AtomicLong(0);
+
+    private final AtomicLong numCumulatedBytesOut = new AtomicLong(0);
+
+    private final AtomicLong numCumulatedFailedFetchRequests = new AtomicLong(0);
+
+    private final AtomicLong numCumulatedFailedProduceRequests = new AtomicLong(0);
+
+    private final AtomicLong numCumulatedMessagesIn = new AtomicLong(0);
+
+    public BrokerTopicStat() {
+    }
+
     public long getMessagesIn() {
-        return 0;
+        return numCumulatedMessagesIn.get();
     }
 
     public long getBytesIn() {
-        return 0;
+        return numCumulatedBytesIn.get();
     }
 
     public long getBytesOut() {
-        return 0;
+        return numCumulatedBytesOut.get();
     }
 
     public long getFailedProducerequest() {
-        return 0;
+        return numCumulatedFailedProduceRequests.get();
     }
 
     public long getFailedFetchRequest() {
-        return 0;
+        return numCumulatedFailedFetchRequests.get();
     }
 
     public String getMbeanName() {
-        return null;
+        return mBeanName;
+    }
+
+
+    public void recordBytesIn(long nBytes){
+        numCumulatedBytesIn.getAndAdd(nBytes);
+    }
+
+    public void recordBytesOut(long nBytes){
+        numCumulatedBytesOut.getAndAdd(nBytes);
+    }
+
+    public void recordFailedFetchRequest(){
+        numCumulatedFailedFetchRequests.getAndIncrement();
+    }
+
+    public void recordFailedProduceRequest(){
+        numCumulatedFailedProduceRequests.getAndIncrement();
+    }
+
+    public void recordMessagesIn(int nMessages){
+        numCumulatedBytesIn.getAndAdd(nMessages);
     }
 }
