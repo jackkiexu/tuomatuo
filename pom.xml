@@ -16,6 +16,7 @@
         <module>tuomatuo-lbdatasource</module>
         <module>tuomatuo-mq</module>
         <module>tuomatuo-manage</module>
+        <module>tuomatuo-cache</module>
     </modules>
     <packaging>pom</packaging>
 </project>
