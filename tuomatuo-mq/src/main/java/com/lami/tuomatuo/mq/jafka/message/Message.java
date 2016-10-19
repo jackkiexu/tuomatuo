@@ -2,6 +2,7 @@ package com.lami.tuomatuo.mq.jafka.message;
 
 import com.lami.tuomatuo.mq.jafka.api.ICalculable;
 import com.lami.tuomatuo.mq.jafka.common.UnknownMagicByteException;
+import com.lami.tuomatuo.mq.jafka.utils.Utils;
 
 import java.nio.ByteBuffer;
 
@@ -92,6 +93,14 @@ public class Message implements ICalculable {
         this.messageSize = buffer.limit();
     }
 
+    public Message(byte[] bytes){
+        this(bytes, CompressionCodec.NoCompressionCodec);
+    }
+
+    public Message(byte[] bytes, CompressionCodec compressionCodec){
+        this(Utils.crc32(bytes), bytes, compressionCodec);
+    }
+
     public Message(long checksum, byte[] bytes, CompressionCodec compressionCodec){
         this(ByteBuffer.allocate(Message.headerSize(Message.CurrentMagicValue) + bytes.length));
         buffer.put(CurrentMagicValue);
@@ -116,5 +125,20 @@ public class Message implements ICalculable {
         return messageSize;
     }
 
+    public byte magic(){
+        return buffer.get(MagicOffset);
+    }
 
+    public int payloadSize(){
+        return getSizeInBytes() - headerSize(magic());
+    }
+
+    public ByteBuffer payload(){
+        ByteBuffer payload = buffer.duplicate();
+        payload.position(headerSize(magic()));
+        payload = payload.slice();
+        payload.limit(payloadSize());
+        payload.rewind();
+        return payload;
+    }
 }
