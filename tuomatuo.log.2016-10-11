@@ -1,0 +1,52 @@
+[2016-10-09 16:45:33,111] INFO  main (TestFile.java:24) - bytesRead:-1
+[2016-10-09 16:46:03,077] INFO  main (TestFile.java:24) - bytesRead:2
+[2016-10-09 16:46:03,080] INFO  main (TestFile.java:32) - F
+[2016-10-09 16:46:03,080] INFO  main (TestFile.java:32) - l
+[2016-10-09 16:46:03,080] INFO  main (TestFile.java:32) - a
+[2016-10-09 16:46:03,080] INFO  main (TestFile.java:32) - g
+[2016-10-09 16:46:03,081] INFO  main (TestFile.java:32) - (
+[2016-10-09 16:46:03,081] INFO  main (TestFile.java:32) - 1
+[2016-10-09 16:46:03,081] INFO  main (TestFile.java:32) - )
+[2016-10-09 16:46:03,081] INFO  main (TestFile.java:32) - 
+[2016-10-09 16:46:03,082] INFO  main (TestFile.java:32) - 
+
+[2016-10-09 16:46:03,082] INFO  main (TestFile.java:32) - F
+[2016-10-09 16:46:03,082] INFO  main (TestFile.java:32) - l
+[2016-10-09 16:46:03,082] INFO  main (TestFile.java:32) - a
+[2016-10-09 16:46:03,083] INFO  main (TestFile.java:32) - g
+[2016-10-09 16:46:03,083] INFO  main (TestFile.java:32) - (
+[2016-10-09 16:46:03,083] INFO  main (TestFile.java:32) - 2
+[2016-10-09 16:46:03,083] INFO  main (TestFile.java:32) - )
+[2016-10-09 16:46:03,084] INFO  main (TestFile.java:32) - 
+[2016-10-09 16:46:03,084] INFO  main (TestFile.java:32) - 
+
+[2016-10-09 16:46:03,084] INFO  main (TestFile.java:32) - F
+[2016-10-09 16:46:03,084] INFO  main (TestFile.java:32) - l
+[2016-10-09 16:46:03,085] INFO  main (TestFile.java:32) - a
+[2016-10-09 16:46:03,085] INFO  main (TestFile.java:32) - g
+[2016-10-09 16:46:03,085] INFO  main (TestFile.java:32) - (
+[2016-10-09 16:46:03,085] INFO  main (TestFile.java:32) - 3
+[2016-10-09 16:46:03,086] INFO  main (TestFile.java:32) - )
+[2016-10-09 16:46:03,086] INFO  main (TestFile.java:32) - 
+[2016-10-09 16:46:03,086] INFO  main (TestFile.java:32) - 
+
+[2016-10-09 16:46:03,086] INFO  main (TestFile.java:32) - F
+[2016-10-09 16:46:03,087] INFO  main (TestFile.java:32) - l
+[2016-10-09 16:46:03,087] INFO  main (TestFile.java:32) - a
+[2016-10-09 16:46:03,087] INFO  main (TestFile.java:32) - g
+[2016-10-09 16:46:03,088] INFO  main (TestFile.java:32) - (
+[2016-10-09 16:46:03,088] INFO  main (TestFile.java:32) - 4
+[2016-10-09 16:46:03,088] INFO  main (TestFile.java:32) - )
+[2016-10-09 16:46:03,088] INFO  main (TestFile.java:32) - 
+[2016-10-09 16:46:03,088] INFO  main (TestFile.java:32) - 
+
+[2016-10-09 16:46:03,088] INFO  main (TestFile.java:32) - F
+[2016-10-09 16:46:03,089] INFO  main (TestFile.java:32) - l
+[2016-10-09 16:46:03,089] INFO  main (TestFile.java:32) - a
+[2016-10-09 16:46:03,089] INFO  main (TestFile.java:32) - g
+[2016-10-09 16:46:03,089] INFO  main (TestFile.java:32) - (
+[2016-10-09 16:46:03,089] INFO  main (TestFile.java:32) - 5
+[2016-10-09 16:46:03,090] INFO  main (TestFile.java:32) - )
+[2016-10-09 16:46:03,090] INFO  main (TestFile.java:32) - 
+[2016-10-09 16:46:03,090] INFO  main (TestFile.java:32) - 
+
