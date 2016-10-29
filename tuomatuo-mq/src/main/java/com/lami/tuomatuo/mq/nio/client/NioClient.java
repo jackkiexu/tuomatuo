@@ -12,6 +12,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -55,7 +56,7 @@ public class NioClient implements Runnable {
         return SelectorProvider.provider().openSelector();
     }
 
-    private SocketChannel inittiateConnection() throws IOException{
+    private SocketChannel initiateConnection() throws IOException{
         // Create a non-blocking socket channel
         SocketChannel socketChannel = SocketChannel.open();
         socketChannel.configureBlocking(false);
@@ -91,7 +92,7 @@ public class NioClient implements Runnable {
 
     public void send(byte[] data, RspHandler handler) throws IOException{
         // Start a new connection
-        SocketChannel socketChannel = this.inittiateConnection();
+        SocketChannel socketChannel = this.initiateConnection();
 
         // Register the response handler
         this.rspHandlerMaps.put(socketChannel, handler);
@@ -125,10 +126,124 @@ public class NioClient implements Runnable {
         }
     }
 
-    public void run() {
+    private void read(SelectionKey key) throws IOException{
+        SocketChannel socketChannel = (SocketChannel)key.channel();
 
+        // Clear out our read buffer so it's ready for new data
+        this.readBuffer.clear();
+
+        // Attemp to read off the channel
+        int numRead;
+        try{
+            numRead = socketChannel.read(this.readBuffer);
+        }catch (Exception e){
+            // The remote forcibly closed the connection, cancel
+            // the selection key and close the channel
+            key.cancel();
+            socketChannel.close();
+            return;
+        }
+
+        if(numRead == -1){
+            // Remote entity shut the socket down cleanly. Do the
+            // same from our and cancel the channel
+            key.channel().close();
+            key.cancel();
+            return;
+        }
+
+        // Handle the response
+        this.handleResponse(socketChannel, this.readBuffer.array(), numRead);
+    }
+
+    private void write(SelectionKey key) throws Exception{
+        SocketChannel socketChannel = (SocketChannel)key.channel();
+
+        BlockingQueue queue = (BlockingQueue)this.pendingData.get(socketChannel);
+
+        // Write until there's not more data....
+        while(!queue.isEmpty()){
+            ByteBuffer buf = (ByteBuffer)queue.poll();
+            socketChannel.write(buf);
+            if(buf.remaining() > 0){
+                // ... or the socket's buffer fills up
+                break;
+            }
+        }
+
+        if(queue.isEmpty()){
+            // we wrote away all data, so we're no longer interested
+            // in writing on this socket. Switch back to waiting for
+            // data
+            key.interestOps(SelectionKey.OP_READ);
+        }
     }
 
 
+    public void run() {
+        while(true){
+            try {
+                // Process any pending changes
+
+                Iterator changes = this.pendingChanges.iterator();
+                while(changes.hasNext()){
+                    ChangeRequest change = (ChangeRequest)changes.next();
+                    switch (change.type){
+                        case ChangeRequest.CHANGEOPS:
+                            SelectionKey key = change.socketChannel.keyFor(this.selector);
+                            key.interestOps(change.ops);
+                            break;
+                        case ChangeRequest.REGISTER:
+                            change.socketChannel.register(this.selector, change.ops);
+                            break;
+                    }
+                }
+
+
+                // Wait for an event one of the registered channels
+                this.selector.select(500);
+
+                // Iterate over the set of keys for which events are available
+                Iterator selectedKeys = this.selector.selectedKeys().iterator();
+                while(selectedKeys.hasNext()){
+                    SelectionKey key = (SelectionKey)selectedKeys.next();
+                    selectedKeys.remove();
+
+                    if (!key.isValid()) {
+                        continue;
+                    }
+
+                    // Check what event is available and deal with it
+                    if (key.isConnectable()) {
+                        this.finishConnection(key);
+                    } else if (key.isReadable()) {
+                        this.read(key);
+                    } else if (key.isWritable()) {
+                        this.write(key);
+                    }
+                }
+
+            }catch (Exception e){
+
+            }
+
+
+        }
+    }
+
+
+    public static void main(String[] args) {
+        try {
+            NioClient client = new NioClient(InetAddress.getByName("www.google.com"), 80);
+            Thread t = new Thread(client);
+            t.setDaemon(true);
+            t.start();
+            RspHandler handler = new RspHandler();
+            client.send("GET / HTTP/1.0\r\n\r\n".getBytes(), handler);
+            handler.waitForResponse();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 }
