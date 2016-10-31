@@ -61,6 +61,10 @@ public class ByteBufferMessageSet extends MessageSet {
         return null;
     }
 
+    public long getValidBytes(){
+        return validBytes;
+    }
+
     public void remove() {
 
     }

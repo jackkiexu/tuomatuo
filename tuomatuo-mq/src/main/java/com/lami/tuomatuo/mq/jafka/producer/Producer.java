@@ -46,6 +46,10 @@ public class Producer<K, V> implements BrokerPartitionInfo.Callback, Closeable {
 
     }
 
+    public Producer(ProducerConfig config){
+
+    }
+
     private ProducerPoolData<V> create(ProducerData<K, V> pd){
         Collection<Partition> topicPartitionsList = getPartitionListForTopic(pd);
         int randomBrokerId = random.nextInt(topicPartitionsList.size());

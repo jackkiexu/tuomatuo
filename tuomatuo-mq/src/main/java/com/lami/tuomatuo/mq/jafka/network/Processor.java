@@ -2,12 +2,17 @@ package com.lami.tuomatuo.mq.jafka.network;
 
 import com.lami.tuomatuo.mq.jafka.api.RequestKeys;
 import com.lami.tuomatuo.mq.jafka.mx.SocketServerStats;
+import com.lami.tuomatuo.mq.netty.channel.ExceptionEvent;
 import org.apache.log4j.Logger;
 
+import java.io.EOFException;
 import java.io.IOException;
+import java.net.Socket;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -32,7 +37,56 @@ public class Processor extends AbstractServerThread {
     }
 
     public void run() {
+        startupComplete();
+        while (isRunning()){
+            try {
+                // setup any new connections that have been queued up
+                configureNewConnections();
 
+                int ready;
+
+                final Selector selector = getSelector();
+                ready = selector.select(500);
+                if(ready > 0){
+                    Iterator<SelectionKey> iter = selector.selectedKeys().iterator();
+                    while(iter.hasNext() && isRunning()){
+                        SelectionKey key = null;
+                        try {
+                            key = iter.next();
+                            iter.remove();
+                            if(key.isReadable()){
+                                read(key);
+                            }else if(key.isWritable()){
+                                write(key);
+                            }else if(!key.isValid()){
+                                close(key);
+                            }else{
+                                throw new IllegalStateException("Unrecognized key state for processor thread.");
+                            }
+                        }catch (EOFException e){
+                            Socket socket = channelFor(key).socket();
+                            logger.info("Closing socket connection to " + socket.getInetAddress() + ":" + socket.getPort());
+                            close(key);
+                        }catch (InvalidRequestException e){
+                            Socket socket = channelFor(key).socket();
+                            logger.info("Closing socket connection to " + socket.getInetAddress() + ":" + socket.getPort() + " due to invalid request : " + e.getMessage());
+                            close(key);
+                        }catch (Throwable t){
+                            Socket socket = channelFor(key).socket();
+                            logger.info("Closing socket for " + socket.getInetAddress() + ":" + socket.getPort() + "because of error ", t);
+                            close(key);
+                        }
+                    }
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        logger.info("Closing selector.");
+        closeSelector();
+        shutdownComplete();
     }
 
     private SocketChannel channelFor(SelectionKey key){
