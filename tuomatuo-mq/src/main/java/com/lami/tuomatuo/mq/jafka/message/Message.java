@@ -141,4 +141,8 @@ public class Message implements ICalculable {
         payload.rewind();
         return payload;
     }
+
+    public boolean isValid(){
+        return false;
+    }
 }
