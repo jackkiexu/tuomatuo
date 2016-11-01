@@ -69,6 +69,8 @@ public class FetcherRunnable extends Thread {
     }
 
     private long processMessages(ByteBufferMessageSet messages, PartitionTopicInfo info) throws IOException, InterruptedException{
+        boolean done = false;
+
         return 0;
     }
 

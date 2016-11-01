@@ -31,10 +31,6 @@ public class ByteBufferMessageSet extends MessageSet {
 
     private long validBytes;
 
-    public Iterator<MessageAndOffset> internalIterator(boolean isShallow){
-        return new Iter(isShallow);
-    }
-
     public ByteBufferMessageSet(ByteBuffer buffer) {
         this(buffer, 0L, ErrorMapping.NoError);
     }
@@ -64,6 +60,30 @@ public class ByteBufferMessageSet extends MessageSet {
         }
     }
 
+    public long getInitialOffset(){
+        return initialOffset;
+    }
+
+    public ByteBuffer getBuffer(){
+        return buffer;
+    }
+
+    public ErrorMapping getErrorCode(){
+        return errorCode;
+    }
+
+    public ByteBuffer serialized(){
+        return buffer;
+    }
+
+    public Iterator<MessageAndOffset> iterator(){
+        return internalIterator(false);
+    }
+
+    public Iterator<MessageAndOffset> internalIterator(boolean isShallow){
+        return new Iter(isShallow);
+    }
+
     public boolean hasNext() {
         return false;
     }
@@ -72,6 +92,10 @@ public class ByteBufferMessageSet extends MessageSet {
         return null;
     }
 
+    /**
+     *
+     * @return
+     */
     public long getValidBytes(){
         return validBytes;
     }
@@ -90,14 +114,11 @@ public class ByteBufferMessageSet extends MessageSet {
         return 0;
     }
 
-    public Iterator<MessageAndOffset> iterator() {
-        return null;
-    }
-
     class Iter extends IteratorTemplate<MessageAndOffset>{
 
         boolean isShallow;
         ByteBuffer topIter = buffer.slice();
+        long currValidBytes = initialOffset;
 
         public Iter(boolean isShallow) {
             this.isShallow = isShallow;
