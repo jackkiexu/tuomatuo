@@ -1,6 +1,7 @@
 package com.lami.tuomatuo.mq.jafka.message;
 
 import com.lami.tuomatuo.mq.jafka.common.ErrorMapping;
+import com.lami.tuomatuo.mq.jafka.common.InvalidMessageSizeException;
 import com.lami.tuomatuo.mq.jafka.utils.IteratorTemplate;
 
 import java.io.IOException;
@@ -119,9 +120,27 @@ public class ByteBufferMessageSet extends MessageSet {
         boolean isShallow;
         ByteBuffer topIter = buffer.slice();
         long currValidBytes = initialOffset;
+        Iterator<MessageAndOffset> innerIter = null;
+        long lastMessageSize = 0l;
 
         public Iter(boolean isShallow) {
             this.isShallow = isShallow;
+        }
+
+        private boolean innerDone(){
+            return innerIter == null || !innerIter.hasNext();
+        }
+
+        private MessageAndOffset makeNextOuter(){
+            if(topIter.remaining() < 4) return allDone();
+            int size = topIter.getInt();
+            lastMessageSize = size;
+            if(size < 0 || topIter.remaining() < size){
+                if(currValidBytes == initialOffset||size<0){
+                    throw new InvalidMessageSizeException("invalid");
+                }
+            }
+            return makeNext();
         }
 
         @Override
@@ -129,8 +148,5 @@ public class ByteBufferMessageSet extends MessageSet {
             return null;
         }
 
-        public Iterator<MessageAndOffset> iterator() {
-            return null;
-        }
     }
 }
