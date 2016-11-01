@@ -142,6 +142,10 @@ public class Message implements ICalculable {
         return payload;
     }
 
+    public long checksum(){
+        return Utils.getUnsignedInt(buffer, crcOffset(magic()));
+    }
+
     public boolean isValid(){
         return false;
     }

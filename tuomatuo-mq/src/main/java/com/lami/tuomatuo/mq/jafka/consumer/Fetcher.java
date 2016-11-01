@@ -20,6 +20,16 @@ public class Fetcher {
 
     private volatile List<FetcherRunnable> fetcherThreads = new ArrayList<FetcherRunnable>(0);
 
+    public Fetcher(ConsumerConfig config, ZkClient zkClient) {
+        super();
+        this.config = config;
+        this.zkClient = zkClient;
+    }
 
-
+    public void stopConnectionsToAllBrokers(){
+        // shutdown the old fetcher threads, if any
+        List<FetcherRunnable> threads = this.fetcherThreads;
+        for(FetcherRunnable fetcherThread : threads){
+        }
+    }
 }

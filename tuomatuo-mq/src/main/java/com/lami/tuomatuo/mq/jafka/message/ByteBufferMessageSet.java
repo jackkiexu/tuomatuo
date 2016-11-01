@@ -3,10 +3,21 @@ package com.lami.tuomatuo.mq.jafka.message;
 import com.lami.tuomatuo.mq.jafka.common.ErrorMapping;
 import com.lami.tuomatuo.mq.jafka.utils.IteratorTemplate;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.GatheringByteChannel;
 import java.util.Iterator;
 
 /**
+ * A sequence of messages stored in a byte buffer
+ *
+ * There are two way to create a ByteBufferMessageSet
+ *
+ * Option 1 : From a ByteBuffer which already contains the serialized
+ * message set. Consumers will use this method
+ *
+ * Option 2: Give it a list of messages along with instructions relating to serialization format. Producers will use this method
+ *
  * Created by xjk on 2016/10/9.
  */
 public class ByteBufferMessageSet extends MessageSet {
@@ -72,6 +83,15 @@ public class ByteBufferMessageSet extends MessageSet {
     @Override
     public long getSizeInBytes() {
         return 0;
+    }
+
+    @Override
+    public long writeTo(GatheringByteChannel channel, long offset, long maxSize) throws IOException {
+        return 0;
+    }
+
+    public Iterator<MessageAndOffset> iterator() {
+        return null;
     }
 
     class Iter extends IteratorTemplate<MessageAndOffset>{
