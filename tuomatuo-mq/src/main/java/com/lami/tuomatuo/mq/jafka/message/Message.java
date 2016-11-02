@@ -149,4 +149,15 @@ public class Message implements ICalculable {
     public boolean isValid(){
         return false;
     }
+
+    public CompressionCodec compressionCodec(){
+        byte magicByte = magic();
+        switch (magicByte){
+            case 0:
+                return CompressionCodec.NoCompressionCodec;
+            case 1:
+                return CompressionCodec.valueof(buffer.get(AttributeOffset) & CompressionCodeMask);
+        }
+        throw new RuntimeException("Invalid magic byte " + magicByte);
+    }
 }

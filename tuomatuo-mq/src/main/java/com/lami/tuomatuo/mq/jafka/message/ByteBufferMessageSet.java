@@ -2,6 +2,7 @@ package com.lami.tuomatuo.mq.jafka.message;
 
 import com.lami.tuomatuo.mq.jafka.common.ErrorMapping;
 import com.lami.tuomatuo.mq.jafka.common.InvalidMessageSizeException;
+import com.lami.tuomatuo.mq.jafka.common.MessageSizeTooLargeException;
 import com.lami.tuomatuo.mq.jafka.utils.IteratorTemplate;
 
 import java.io.IOException;
@@ -106,13 +107,11 @@ public class ByteBufferMessageSet extends MessageSet {
     }
 
     @Override
-    public long getSizeInBytes() {
-        return 0;
-    }
-
-    @Override
     public long writeTo(GatheringByteChannel channel, long offset, long maxSize) throws IOException {
-        return 0;
+        buffer.mark();
+        int written = channel.write(buffer);
+        buffer.reset();
+        return written;
     }
 
     class Iter extends IteratorTemplate<MessageAndOffset>{
@@ -137,16 +136,56 @@ public class ByteBufferMessageSet extends MessageSet {
             lastMessageSize = size;
             if(size < 0 || topIter.remaining() < size){
                 if(currValidBytes == initialOffset||size<0){
-                    throw new InvalidMessageSizeException("invalid");
+                    throw new InvalidMessageSizeException("invalid message size: " + size + "only received bytes: " +
+                    topIter.remaining() + " at " + currValidBytes + "( possible causes (1) single message larger than "
+                    + " the fetch size; (2) log corruption");
                 }
+                return allDone();
             }
+
+            ByteBuffer message = topIter.slice();
+            message.limit(size);
+            topIter.position(topIter.position() + size);
+            Message newMessage = new Message(message);
+            if(isShallow){
+                currValidBytes += 4 + size;
+                return new MessageAndOffset(newMessage, currValidBytes);
+            }
+            if(newMessage.compressionCodec() == CompressionCodec.NoCompressionCodec){
+
+            }
+
             return makeNext();
         }
 
         @Override
         protected MessageAndOffset makeNext() {
-            return null;
+            if(isShallow){
+                return makeNextOuter();
+            }
+            if(innerDone()) return makeNextOuter();
+            MessageAndOffset messageAndOffset = innerIter.next();
+            if(!innerIter.hasNext()){
+                currValidBytes += 4 + lastMessageSize;
+            }
+
+            return new MessageAndOffset(messageAndOffset.message, currValidBytes);
         }
 
+    }
+
+    public long getSizeInBytes(){
+        return buffer.limit();
+    }
+
+    public void verifyMessageSize(int maxMessageSize){
+        Iterator<MessageAndOffset> shallowIter = internalIterator(true);
+        while(shallowIter.hasNext()){
+            MessageAndOffset messageAndOffset = shallowIter.next();
+            int payloadsize = messageAndOffset.message.payloadSize();
+            if(payloadsize > maxMessageSize){
+                throw new MessageSizeTooLargeException("payload size of  " + payloadsize + " larger than " + maxMessageSize);
+            }
+        }
     }
 }
