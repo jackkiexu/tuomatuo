@@ -29,7 +29,7 @@ public abstract class CompressionFacade implements Closeable {
         outputStream.write(b);
     }
 
-    public void close() throws IOException {
+    public void close() {
         Closer.closeQuietly(inputStream);
         Closer.closeQuietly(outputStream);
     }

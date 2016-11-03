@@ -16,7 +16,7 @@ public abstract class MessageSet implements Iterable<MessageAndOffset> {
 
     public static final int LogOverhead = 4;
 
-    public ByteBuffer createByteBuffer(CompressionCodec compressionCodec, Message... messages){
+    public static ByteBuffer createByteBuffer(CompressionCodec compressionCodec, Message... messages){
         if(compressionCodec == CompressionCodec.NoCompressionCodec){
             ByteBuffer buffer = ByteBuffer.allocate(messageSetSize(messages));
             for(Message message : messages){
@@ -39,12 +39,8 @@ public abstract class MessageSet implements Iterable<MessageAndOffset> {
         return buffer;
     }
 
-    public static int messageSetSize(Message... messages){
-        int size = 0;
-        for(Message message : messages){
-            size += entrySize(message);
-        }
-        return size;
+    public static int entrySize(Message message){
+        return LogOverhead + message.getSizeInBytes();
     }
 
     public static int messageSetSize(Iterable<Message> messages){
@@ -55,8 +51,12 @@ public abstract class MessageSet implements Iterable<MessageAndOffset> {
         return size;
     }
 
-    public static int entrySize(Message message){
-        return LogOverhead + message.getSizeInBytes();
+    public static int messageSetSize(Message... messages){
+        int size = 0;
+        for(Message message : messages){
+            size += entrySize(message);
+        }
+        return size;
     }
 
     /**

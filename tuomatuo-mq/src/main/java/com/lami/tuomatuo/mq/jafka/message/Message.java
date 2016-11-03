@@ -45,7 +45,10 @@ public class Message implements ICalculable {
 
     /**
      * Computes the CRC value based on the magic byte
-     * @param magic
+     * @param magic Specifies the magic byte value. Possible values are 0
+     *              and 1
+     *              0 for no compression
+     *              1 for compression
      * @return
      */
     public static int crcOffset(byte magic){
@@ -109,16 +112,17 @@ public class Message implements ICalculable {
             attributes = (byte)(attributes | (CompressionCodeMask & compressionCodec.codec));
         }
         buffer.put(attributes);
-
+        Utils.putUnsignedInt(buffer, checksum);
+        buffer.put(bytes);
+        buffer.rewind();
     }
 
-    public void serializeTo(ByteBuffer serBuffer){
-        serBuffer.putInt(buffer.limit());
-        serBuffer.put(buffer.duplicate());
+    public Message(long checksum, byte[] bytes){
+        this(checksum, bytes, CompressionCodec.NoCompressionCodec);
     }
 
-    public int serializedSize(){
-        return 4 /* int size */ + buffer.limit();
+    public byte attributes(){
+        return buffer.get(AttributeOffset);
     }
 
     public int getSizeInBytes() {
@@ -133,21 +137,8 @@ public class Message implements ICalculable {
         return getSizeInBytes() - headerSize(magic());
     }
 
-    public ByteBuffer payload(){
-        ByteBuffer payload = buffer.duplicate();
-        payload.position(headerSize(magic()));
-        payload = payload.slice();
-        payload.limit(payloadSize());
-        payload.rewind();
-        return payload;
-    }
-
     public long checksum(){
         return Utils.getUnsignedInt(buffer, crcOffset(magic()));
-    }
-
-    public boolean isValid(){
-        return false;
     }
 
     public CompressionCodec compressionCodec(){
@@ -159,5 +150,51 @@ public class Message implements ICalculable {
                 return CompressionCodec.valueof(buffer.get(AttributeOffset) & CompressionCodeMask);
         }
         throw new RuntimeException("Invalid magic byte " + magicByte);
+    }
+
+    public ByteBuffer payload(){
+        ByteBuffer payload = buffer.duplicate();
+        payload.position(headerSize(magic()));
+        payload = payload.slice();
+        payload.limit(payloadSize());
+        payload.rewind();
+        return payload;
+    }
+
+    public boolean isValid(){
+        return checksum() == Utils.crc32(buffer.array(), buffer.position() + buffer.arrayOffset() + payloadOffset(magic()), payloadSize());
+    }
+
+    public int serializedSize(){
+        return 4 /** int size */ + buffer.limit();
+    }
+
+    public void serializeTo(ByteBuffer serBuffer){
+        serBuffer.putInt(buffer.limit());
+        serBuffer.put(buffer.duplicate());
+    }
+
+
+    @Override
+    public String toString() {
+        return String.format("message(magic = %d, attribute = %d, crc = %d, payload = %s)", magic(), attributes(), checksum(), payload());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof Message){
+            Message m = (Message)obj;
+            return getSizeInBytes() == m.getSizeInBytes() //
+                    && attributes() == m.attributes() //
+                    && checksum() == m.checksum() //
+                    && payload() == m.payload() //
+                    && magic() == m.magic();
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return buffer.hashCode();
     }
 }

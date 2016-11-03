@@ -45,6 +45,15 @@ public class ByteBufferMessageSet extends MessageSet {
     }
 
     public ByteBufferMessageSet(CompressionCodec compressionCodec, Message... messages){
+        this(MessageSet.createByteBuffer(compressionCodec, messages), 0L, ErrorMapping.NoError);
+    }
+
+    public ByteBufferMessageSet(Message... messages){
+        this(CompressionCodec.NoCompressionCodec, messages);
+    }
+
+    public long getValidBytes(){
+        return validBytes;
     }
 
     private long shallowValidBytes(){
@@ -85,35 +94,6 @@ public class ByteBufferMessageSet extends MessageSet {
     public Iterator<MessageAndOffset> internalIterator(boolean isShallow){
         return new Iter(isShallow);
     }
-
-    public boolean hasNext() {
-        return false;
-    }
-
-    public MessageAndOffset next() {
-        return null;
-    }
-
-    /**
-     *
-     * @return
-     */
-    public long getValidBytes(){
-        return validBytes;
-    }
-
-    public void remove() {
-
-    }
-
-    @Override
-    public long writeTo(GatheringByteChannel channel, long offset, long maxSize) throws IOException {
-        buffer.mark();
-        int written = channel.write(buffer);
-        buffer.reset();
-        return written;
-    }
-
     class Iter extends IteratorTemplate<MessageAndOffset>{
 
         boolean isShallow;
@@ -152,9 +132,23 @@ public class ByteBufferMessageSet extends MessageSet {
                 return new MessageAndOffset(newMessage, currValidBytes);
             }
             if(newMessage.compressionCodec() == CompressionCodec.NoCompressionCodec){
-
+                if(!newMessage.isValid()){
+                    throw new InvalidMessageException("Uncompressed essage is invalid");
+                }
+                innerIter = null;
+                currValidBytes += 4 + size;
+                return new MessageAndOffset(newMessage, currValidBytes);
             }
 
+            // compress message
+            if(!newMessage.isValid()){
+                throw new InvalidMessageException("Compressed message is invalid");
+            }
+            innerIter = CompressionUtils.decompress(newMessage).internalIterator(false);
+            if(!innerIter.hasNext()){
+                currValidBytes += 4 + lastMessageSize;
+                innerIter = null;
+            }
             return makeNext();
         }
 
@@ -173,6 +167,16 @@ public class ByteBufferMessageSet extends MessageSet {
         }
 
     }
+
+
+    @Override
+    public long writeTo(GatheringByteChannel channel, long offset, long maxSize) throws IOException {
+        buffer.mark();
+        int written = channel.write(buffer);
+        buffer.reset();
+        return written;
+    }
+
 
     public long getSizeInBytes(){
         return buffer.limit();
