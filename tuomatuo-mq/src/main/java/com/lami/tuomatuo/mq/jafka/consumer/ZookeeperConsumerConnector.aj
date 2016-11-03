@@ -3,10 +3,12 @@ package com.lami.tuomatuo.mq.jafka.consumer;
 import com.github.zkclient.IZkChildListener;
 import com.github.zkclient.IZkStateListener;
 import com.github.zkclient.ZkClient;
+import com.github.zkclient.exception.ZkInterruptedException;
 import com.lami.tuomatuo.mq.jafka.api.OffsetRequest;
 import com.lami.tuomatuo.mq.jafka.cluster.Broker;
 import com.lami.tuomatuo.mq.jafka.cluster.Cluster;
 import com.lami.tuomatuo.mq.jafka.cluster.Partition;
+import com.lami.tuomatuo.mq.jafka.common.ConsumerRebalanceFailedException;
 import com.lami.tuomatuo.mq.jafka.common.InvalidConfigException;
 import com.lami.tuomatuo.mq.jafka.producer.serializer.Decoder;
 import com.lami.tuomatuo.mq.jafka.utils.Closer;
@@ -15,13 +17,18 @@ import com.lami.tuomatuo.mq.jafka.utils.Pool;
 import com.lami.tuomatuo.mq.jafka.utils.Scheduler;
 import com.lami.tuomatuo.mq.jafka.utils.zookeeper.ZkGroupDirs;
 import com.lami.tuomatuo.mq.jafka.utils.zookeeper.ZkGroupTopicDirs;
+import com.lami.tuomatuo.mq.jafka.utils.zookeeper.ZkStringSerializer;
 import com.lami.tuomatuo.mq.jafka.utils.zookeeper.ZkUtils;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.Watcher;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
@@ -149,19 +156,157 @@ public class ZookeeperConsumerConnector implements ConsumerConnector {
         this.queues = new Pool<KV<String, String>, BlockingQueue<FetchedDataChunk>>();
         //
 
+        connectZk();
+        createFetcher();
+        if(this.config.isAutoCommit()){
+            logger.info("starting auto committer every " + config.getAutoCommitIntervalMs() + " ms");
+            scheduler.scheduleWithRate(new AutoCommitTask(), config.getAutoCommitIntervalMs(), config.getAutoCommitIntervalMs());
+        }
+
+    }
+
+    private void createFetcher(){
+        if(enableFetcher){
+            this.fetcher = new Fetcher(config, zkClient);
+        }
     }
 
 
+    class AutoCommitTask implements Runnable{
+
+        public void run() {
+            try {
+                commitOffsets();
+            } catch (Exception e) {
+                e.printStackTrace();
+                logger.info("exception during autocommit : " , e);
+            }
+        }
+    }
+
     public <T> Map<String, List<MessageStream<T>>> createMessageStreams(Map<String, Integer> topicCountMap, Decoder<T> decoder) {
-        return null;
+        return consume(topicCountMap, decoder);
+    }
+
+    private <T> Map<String, List<MessageStream<T>>> consume(Map<String, Integer> topicCountMap, Decoder<T>decoder){
+        if(topicCountMap == null){
+            throw new IllegalArgumentException("topicCountMap is null");
+        }
+        ZkGroupDirs dirs = new ZkGroupDirs(config.getGroupId());
+        Map<String, List<MessageStream<T>>> ret = new HashMap<String, List<MessageStream<T>>>();
+        String consumerUuid = config.getConsumerId();
+        if(consumerUuid == null){
+            consumerUuid = generateConsumerId();
+        }
+        final String consumerIdString = config.getGroupId() + "_" + consumerUuid;
+        final TopicCount topicCount = new TopicCount(consumerIdString, topicCountMap);
+        for(Map.Entry<String, Set<String>> e : topicCount.getConsumerThreadIdsPerTopic().entrySet()){
+            final String topic = e.getKey();
+            final Set<String> threadIdSet = e.getValue();
+            final List<MessageStream<T>> streamList = new ArrayList<MessageStream<T>>();
+            for(String threadId : threadIdSet){
+                LinkedBlockingQueue<FetchedDataChunk> stream = new LinkedBlockingQueue<FetchedDataChunk>();
+                queues.put(new KV<String, String>(topic, threadId),stream);
+                streamList.add(new MessageStream<T>(topic, stream, config.getConsumerTimeoutMs(), decoder));
+            }
+            ret.put(topic, streamList);
+            logger.info("adding topic " + topic + " and stream to map");
+
+        }
+
+
+        // listener to consumer and partition changes
+        ZKRebalanceListener<T> loadBalancerListener = new ZKRebalanceListener<T>(config.getGroupId(), consumerIdString, ret);
+        loadBalancerListener.start();
+        registerConsumerInZK(dirs, consumerIdString, topicCount);
+
+        // register listener for session expired event
+        zkClient.subscribeStateChanges(new ZKSessionExpireListener<T>(dirs, consumerIdString, topicCount, loadBalancerListener));
+        zkClient.subscribeChildChanges(dirs.consumerRegistryDir, loadBalancerListener);
+        for(String topic : ret.keySet()){
+            // register on broker partition path changes
+            final String partitionPath = ZkUtils.BrokerTopicsPath + "/" + topic;
+            zkClient.subscribeChildChanges(partitionPath, loadBalancerListener);
+        }
+
+        // explicitly trigger load balancing for this consumer
+        loadBalancerListener.syncedRebalance();
+        return ret;
+    }
+
+
+    private String generateConsumerId(){
+        UUID uuid = UUID.randomUUID();
+        try {
+            return String.format("%s-%d-%s", InetAddress.getLocalHost().getHostName(), System.currentTimeMillis(), Long.toHexString(uuid.getMostSignificantBits()).substring(0, 8));
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException("can not generate consume id by auto, set the 'consumerid' parameter to fix this");
+        }
     }
 
     public void commitOffsets() {
-
+        if(zkClient == null){
+            logger.info("zk client is null, Cannot commit offsets");
+            return;
+        }
+        for(Map.Entry<String, Pool<Partition, PartitionTopicInfo>> e : topicRegistry.entrySet()){
+            ZkGroupTopicDirs topicDirs = new ZkGroupTopicDirs(config.getGroupId(), e.getKey());
+            //
+            for(PartitionTopicInfo info : e.getValue().values()){
+                final long newOffset = info.getConsumedOffset();
+                final String path = topicDirs.consumerOffsetDir + "/" + info.partition.getName();
+                try {
+                    ZkUtils.updatePersistentPath(zkClient, path, "" + newOffset);
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                    logger.info("exception during commitOffsets, path= " + path + ", offset=" + newOffset, e1);
+                }finally {
+                    logger.info("Commited [" + path + "] for topic " + info);
+                }
+            }
+        }
     }
 
     public void close() throws IOException {
+        if(isShuttingDown.compareAndSet(false, true)){
+            logger.info("ZkConsumerConnector shuting down");
+            try {
+                scheduler.shutdown();
+                if(fetcher != null){
+                    fetcher.stopConnectionsToAllBrokers();
+                }
+                sendShutdownToAllQueues();
+                if(config.isAutoCommit()){
+                    commitOffsets();
+                }
+                if(this.zkClient != null){
+                    this.zkClient.close();
+                    zkClient = null;
+                }
+            } catch (ZkInterruptedException e) {
+                e.printStackTrace();
+                logger.info("error during consumer connector shutdown", e);
+            }
+            logger.info("ZkConsumerConnector shut down completed");
+        }
+    }
 
+    private void sendShutdownToAllQueues(){
+        for(BlockingQueue<FetchedDataChunk> queue : queues.values()){
+            queue.clear();
+            try {
+                queue.put(SHUTDOWN_COMMAND);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void connectZk(){
+        logger.info("Connecting to zookeeper instance at " + config.getZkConnect());
+        this.zkClient = new ZkClient(config.getZkConnect(), config.getZkSessionTimeoutMs(), config.getZkConnectionTimeoutMs(), ZkStringSerializer.getInstance());
+        logger.info("Connected to zookeeper at " + config.getZkConnect());
     }
 
     class ZKRebalanceListener<T> implements IZkChildListener, Runnable{
@@ -204,17 +349,155 @@ public class ZookeeperConsumerConnector implements ConsumerConnector {
         }
 
         public void run() {
+            logger.info("staring watcher executor thread for consumer " + consumerIdString);
+            boolean doRebalance = false;
+            while(!isShuttingDown.get()){
+                try {
+                    lock.lock();
+                    try {
+                        if(!isWatcherTriggered){
+                            cond.await(1000, TimeUnit.MILLISECONDS); // wake up periodically so that it can check the shutdown flag
+                        }
+                    } finally {
+                        doRebalance = isWatcherTriggered;
+                        isWatcherTriggered = false;
+                        lock.unlock();
+                    }
+                    if(doRebalance){
+                        syncedRebalance();;
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    logger.info("error during syncedRebalance", e);
+                }
+            }
 
+            logger.info("stoping watcher executor thread for consumer " + consumerIdString);
         }
 
         public void syncedRebalance(){
+            synchronized (rebalanceLock){
+                for(int i = 0; i < config.getMaxRebalanceRetries(); i++){
+                    logger.info("begin rebalancing consumer " + consumerIdString + " try # " + i );
+                    boolean done = true;
+                    Cluster cluster = ZkUtils.getCluster(zkClient);
+                    try {
+                        done = rebalance(cluster);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        /**
+                         * occasionally, we may hit ZK exception because
+                         * the ZK state is changing while we are iterating
+                         * For example, a Zk node can disappear between the
+                         * time we get all children and the time we try to
+                         * get the value of a child. Just let this go since
+                         * another rbalance will be triggered
+                         */
+                        logger.info("exception during rebalance ", e);
+                    }
+                    logger.info("end rebalance consumer " + consumerIdString + " try # " + i);
 
+                    if(done){
+                        return;
+                    }else{
+                        /**
+                         * Here the cache is at a risk of being stable. To take future rebalancing decisions correctly, we should
+                         * clear the cache
+                         */
+                        logger.info("Rebalancing attempt failed, Clearing the cache before the next rebalancing operation is triggered");
+                    }
+
+                    closeFetchersForQueues(cluster, messagesStreams, queues.values());
+                    try {
+                        Thread.sleep(config.getRebalanceBackoffMs());
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            throw new ConsumerRebalanceFailedException(consumerIdString + " can't rebalance after " + config.getMaxRebalanceRetries() + " retries");
         }
 
         private boolean rebalance(Cluster cluster){
             Map<String, Set<String>> myTopicThreadIdsMap = ZkUtils.getTopicCount(zkClient, group, consumerIdString).getConsumerThreadIdsPerTopic();
             Map<String, List<String>> consumersPerTopicMap = ZkUtils.getConsumersPerTopic(zkClient, group);
-            Map<String, List<String>>
+            Map<String, List<String>> partitionPerTopicMap = ZkUtils.getPartitionsForTopics(zkClient, myTopicThreadIdsMap.keySet());
+
+            /**
+             * fetchers must be stopped to avoid data duplication, since if
+             * the current rebalancing attempt fails, the partitions that
+             * are released could be owned by another consumer. But if we
+             * don't stop the fetchers first, this consumer would continue
+             * returing data for released partitions in parallel. So, not
+             * stopping the fetchers leads to duplicate data
+             */
+
+            closeFetchers(cluster, messagesStreams, myTopicThreadIdsMap);
+            releasePartitionOwnership(topicRegistry);
+
+            Map<KV<String, String>, String> partitionOwnershipDecision = new HashMap<KV<String, String>, String>();
+            Pool<String, Pool<Partition, PartitionTopicInfo>> currentTopicRegistry = new Pool<String, Pool<Partition, PartitionTopicInfo>>();
+            for(Map.Entry<String, Set<String>> e : myTopicThreadIdsMap.entrySet()){
+                String topic = e.getKey();
+                currentTopicRegistry.put(topic, new Pool<Partition, PartitionTopicInfo>());
+
+                //
+                ZkGroupTopicDirs topicDirs = new ZkGroupTopicDirs(group, topic);
+                List<String> curConsumers = consumersPerTopicMap.get(topic);
+                List<String> curPartitions = partitionPerTopicMap.get(topic);
+
+                final int nPartsPerConsumer = curPartitions.size() / curConsumers.size();
+                final int nConsumersWithExtraPart = curPartitions.size() % curConsumers.size();
+
+                logger.info("Consumer " + consumerIdString + " rebalancing the following partitions : " +
+                curPartitions + " for topic " + topic + " with consumers " + curConsumers);
+
+                for(String consumerThreadId : e.getValue()){
+                    final int myConsumerPosition = curConsumers.indexOf(consumerThreadId);
+                    assert (myConsumerPosition >= 0);
+                    final int startPart = nPartsPerConsumer * myConsumerPosition + Math.min(myConsumerPosition, nConsumersWithExtraPart);
+                    final int nParts = nPartsPerConsumer + ((myConsumerPosition + 1 > nConsumersWithExtraPart)? 0:1);
+
+                    /**
+                     * Range-partition the sorted partitions to consumers
+                     * for better locality. The first few consumers pick up
+                     * an extra partition, if any
+                     */
+
+                    if(nParts <= 0){
+                        logger.info("No broker partitions consumed by consumer thread " + consumerThreadId + " for topic " + topic);
+                    }else{
+                        for(int i = startPart; i < startPart + nParts; i++){
+                            String partition = curPartitions.get(i);
+                            logger.info(consumerThreadId + " attempting to claim partition " + partition);
+                            addPartitionTopicInfo(currentTopicRegistry, topicDirs, partition, topic, consumerThreadId);
+                            // record the partition ownership decision
+                            partitionOwnershipDecision.put(new KV<String, String>(topic, partition), consumerThreadId);
+                        }
+                    }
+
+
+                }
+
+            }
+
+            /**
+             * move the partition ownership here, since that can be used to
+             * indicate a truly successful rebalancing attempt A
+             * rebalancing attempt is completed successfully only after the
+             * fetcher have been started correctly
+             */
+            if(reflectPartitionOwnershipDecision(partitionOwnershipDecision)){
+                logger.info("Updating the cache");
+                logger.info("Partitions per topic cache " + partitionPerTopicMap);
+                logger.info("Consumers per topic cache " + consumersPerTopicMap);
+                topicRegistry = currentTopicRegistry;
+                updateFetcher(cluster, messagesStreams);
+                return true;
+            }else{
+                return false;
+            }
         }
 
         private void updateFetcher(Cluster cluster, Map<String, List<MessageStream<T>>> messagesStreams2 ){

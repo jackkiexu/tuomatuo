@@ -25,13 +25,13 @@ public class MessageStream<T> implements Iterable<T> {
 
     private ConsumerIterator<T> consumerIterator;
 
-    public MessageStream(String topic, BlockingQueue<FetchedDataChunk> queue, int consumerTimeoutMs, Decoder<T> decoder, ConsumerIterator<T> consumerIterator) {
+    public MessageStream(String topic, BlockingQueue<FetchedDataChunk> queue, int consumerTimeoutMs, Decoder<T> decoder) {
         super();
         this.topic = topic;
         this.queue = queue;
         this.consumerTimeoutMs = consumerTimeoutMs;
         this.decoder = decoder;
-        this.consumerIterator = consumerIterator;
+        this.consumerIterator = new ConsumerIterator<T>(topic, queue, consumerTimeoutMs, decoder);
     }
 
     public Iterator<T> iterator() {
