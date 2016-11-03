@@ -14,6 +14,7 @@ import com.lami.tuomatuo.mq.jafka.utils.Closer;
 import com.lami.tuomatuo.mq.jafka.utils.KV;
 import org.apache.log4j.Logger;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
@@ -23,7 +24,7 @@ import java.util.List;
 /**
  * Created by xjk on 2016/11/1.
  */
-public class SimpleConsumer {
+public class SimpleConsumer implements Closeable {
 
     private static final Logger logger = Logger.getLogger(SimpleConsumer.class);
 

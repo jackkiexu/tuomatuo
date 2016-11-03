@@ -52,5 +52,12 @@ public class TopicCount {
         }
     }
 
-
+    public String toJsonString(){
+        try {
+            return mapper.writeValueAsString(topicCountMap);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -27,7 +27,12 @@ public class PartitionTopicInfo {
 
     public Partition partition;
 
-    public PartitionTopicInfo(String topic, int brokerId, BlockingQueue<FetchedDataChunk> chunkQueue, AtomicLong consumerOffset, AtomicLong fetchOffset, Partition partition) {
+    public PartitionTopicInfo(String topic, //
+                              int brokerId, //
+                              Partition partition,//
+                              BlockingQueue<FetchedDataChunk> chunkQueue, //
+                              AtomicLong consumedOffset, //
+                              AtomicLong fetchedOffset) {
         super();
         this.topic = topic;
         this.brokerId = brokerId;
