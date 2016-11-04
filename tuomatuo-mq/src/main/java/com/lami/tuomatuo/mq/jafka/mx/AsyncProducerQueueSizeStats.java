@@ -1,6 +1,7 @@
 package com.lami.tuomatuo.mq.jafka.mx;
 
-import com.sohu.jafka.producer.async.QueueItem;
+
+import com.lami.tuomatuo.mq.jafka.producer.async.QueueItem;
 
 import java.util.concurrent.BlockingQueue;
 

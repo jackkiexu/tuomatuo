@@ -40,8 +40,28 @@ public class OffsetRequest implements Request {
         return RequestKeys.Offset;
     }
 
+    public int getMaxNumOffsets(){
+        return maxNumOffsets;
+    }
+
+    public long getTime(){
+        return time;
+    }
+
+    public String getTopic(){
+        return topic;
+    }
+
+    public int getPartition(){
+        return partition;
+    }
+
     public int getSizeInBytes() {
         return Utils.caculateShortString(topic) + 4 + 8 + 4;
+    }
+
+    public String toString(){
+        return "OffsetRequest( topic : " + topic + ", part:" + partition + ", time:" + time + ", maxNumOffsets:" + maxNumOffsets + ")";
     }
 
     public void writeTo(ByteBuffer buffer) {

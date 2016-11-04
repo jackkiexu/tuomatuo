@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 /**
+ * a response with multi-data
  * Created by xjk on 2016/10/9.
  */
 public class MultiFetchResponse  implements Iterable<ByteBufferMessageSet>{
