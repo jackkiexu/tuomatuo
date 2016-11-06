@@ -17,6 +17,8 @@ public interface AsyncProducerConfigShared {
 
     int getBatchSize();
 
+    String getSerializerClass();
+
     String getCbkHandler();
 
     Properties getCbkHandlerProperties();

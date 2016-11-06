@@ -27,6 +27,10 @@ public class ServerStartable {
         this.producerConfig = producerConfig;
     }
 
+    public ServerStartable(Config config){
+        this(config, null, null);
+    }
+
     private void init(){
         server = new Server(config);
         if(consumerConfig != null){
@@ -40,4 +44,13 @@ public class ServerStartable {
     public void shutdown(){
 
     }
+
+    public void awaitShutdown(){
+        try {
+            server.awaitShutdown();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
 }

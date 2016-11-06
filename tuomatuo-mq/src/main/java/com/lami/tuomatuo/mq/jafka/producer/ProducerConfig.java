@@ -79,6 +79,10 @@ public class ProducerConfig extends ZkConfig implements SyncProducerConfigShared
         return asyncProducerConfigShared.getBatchSize();
     }
 
+    public String getSerializerClass(){
+        return asyncProducerConfigShared.getSerializerClass();
+    }
+
     public String getCbkHandler() {
         return asyncProducerConfigShared.getCbkHandler();
     }
@@ -109,7 +113,7 @@ public class ProducerConfig extends ZkConfig implements SyncProducerConfigShared
     /**
      * the partitioner class for partitioning events amongst sub-topics
      */
-    public String getPartitionClass(){
+    public String getPartitionerClass(){
         return Utils.getString(props, "partitioner.class", DefaultPartitioner.class.getName());
     }
 
