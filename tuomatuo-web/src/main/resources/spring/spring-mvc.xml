@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+       http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+       <bean id ="controllerLogAspect" class="com.lami.tuomatuo.interceptor.ControllerLogAspect"></bean>
+       <aop:config>
+              <aop:aspect id="logAspect" ref="controllerLogAspect">
+                     <aop:pointcut id="logAspectPoint" expression="execution(* com.lami.tuomatuo.controller.*.*(..))" ></aop:pointcut>
+                     <aop:before method="doBefore" pointcut-ref="logAspectPoint"></aop:before>
+                     <aop:after method="doAfter" pointcut-ref="logAspectPoint"></aop:after>
+                     <aop:around method="doAround" pointcut-ref="logAspectPoint"></aop:around>
+                     <aop:after-throwing method="doThrowing" throwing="ex" pointcut-ref="logAspectPoint"></aop:after-throwing>
+              </aop:aspect>
+       </aop:config>
+
+       <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+              <property name="ignoreAcceptHeader" value="true"/>
+              <property name="defaultContentType" value="text/html"/>
+              <property name="mediaTypes">
+                     <map>
+                            <entry key="atom" value="application/atom+xml"/>
+                            <entry key="html" value="text/html"/>
+                            <entry key="json" value="application/json"/>
+                            <entry key="rest" value="application/json"/>
+                            <entry key="report" value="application/pdf"/>
+                     </map>
+              </property>
+              <property name="favorParameter" value="false"/>
+              <property name="defaultViews">
+                     <list>
+                            <bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView"/>
+                     </list>
+              </property>
+       </bean>
+
+       <mvc:annotation-driven/>
+
+</beans>
