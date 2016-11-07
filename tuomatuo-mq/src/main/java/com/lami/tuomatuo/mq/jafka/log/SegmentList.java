@@ -1,5 +1,7 @@
 package com.lami.tuomatuo.mq.jafka.log;
 
+import javax.swing.text.Segment;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -18,7 +20,19 @@ public class SegmentList {
      * Delete the first n items from the list
      * @return
      */
-    public List<LogSegment>
+    public List<LogSegment> trunc(int newStart){
+        if(newStart < 0){
+            throw new IllegalArgumentException("Staring index must be positive");
+        }
+        while(true){
+            List<LogSegment> curr = contents.get();
+            int newLength = Math.max(curr.size() - newStart, 0);
+            List<LogSegment> updatedList = new ArrayList<LogSegment>(curr.subList(Math.min(newStart, curr.size() - 1), curr.size()));
+            if(contents.compareAndSet(curr, updatedList)){
+                return curr.subList(0, curr.size() - newLength);
+            }
+        }
+    }
 
     public List<LogSegment> getView(){
         return contents.get();
