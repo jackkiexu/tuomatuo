@@ -18,21 +18,21 @@ import java.util.function.Consumer;
  */
 public class ConsumerIterator<T> extends IteratorTemplate<T> {
 
-    private static Logger logger = Logger.getLogger(ConsumerIterator.class);
+    private final Logger logger = Logger.getLogger(ConsumerIterator.class);
 
-    public String topic;
+    final String topic;
 
-    public BlockingQueue<FetchedDataChunk> queue;
+    final BlockingQueue<FetchedDataChunk> queue;
 
-    public int consumerTimeoutMs;
+    final int consumerTimeoutMs;
 
-    public Decoder<T> decoder;
+    final Decoder<T> decoder;
 
-    private AtomicReference<Iterator<MessageAndOffset>> current = new AtomicReference<Iterator<MessageAndOffset>>();
+    private AtomicReference<Iterator<MessageAndOffset>> current = new AtomicReference<Iterator<MessageAndOffset>>(null);
 
     private PartitionTopicInfo currentTopicInfo = null;
 
-    private long consumerOffset = -1l;
+    private long consumedOffset = -1L;
 
     public ConsumerIterator(String topic, BlockingQueue<FetchedDataChunk> queue, int consumerTimeoutMs, Decoder<T> decoder) {
         super();
@@ -44,13 +44,13 @@ public class ConsumerIterator<T> extends IteratorTemplate<T> {
 
     @Override
     public T next() {
-        T decodeMessage = super.next();
-        if(consumerOffset < 0){
-            throw new IllegalStateException("Offset returned by the message set is invalid " + consumerOffset);
+        T decodedMessage = super.next();
+        if (consumedOffset < 0) {
+            throw new IllegalStateException("Offset returned by the message set is invalid " + consumedOffset);
         }
-        currentTopicInfo.resetConsumerOffset(consumerOffset);
-        ConsumerTopicStat.getComsumerTopicStat(topic).recordMessagePerTopic(1);
-        return decodeMessage;
+        currentTopicInfo.resetConsumeOffset(consumedOffset);
+        ConsumerTopicStat.getConsumerTopicStat(topic).recordMessagesPerTopic(1);
+        return decodedMessage;
     }
 
     @Override
@@ -58,44 +58,43 @@ public class ConsumerIterator<T> extends IteratorTemplate<T> {
         try {
             return makeNext0();
         } catch (InterruptedException e) {
-            e.printStackTrace();
             throw new RuntimeException(e.getMessage(), e);
         }
     }
 
-    protected T makeNext0() throws InterruptedException{
+    protected T makeNext0() throws InterruptedException {
         FetchedDataChunk currentDataChunk = null;
-        Iterator<MessageAndOffset> localCurrent = null;
-        if(localCurrent == null || !localCurrent.hasNext()){
-            if(consumerTimeoutMs < 0){
+        Iterator<MessageAndOffset> localCurrent = current.get();
+        if (localCurrent == null || !localCurrent.hasNext()) {
+            if (consumerTimeoutMs < 0) {
                 currentDataChunk = queue.take();
-            }else{
+            } else {
                 currentDataChunk = queue.poll(consumerTimeoutMs, TimeUnit.MILLISECONDS);
-                if(currentDataChunk == null){
+                if (currentDataChunk == null) {
                     resetState();
-                    throw new ConsumerTimeoutException("consumer timeout in " + consumerTimeoutMs + "ms");
+                    throw new ConsumerTimeoutException("consumer timeout in " + consumerTimeoutMs + " ms");
                 }
             }
-
-            if(currentDataChunk == ZookeeperConsumerConnector.SHUTDOWN_COMMAND){
+            if (currentDataChunk == ZookeeperConsumerConnector.SHUTDOWN_COMMAND) {
                 queue.offer(currentDataChunk);
                 return allDone();
-            }else{
+            } else {
                 currentTopicInfo = currentDataChunk.topicInfo;
-                if(currentTopicInfo.getConsumedOffset() != currentDataChunk.fetchOffset){
-                    logger.info(String.format("command offset: %d doesn't match fetch offset: %d for %s; \n Consumer may lose data", currentTopicInfo.getConsumedOffset(), currentDataChunk.fetchOffset, currentTopicInfo));
-                    currentTopicInfo.resetConsumerOffset(currentDataChunk.fetchOffset);
+                if (currentTopicInfo.getConsumedOffset() != currentDataChunk.fetchOffset) {
+                    logger.error(String.format("consumed offset: %d doesn't match fetch offset: %d for %s;\n Consumer may lose data", //
+                            currentTopicInfo.getConsumedOffset(), currentDataChunk.fetchOffset, currentTopicInfo));
+                    currentTopicInfo.resetConsumeOffset(currentDataChunk.fetchOffset);
                 }
                 localCurrent = currentDataChunk.messages.iterator();
                 current.set(localCurrent);
             }
         }
         MessageAndOffset item = localCurrent.next();
-        consumerOffset = item.offset;
+        consumedOffset = item.offset;
         return decoder.toEvent(item.message);
     }
 
-    public void clearCurrentChunk(){
+    public void clearCurrentChunk() {
         logger.info("Clearing the current data chunk for this consumer iterator");
         current.set(null);
     }

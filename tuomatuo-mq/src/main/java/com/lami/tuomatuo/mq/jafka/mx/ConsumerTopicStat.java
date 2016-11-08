@@ -9,18 +9,18 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Created by xjk on 2016/10/10.
  */
-public class ConsumerTopicStat implements ConsumerTopicStatMBean, IMBeanName{
+public class ConsumerTopicStat implements ConsumerTopicStatMBean, IMBeanName {
 
     private static final Pool<String, ConsumerTopicStat> instances = new Pool<String, ConsumerTopicStat>();
 
     private final AtomicLong numCumulatedMessagesPerTopic = new AtomicLong(0);
 
-    public long getMessagesPerTopic(){
+    public long getMessagesPerTopic() {
         return numCumulatedMessagesPerTopic.get();
     }
 
-    public void recordMessagePerTopic(int nMessage){
-        numCumulatedMessagesPerTopic.addAndGet(nMessage);
+    public void recordMessagesPerTopic(int nMessages) {
+        numCumulatedMessagesPerTopic.addAndGet(nMessages);
     }
 
     public String getMbeanName() {
@@ -29,14 +29,14 @@ public class ConsumerTopicStat implements ConsumerTopicStatMBean, IMBeanName{
 
     private String mBeanName;
 
-    public static ConsumerTopicStat getComsumerTopicStat(String topic){
+    public static ConsumerTopicStat getConsumerTopicStat(String topic) {
         ConsumerTopicStat stat = instances.get(topic);
-        if(stat == null){
+        if (stat == null) {
             stat = new ConsumerTopicStat();
-            stat.mBeanName = "jafka:type=jafka.ComsumerTopicStat."+topic;
-            if(instances.putIfNotExists(topic, stat) == null){
+            stat.mBeanName = "jafka:type=jafka.ConsumerTopicStat." + topic;
+            if (instances.putIfNotExists(topic, stat) == null) {
                 Utils.registerMBean(stat);
-            }else{
+            } else {
                 stat = instances.get(topic);
             }
         }
