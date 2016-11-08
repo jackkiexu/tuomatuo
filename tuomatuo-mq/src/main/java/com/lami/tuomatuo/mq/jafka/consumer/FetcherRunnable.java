@@ -88,7 +88,7 @@ public class FetcherRunnable extends Thread {
     private long fetchOnce() throws IOException, InterruptedException{
         List<FetchRequest> fetches = new ArrayList<FetchRequest>();
         for(PartitionTopicInfo info : partitionTopicInfos){
-            fetches.add(new FetchRequest(info.topic, info.partition.partId, info.getFetchOffset(), config.getFetchSize()));
+            fetches.add(new FetchRequest(info.topic, info.partition.partId, info.getFetchedOffset(), config.getFetchSize()));
         }
         MultiFetchResponse response = simpleConsumer.multifetch(fetches);
         int index = 0;
@@ -104,7 +104,7 @@ public class FetcherRunnable extends Thread {
             }catch (Exception e){
                 if(!stopped){
                     logger.info("error in FetcherRunnable for " + info, e);
-                    info.enqueueError(e, info.getFetchOffset());
+                    info.enqueueError(e, info.getFetchedOffset());
                 }
             }
 
@@ -120,12 +120,12 @@ public class FetcherRunnable extends Thread {
             long resetOffset = resetConsumerOffsets(info.topic, info.partition);
             if(resetOffset >= 0){
                 info.resetFetchOffset(resetOffset);
-                info.resetConsumerOffset(resetOffset);
+                info.resetConsumeOffset(resetOffset);
                 done = true;
             }
         }
         if(!done){
-            return info.enqueue(messages, info.getFetchOffset());
+            return info.enqueue(messages, info.getFetchedOffset());
         }
         return 0;
     }

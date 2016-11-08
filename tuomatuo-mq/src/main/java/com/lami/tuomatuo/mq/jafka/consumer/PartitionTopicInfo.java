@@ -15,17 +15,17 @@ public class PartitionTopicInfo {
 
     private static final Logger logger = Logger.getLogger(PartitionTopicInfo.class);
 
-    public String topic;
+    public final String topic;
 
-    public int brokerId;
+    public final int brokerId;
 
-    private BlockingQueue<FetchedDataChunk> chunkQueue;
+    private final BlockingQueue<FetchedDataChunk> chunkQueue;
 
-    private AtomicLong consumerOffset;
+    private final AtomicLong consumedOffset;
 
-    private AtomicLong fetchOffset;
+    private final AtomicLong fetchedOffset;
 
-    public Partition partition;
+    final Partition partition;
 
     public PartitionTopicInfo(String topic, //
                               int brokerId, //
@@ -35,60 +35,59 @@ public class PartitionTopicInfo {
                               AtomicLong fetchedOffset) {
         super();
         this.topic = topic;
+        this.partition = partition;
         this.brokerId = brokerId;
         this.chunkQueue = chunkQueue;
-        this.consumerOffset = consumerOffset;
-        this.fetchOffset = fetchOffset;
-        this.partition = partition;
+        this.consumedOffset = consumedOffset;
+        this.fetchedOffset = fetchedOffset;
     }
-
 
     /**
-     * return the comsumerOffset
+     * @return the consumedOffset
      */
-    public long getConsumedOffset(){
-        return consumerOffset.get();
+    public long getConsumedOffset() {
+        return consumedOffset.get();
     }
 
-    public long getFetchOffset(){
-        return fetchOffset.get();
+    /**
+     * @return the fetchedOffset
+     */
+    public long getFetchedOffset() {
+        return fetchedOffset.get();
     }
 
-    public void resetConsumerOffset(long newConsumerOffset){
-        consumerOffset.set(newConsumerOffset);
+    public void resetConsumeOffset(long newConsumeOffset) {
+        consumedOffset.set(newConsumeOffset);
     }
 
-    public void resetFetchOffset(long newFetchOffset){
-        fetchOffset.set(newFetchOffset);
+    public void resetFetchOffset(long newFetchOffset) {
+        fetchedOffset.set(newFetchOffset);
     }
 
-    public long enqueue(ByteBufferMessageSet messages, long fetchOffset) throws InterruptedException{
+    public long enqueue(ByteBufferMessageSet messages, long fetchOffset) throws InterruptedException {
         long size = messages.getValidBytes();
-        if(size > 0){
-            long oldOffset = this.fetchOffset.get();
+        if (size > 0) {
+            final long oldOffset = fetchedOffset.get();
             chunkQueue.put(new FetchedDataChunk(messages, this, fetchOffset));
-            long newOffsetset = this.fetchOffset.addAndGet(size);
-            if(logger.isDebugEnabled()){
-                logger.debug("update fetchset (origin+size=newOffset) => " + oldOffset + " + " + size + "= " + newOffsetset);
+            long newOffset = fetchedOffset.addAndGet(size);
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("updated fetchset (origin+size=newOffset) => %d + %d = %d", oldOffset, size, newOffset));
             }
         }
         return size;
     }
 
-    public void enqueueError(Exception e, long fetchOffset) throws InterruptedException{
-        ByteBufferMessageSet messageSet = new ByteBufferMessageSet(ErrorMapping.EMPTY_BUFFER, 0, ErrorMapping.valueOf(e));
-        chunkQueue.put(new FetchedDataChunk(messageSet, this, fetchOffset));
-    }
-
-
     @Override
     public String toString() {
-        return "PartitionTopicInfo{" +
-                "topic='" + topic + '\'' +
-                ", brokerId=" + brokerId +
-                ", consumerOffset=" + consumerOffset +
-                ", fetchOffset=" + fetchOffset +
-                ", partition=" + partition +
-                '}';
+        return topic + ":" + partition + ": fetched offset = " + fetchedOffset.get() + ": consumed offset = " + consumedOffset.get();
+    }
+
+    /**
+     * @param e
+     * @throws InterruptedException
+     */
+    public void enqueueError(Exception e, long fetchOffset) throws InterruptedException {
+        ByteBufferMessageSet messages = new ByteBufferMessageSet(ErrorMapping.EMPTY_BUFFER, 0, ErrorMapping.valueOf(e));
+        chunkQueue.put(new FetchedDataChunk(messages, this, fetchOffset));
     }
 }
