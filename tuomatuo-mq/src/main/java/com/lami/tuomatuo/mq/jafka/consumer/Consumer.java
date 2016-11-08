@@ -17,10 +17,10 @@ public class Consumer {
      * @return
      */
     public static ConsumerConnector create(ConsumerConfig config) {
-        ConsumerConnector consumerConnector = new ZookeeperConsumerConnector(config);
+//        ConsumerConnector consumerConnector = new ZookeeperConsumerConnector(config);
         //register mbean
         //Utils.registerMBean(consumerConnector, "jafka:type=jafka.ConsumerStats");
-        return consumerConnector;
+        return null;
     }
 
 }

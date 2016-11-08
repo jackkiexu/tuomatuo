@@ -75,7 +75,7 @@ public class ConsumerIterator<T> extends IteratorTemplate<T> {
                     throw new ConsumerTimeoutException("consumer timeout in " + consumerTimeoutMs + " ms");
                 }
             }
-            if (currentDataChunk == ZookeeperConsumerConnector.SHUTDOWN_COMMAND) {
+            /*if (currentDataChunk == ZookeeperConsumerConnector.SHUTDOWN_COMMAND) {
                 queue.offer(currentDataChunk);
                 return allDone();
             } else {
@@ -87,7 +87,7 @@ public class ConsumerIterator<T> extends IteratorTemplate<T> {
                 }
                 localCurrent = currentDataChunk.messages.iterator();
                 current.set(localCurrent);
-            }
+            }*/
         }
         MessageAndOffset item = localCurrent.next();
         consumedOffset = item.offset;
