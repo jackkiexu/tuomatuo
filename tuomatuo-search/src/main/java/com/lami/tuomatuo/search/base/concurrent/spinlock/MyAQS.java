@@ -975,6 +975,7 @@ public class MyAQS extends AbstractOwnableSynchronizer implements java.io.Serial
             if(Thread.interrupted()){
                 throw new InterruptedException();
             }
+            // 将当前线程作为内容构造的节点 node 放入条件队列中并返回此节点
             Node node = addConditionWaiter();
             int savedState = fullyRelease(node);
             int interruptMode = 0;

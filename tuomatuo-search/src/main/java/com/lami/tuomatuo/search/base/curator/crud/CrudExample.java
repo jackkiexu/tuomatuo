@@ -20,7 +20,7 @@ public class CrudExample {
     public static void main(String[] args) {
         client.start();
         try {
-//            client.create().forPath(PATH, "I Love messi".getBytes());
+            client.create().forPath(PATH, "I Love messi".getBytes());
 
             byte[] bs = client.getData().forPath(PATH);
             logger.info("新建的节点, data为:" + new String(bs));
