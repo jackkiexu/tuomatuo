@@ -83,6 +83,7 @@ public class MyAQS extends AbstractOwnableSynchronizer implements java.io.Serial
 
     /**
      * insert into the queue tail
+     * 插入 node 节点到队列中, 若原先整个链表都是空的, 则先生成一个空的节点插入进去, 然后在插入我们要插入的节点
      * @param node
      * @return
      */
@@ -582,6 +583,10 @@ public class MyAQS extends AbstractOwnableSynchronizer implements java.io.Serial
                 s.thread != null;
     }
 
+    /**
+     * 简单的说就是判断 当前线程是否是等待事件最长的
+     * @return
+     */
     public final boolean hasQueuedPredecessors(){
         Node t = tail; // Read fields in reverse initialization order
         Node h = head;
