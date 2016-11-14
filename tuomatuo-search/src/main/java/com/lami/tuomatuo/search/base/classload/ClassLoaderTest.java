@@ -28,7 +28,7 @@ public class ClassLoaderTest {
                 }
             }
         };
-        
+
         Object obj = myLoader.loadClass("com.lami.tuomatuo.search.base.classload.ClassLoaderTest").newInstance();
         System.out.println("obj class : " + obj.getClass());
         System.out.println(obj instanceof com.lami.tuomatuo.search.base.classload.ClassLoaderTest);

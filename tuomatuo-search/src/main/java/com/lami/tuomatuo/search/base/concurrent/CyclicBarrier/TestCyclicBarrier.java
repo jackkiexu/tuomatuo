@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.search.base.concurrent;
+package com.lami.tuomatuo.search.base.concurrent.CyclicBarrier;
 
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;

@@ -803,8 +803,8 @@ public class MyAQS extends AbstractOwnableSynchronizer implements java.io.Serial
 
         /**
          * 状态字段: 具有以下值
-         * 1 SIGNAL: 当前节点的后继节点已经(或即将)被阻塞(通过park), 所以当 当前节点释放或被取消时候, 一定要 unpark它的后继节点. 为了避免竞争, 获取方法一定要首先设置 node 为 signal, 然后再次重新调用获取方法, 如果失败则阻塞
-         * -1 CANCELLED: 当前节点由于超时或者被中断而被取消, 一旦节点被取消, 那么它的状态值不再会被改变, 且当前点的线程不会再次被阻塞
+         * -1 SIGNAL: 当前节点的后继节点已经(或即将)被阻塞(通过park), 所以当 当前节点释放或被取消时候, 一定要 unpark它的后继节点. 为了避免竞争, 获取方法一定要首先设置 node 为 signal, 然后再次重新调用获取方法, 如果失败则阻塞
+         * 1 CANCELLED: 当前节点由于超时或者被中断而被取消, 一旦节点被取消, 那么它的状态值不再会被改变, 且当前点的线程不会再次被阻塞
          * -2 CONDITION: 表示当前节点正在条件队列(AQS下的ConditionObject里也维护了队列)中, 在从 conditionObject 队列 转移到同步队列前, 它不会在同步队列(AQS下的队列)中被使用. 当成功转移后, 该节点的状态值将由 CONDITION 设置 0
          * -3 PROPAGATE: 共享模式下的释放操作应该被传播到其他节点. 该状态值在 doReleaseShared 方法中被设置的
          * 0 以上都不是
