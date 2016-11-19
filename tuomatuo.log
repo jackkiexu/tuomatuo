@@ -1,18 +1,3 @@
-[2016-11-08 22:00:49,108] INFO  main (LongEventProducer.java:32) - event:LongEvent(value=0)
-[2016-11-08 22:00:49,112] INFO  pool-1-thread-1 (LongEventHandler.java:15) - LongEventHandler : 0, l:0, b:true
-[2016-11-08 22:00:50,115] INFO  main (LongEventProducer.java:32) - event:LongEvent(value=0)
-[2016-11-08 22:00:50,116] INFO  pool-1-thread-1 (LongEventHandler.java:15) - LongEventHandler : 1, l:1, b:true
-[2016-11-08 22:00:51,120] INFO  main (LongEventProducer.java:32) - event:LongEvent(value=0)
-[2016-11-08 22:00:51,121] INFO  pool-1-thread-1 (LongEventHandler.java:15) - LongEventHandler : 2, l:2, b:true
-[2016-11-08 22:00:52,124] INFO  main (LongEventProducer.java:32) - event:LongEvent(value=0)
-[2016-11-08 22:00:52,125] INFO  pool-1-thread-1 (LongEventHandler.java:15) - LongEventHandler : 3, l:3, b:true
-[2016-11-08 22:00:53,128] INFO  main (LongEventProducer.java:32) - event:LongEvent(value=0)
-[2016-11-08 22:00:53,129] INFO  pool-1-thread-1 (LongEventHandler.java:15) - LongEventHandler : 4, l:4, b:true
-[2016-11-08 22:00:54,133] INFO  main (LongEventProducer.java:32) - event:LongEvent(value=0)
-[2016-11-08 22:00:54,134] INFO  pool-1-thread-1 (LongEventHandler.java:15) - LongEventHandler : 5, l:5, b:true
-[2016-11-09 18:21:03,295] INFO  main (CrudExample.java:26) - 新建的节点, data为:I Love messi
-[2016-11-09 18:21:03,326] INFO  main (CrudExample.java:31) - 修改后的数据 data 为:I Love football
-[2016-11-09 18:21:03,419] INFO  main (CrudExample.java:37) - stat:null
-[2016-11-09 18:22:18,472] INFO  main (CrudExample.java:26) - 新建的节点, data为:I Love messi
-[2016-11-09 18:22:26,367] INFO  main (CrudExample.java:31) - 修改后的数据 data 为:I Love football
-[2016-11-09 18:22:44,008] INFO  main (CrudExample.java:37) - stat:null
+[2016-11-19 21:31:17,792] INFO  main (CompletableFutureTest.java:20) - 100
+[2016-11-19 21:38:38,891] INFO  Client2 (CompletableFutureTest.java:33) - ThreadName:Client2 : 100
+[2016-11-19 21:38:38,891] INFO  Client1 (CompletableFutureTest.java:33) - ThreadName:Client1 : 100
