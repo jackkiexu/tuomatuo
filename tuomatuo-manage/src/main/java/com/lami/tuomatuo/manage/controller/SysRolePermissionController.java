@@ -1,10 +1,10 @@
 package com.lami.tuomatuo.manage.controller;
 
-import com.lami.tuomatuo.model.base.Result;
-import com.lami.tuomatuo.model.manage.SysPermission;
-import com.lami.tuomatuo.model.manage.SysRolePermission;
-import com.lami.tuomatuo.service.manage.SysPermissionService;
-import com.lami.tuomatuo.service.manage.SysRolePermissionService;
+import com.lami.tuomatuo.core.model.base.Result;
+import com.lami.tuomatuo.core.model.manage.SysPermission;
+import com.lami.tuomatuo.core.model.manage.SysRolePermission;
+import com.lami.tuomatuo.core.service.manage.SysPermissionService;
+import com.lami.tuomatuo.core.service.manage.SysRolePermissionService;
 import com.lami.tuomatuo.utils.StringUtil;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;

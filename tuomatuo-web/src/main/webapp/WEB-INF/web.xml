@@ -29,7 +29,7 @@
     <!-- servlet begin -->
     <servlet>
         <servlet-name>LoginServlet</servlet-name>
-        <servlet-class>com.lami.tuomatuo.servlet.LoginServlet</servlet-class>
+        <servlet-class>com.lami.tuomatuo.web.servlet.LoginServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
@@ -38,7 +38,7 @@
 
     <servlet>
         <servlet-name>InitServlet</servlet-name>
-        <servlet-class>com.lami.tuomatuo.servlet.InitServlet</servlet-class>
+        <servlet-class>com.lami.tuomatuo.web.servlet.InitServlet</servlet-class>
         <load-on-startup>2</load-on-startup>
     </servlet>
     <servlet-mapping>

@@ -1,11 +1,11 @@
 package com.lami.tuomatuo.manage.controller;
 
-import com.lami.tuomatuo.base.BaseService;
-import com.lami.tuomatuo.base.PageBean;
+import com.lami.tuomatuo.core.base.BaseService;
+import com.lami.tuomatuo.core.base.PageBean;
 import com.lami.tuomatuo.manage.bean.Comment;
 import com.lami.tuomatuo.manage.bean.ConstantMessage;
 import com.lami.tuomatuo.manage.bean.ConstantModel;
-import com.lami.tuomatuo.model.base.Result;
+import com.lami.tuomatuo.core.model.base.Result;
 import com.lami.tuomatuo.utils.StringUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

@@ -7,7 +7,7 @@
        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
 
-       <bean id ="controllerLogAspect" class="com.lami.tuomatuo.interceptor.ControllerLogAspect"></bean>
+       <bean id ="controllerLogAspect" class="com.lami.tuomatuo.web.interceptor.ControllerLogAspect"></bean>
        <aop:config>
               <aop:aspect id="logAspect" ref="controllerLogAspect">
                      <aop:pointcut id="logAspectPoint" expression="execution(* com.lami.tuomatuo.controller.*.*(..))" ></aop:pointcut>

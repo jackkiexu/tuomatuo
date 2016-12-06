@@ -1,7 +1,8 @@
 package com.lami.tuomatuo.service;
 
+import com.lami.tuomatuo.core.service.UserDynamicService;
 import com.lami.tuomatuo.base.AbstractBaseTest;
-import com.lami.tuomatuo.model.UserDynamic;
+import com.lami.tuomatuo.core.model.UserDynamic;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 

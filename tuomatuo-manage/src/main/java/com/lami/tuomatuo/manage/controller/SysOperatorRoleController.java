@@ -1,10 +1,10 @@
 package com.lami.tuomatuo.manage.controller;
 
-import com.lami.tuomatuo.model.base.Result;
-import com.lami.tuomatuo.model.manage.SysOperatorRole;
-import com.lami.tuomatuo.model.manage.SysRole;
-import com.lami.tuomatuo.service.manage.SysOperatorRoleService;
-import com.lami.tuomatuo.service.manage.SysRoleService;
+import com.lami.tuomatuo.core.model.base.Result;
+import com.lami.tuomatuo.core.model.manage.SysOperatorRole;
+import com.lami.tuomatuo.core.model.manage.SysRole;
+import com.lami.tuomatuo.core.service.manage.SysOperatorRoleService;
+import com.lami.tuomatuo.core.service.manage.SysRoleService;
 import com.lami.tuomatuo.utils.StringUtil;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;

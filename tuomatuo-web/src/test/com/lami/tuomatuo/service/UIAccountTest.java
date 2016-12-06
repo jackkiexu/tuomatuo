@@ -1,15 +1,12 @@
 package com.lami.tuomatuo.service;
 
 import com.lami.tuomatuo.base.AbstractBaseTest;
-import com.lami.tuomatuo.model.UserDynamic;
-import com.lami.tuomatuo.service.crawler.ChanYouJiAccountService;
-import com.lami.tuomatuo.service.crawler.HuPuAccountService;
-import com.lami.tuomatuo.service.crawler.UIAccountService;
+import com.lami.tuomatuo.core.service.crawler.ChanYouJiAccountService;
+import com.lami.tuomatuo.core.service.crawler.HuPuAccountService;
+import com.lami.tuomatuo.core.service.crawler.UIAccountService;
 import lombok.Data;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 /**
  * Created by xjk on 2016/3/21.

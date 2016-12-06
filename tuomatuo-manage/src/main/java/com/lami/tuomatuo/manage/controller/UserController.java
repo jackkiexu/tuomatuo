@@ -1,21 +1,15 @@
 package com.lami.tuomatuo.manage.controller;
 
-import com.lami.tuomatuo.base.PageBean;
-import com.lami.tuomatuo.model.base.Result;
-import com.lami.tuomatuo.model.manage.User;
-import com.lami.tuomatuo.service.manage.UserService;
-import com.lami.tuomatuo.utils.StringUtil;
+import com.lami.tuomatuo.core.model.base.Result;
+import com.lami.tuomatuo.core.model.manage.User;
+import com.lami.tuomatuo.core.service.manage.UserService;
 import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
 
 @Controller
 @RequestMapping("user")

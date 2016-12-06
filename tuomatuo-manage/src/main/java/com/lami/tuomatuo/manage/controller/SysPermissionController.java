@@ -1,9 +1,9 @@
 package com.lami.tuomatuo.manage.controller;
 
 
-import com.lami.tuomatuo.model.base.Result;
-import com.lami.tuomatuo.model.manage.SysPermission;
-import com.lami.tuomatuo.service.manage.SysPermissionService;
+import com.lami.tuomatuo.core.model.base.Result;
+import com.lami.tuomatuo.core.model.manage.SysPermission;
+import com.lami.tuomatuo.core.service.manage.SysPermissionService;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;

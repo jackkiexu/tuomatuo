@@ -1,6 +1,7 @@
 package com.ailami.tuomatuo.cache;
 
-import com.ailami.tuomatuo.executors.DirectExecutorService;
+import com.lami.tuomatuo.cache.cache.Cache;
+import com.lami.tuomatuo.cache.executors.DirectExecutorService;
 import junit.framework.Assert;
 import org.apache.log4j.Logger;
 import org.junit.BeforeClass;
