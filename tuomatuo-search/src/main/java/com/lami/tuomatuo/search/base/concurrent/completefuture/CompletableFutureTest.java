@@ -4,6 +4,8 @@ import org.apache.log4j.Logger;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by xjk on 11/19/16.
@@ -18,33 +20,20 @@ public class CompletableFutureTest {
     }
 
     public static void main(String[] args) throws Exception{
-        CompletableFuture<Integer> f = compute();
-        class Client extends Thread{
-            CompletableFuture<Integer> f;
+        ExecutorService service = Executors.newCachedThreadPool();
+        CompletableFuture<Void> runAsync = CompletableFuture.runAsync(() -> System.out.println("running async task"), service);
+        //utility testing method
+        pauseSeconds(1);
+        System.out.printf(" result:" + runAsync.isDone());
 
-            public Client(String threadName, CompletableFuture<Integer> f) {
-                super(threadName);
-                this.f = f;
-            }
+    }
 
-            @Override
-            public void run() {
-                try {
-                    logger.info("ThreadName:" + this.getName() + " : " + f.get());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                }
-            }
+    private static void pauseSeconds(int seconds) {
+        try {
+            Thread.sleep(seconds * 1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-
-        new Client("Client1", f).start();
-        new Client("Client2", f).start();
-
-        f.complete(100);
-        System.in.read();
-
     }
 
 
