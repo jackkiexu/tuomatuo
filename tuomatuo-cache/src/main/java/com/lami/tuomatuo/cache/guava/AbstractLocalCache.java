@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * http://blog.csdn.net/clementad/article/details/46491701
  * Created by xjk on 2016/12/6.
  */
 @Data
