@@ -409,11 +409,13 @@
             <artifactId>curator-x-rpc</artifactId>
             <version>3.1.0</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.curator/curator-x-discovery -->
         <dependency>
             <groupId>org.apache.curator</groupId>
-            <artifactId>curator-x-discovery-server</artifactId>
+            <artifactId>curator-x-discovery</artifactId>
             <version>3.1.0</version>
         </dependency>
+
 
         <!-- kafka -->
         <dependency>
