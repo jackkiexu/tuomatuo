@@ -2,6 +2,7 @@ package com.lami.tuomatuo.web.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -19,7 +20,8 @@ public class HomeController extends BaseController {
     }
 
     @RequestMapping(value = "/isLive.form")
-    public void isLive(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
-
+    @ResponseBody
+    public String isLive(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
+        return "OK";
     }
 }

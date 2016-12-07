@@ -3,29 +3,4 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-       <bean id="updateUserDynamicScheduler" class="com.lami.tuomatuo.scheduler.UpdateUserDynamicScheduler"></bean>
-
-       <!-- 执行任务 -->
-       <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean" autowire="no">
-              <property name="triggers">
-                     <list>
-                            <ref bean="housePublishAuditTask_Trigger" />
-                     </list>
-              </property>
-       </bean>
-
-       <!--=============================定时调度发布房源审核 ======================================-->
-       <bean id="updateUserDynamicTask_Job_Detail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
-              <property name="targetObject" ref="updateUserDynamicScheduler" />
-              <property name="targetMethod" value="run" />
-              <property name="concurrent" value="false" />
-       </bean>
-       <bean id="housePublishAuditTask_Trigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
-              <property name="jobDetail" ref="updateUserDynamicTask_Job_Detail" />
-              <!--  10分钟执行一次 [秒] [分] [小时] [日] [月] [周] [年] -->
-              <property name="cronExpression">
-                     <value> 0/5 * * * * ?</value>
-              </property>
-       </bean>
-
 </beans>

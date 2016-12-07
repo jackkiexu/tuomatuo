@@ -16,7 +16,10 @@ import java.util.concurrent.TimeUnit;
  */
 @Data
 public abstract class AbstractLocalCache<K, V> {
+
 	protected final Logger logger = org.apache.log4j.Logger.getLogger(this.getClass());
+
+	private String cacheName;
 	
 	// the default max cache size
 	private int maximumSize = 50 * 1000;

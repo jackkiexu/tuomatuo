@@ -21,10 +21,6 @@ public class MyCacheManager {
 
 	private  Map<String, ? extends AbstractLocalCache<Object, Object>> cacheNameToObjectMap = null;
 
-	public MyCacheManager() {
-		cacheNameToObjectMap = (Map<String, ? extends AbstractLocalCache<Object, Object>>) springContextUtil.getBeanOfType(AbstractLocalCache.class);
-	}
-
 	/**
 	 * fetch all AbstractLoadingCache subClass
 	 * @return
@@ -34,9 +30,9 @@ public class MyCacheManager {
 			cacheNameToObjectMap = (Map<String, ? extends AbstractLocalCache<Object, Object>>) springContextUtil.getBeanOfType(AbstractLocalCache.class);
 		}
 		return cacheNameToObjectMap;
-		
+
 	}
-	
+
 	/**
 	 *	fetch cache by cacheName
 	 * @param cacheName

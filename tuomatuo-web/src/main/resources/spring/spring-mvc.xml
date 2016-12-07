@@ -10,7 +10,7 @@
        <bean id ="controllerLogAspect" class="com.lami.tuomatuo.web.interceptor.ControllerLogAspect"></bean>
        <aop:config>
               <aop:aspect id="logAspect" ref="controllerLogAspect">
-                     <aop:pointcut id="logAspectPoint" expression="execution(* com.lami.tuomatuo.controller.*.*(..))" ></aop:pointcut>
+                     <aop:pointcut id="logAspectPoint" expression="execution(* com.lami.tuomatuo.web.controller.*.*(..))" ></aop:pointcut>
                      <aop:before method="doBefore" pointcut-ref="logAspectPoint"></aop:before>
                      <aop:after method="doAfter" pointcut-ref="logAspectPoint"></aop:after>
                      <aop:around method="doAround" pointcut-ref="logAspectPoint"></aop:around>

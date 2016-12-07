@@ -21,7 +21,7 @@
        <!-- 解析配置 -->
        <context:property-placeholder location="classpath:*.properties"></context:property-placeholder>
        <!-- 扫描指定包 -->
-       <context:component-scan base-package="com.lami.tuomatuo.controller"/>
+       <context:component-scan base-package="com.lami.tuomatuo"/>
 
        <!-- 写 DataSource -->
        <bean class="org.springframework.jdbc.datasource.DataSourceTransactionManager" id="transactionManager">
