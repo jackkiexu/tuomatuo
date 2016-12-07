@@ -1,5 +1,7 @@
 package com.lami.tuomatuo.mq.jafka.api;
 
+import com.lami.tuomatuo.mq.jafka.common.annotations.ClientSide;
+import com.lami.tuomatuo.mq.jafka.common.annotations.ServerSide;
 import com.lami.tuomatuo.mq.jafka.message.ByteBufferMessageSet;
 import com.lami.tuomatuo.mq.jafka.network.Request;
 import com.lami.tuomatuo.mq.jafka.utils.Utils;
@@ -23,6 +25,8 @@ import java.nio.ByteBuffer;
  *
  * Created by xjk on 2016/11/4.
  */
+@ClientSide
+@ServerSide
 public class ProducerRequest implements Request {
 
     public static final int RandomPartition = -1;
