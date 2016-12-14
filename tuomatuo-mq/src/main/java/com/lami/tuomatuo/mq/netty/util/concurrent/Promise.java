@@ -50,5 +50,27 @@ public interface Promise<V> extends Future<V> {
      */
     boolean setUncancellable();
 
+    @Override
+    Future<V> addlistener(GenericFutureListener<? extends Future<? super V>> listener);
 
+    @Override
+    Future<V> addListeners(GenericFutureListener<? extends Future<? super V>>... listeners);
+
+    @Override
+    Future<V> removeListener(GenericFutureListener<? extends Future<? super V>> listener);
+
+    @Override
+    Future<V> removeListeners(GenericFutureListener<? extends Future<? super V>>... listeners);
+
+    @Override
+    Future<V> await() throws InterruptedException;
+
+    @Override
+    Future<V> awaitUninterruptibly();
+
+    @Override
+    Future<V> sync() throws InterruptedException;
+
+    @Override
+    Future<V> syncUninterruptibly();
 }

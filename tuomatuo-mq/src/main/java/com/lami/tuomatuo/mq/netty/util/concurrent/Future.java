@@ -1,5 +1,7 @@
 package com.lami.tuomatuo.mq.netty.util.concurrent;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * The result of an asynchronous operation
  *
@@ -85,4 +87,73 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      */
     Future<V> await() throws InterruptedException;
 
+    /**
+     * Waits for this future to be completed without
+     * interruption. This method catches an {@link InterruptedException} and
+     * discards it silently
+     * @return
+     */
+    Future<V> awaitUninterruptibly();
+
+    /**
+     * Waits for this future to be completed within the
+     * specified time limit
+     *
+     * @param timeout
+     * @param unit
+     * @return {@code true} if and only if the future was completed within
+     *                      the specified time limit
+     * @throws InterruptedException
+     *          If the current thread wad interrupted
+     */
+    boolean await(long timeout, TimeUnit unit) throws InterruptedException;
+
+    /**
+     *
+     * Waits for this future to be completed within the specified time limit
+     *
+     * @param timeoutMillis
+     * @return
+     * @throws InterruptedException
+     *          if the current thread was interrupted
+     */
+    boolean await(long timeoutMillis) throws InterruptedException;
+
+    /**
+     * Waits for this future to be completed within the
+     * specified time limit without interruption. This method catches an
+     * @{link InterruptedException} and discards it silently
+     *
+     * @param timeout
+     * @param unit
+     * @return {@code true} if and only if the future was completed within
+     *              the specified time limit
+     */
+    boolean awaitUninterruptibly(long timeout, TimeUnit unit);
+
+    /**
+     * Waits for this future to be completed within the
+     * specified time limit wthout interruption. This method catches an
+     * @{link InterruptedException} and discards it silently
+     *
+     * @param timeoutMillis
+     * @return {@code true} if and only if the future was completed within
+     *                      the specified time limit
+     */
+    boolean awaitUninterruptibly(long timeoutMillis);
+
+    /**
+     * Return the result without blocking. If the future is not done yet this will return {@code null}
+     * As it is possible that a {@code null} value is used to mark the future as successful you also need to check
+     * if the future is ready done with {@link #isDone()} and not rely on the returned {@code null} value
+     */
+    V getNow();
+
+    /**
+     * If the cancellation was successful it will fail the future with an {@link java.util.concurrent.CancellationException}
+     * @param mayInterruptIfRunning
+     * @return
+     */
+    @Override
+    boolean cancel(boolean mayInterruptIfRunning);
 }
