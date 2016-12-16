@@ -1,3 +1,0 @@
-[2016-11-19 21:31:17,792] INFO  main (CompletableFutureTest.java:20) - 100
-[2016-11-19 21:38:38,891] INFO  Client2 (CompletableFutureTest.java:33) - ThreadName:Client2 : 100
-[2016-11-19 21:38:38,891] INFO  Client1 (CompletableFutureTest.java:33) - ThreadName:Client1 : 100
