@@ -16,14 +16,10 @@ public abstract class AbstractLocalCache<K, V> {
 
     protected Logger logger = Logger.getLogger(getClass());
 
-    /** 缓存过期时间, 单位秒 */
-    private long valueDefaultExpireTime = 10;
-
-    /** 本地缓存默认最大值*/
-    private static long LOCAL_CACHE_MAX_SIZE = 10 * 1000l;
 
     /** 本地缓存存储地址 */
     private ConcurrentHashMap<K, Future<V>> pool = new ConcurrentHashMap<>();
+
     private ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
 
     public abstract V computeV(K k);
@@ -40,16 +36,10 @@ public abstract class AbstractLocalCache<K, V> {
             }
         });
 
-        if(pool.putIfAbsent(k, future) == null){ // 说明map中以前没有对应的 futureTask
-//            result = (Future<V>) executorService.submit(future);
-            new Thread(){
-                @Override
-                public void run() {
-                    future.run();
-                }
-            }.start();
-
-            result = future;
+        // 说明map中以前没有对应的 futureTask
+        // 仔细体会 putIfAbsent 的作用
+        if(pool.putIfAbsent(k, future) == null){
+            result = (Future<V>) executorService.submit(future);
         }
         return result;
     }

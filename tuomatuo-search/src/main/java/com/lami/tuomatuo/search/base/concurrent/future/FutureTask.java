@@ -16,7 +16,7 @@ import java.util.concurrent.locks.LockSupport;
  * methods will block if the computation has not yet completed. Once
  * the computation has completed. The conputation cannot be restarted
  * or cancelled (unless the computation is invoked using
- * {@link #runAndSet})
+ * {@link #runAndReset})
  *
  * <p>
  *     A {@code FutureTask} can be used to wrap a {@link Callable} or
@@ -58,6 +58,8 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * states use cheaper ordered/lazy writes because values unique
      * and cannot be further modified
      *
+     *
+     *  这几种状态比较重要, 是 FutureTask 中 state 的状态转变的几种情况
      * Possible state's transitions
      * NEW -> COMPLETING -> NORMAL
      * NEW -> COMPLETING -> EXCEPTIONAL
@@ -85,6 +87,8 @@ public class FutureTask<V> implements RunnableFuture<V> {
 
     /**
      * Return result or throws exception for completed task
+     *
+     * report 方法 根据state值 返回值或抛出异常
      * @param s
      * @return
      * @throws ExecutionException
@@ -126,12 +130,18 @@ public class FutureTask<V> implements RunnableFuture<V> {
      *                  @throws  NullPointerException if the runnable is null
      */
     public FutureTask(Runnable runnable, V result) {
+        // 调用 Executors.callable 将 runnable 转为 callable (对象适配器模式)
         this.callable = Executors.callable(runnable, result);
         this.state = NEW; // ensure visibility of callable
     }
 
+    // CANCELLED = 4, 大于 CANCELLED 的还有 INTERRUPTING 和 INTERRUPTED
     public boolean isCancelled() { return state >= CANCELLED; }
 
+    /**
+     * 这里的 isDone 其实指的是 任务有没有开始执行, 所以只要判断 state 是否为 NEW就可以
+     * @return
+     */
     @Override
     public boolean isDone() {
         return state != NEW;
@@ -139,7 +149,9 @@ public class FutureTask<V> implements RunnableFuture<V> {
 
     /**
      *  注意点
-     *      1. 一旦任务的status != NEW 或 进行cas操作失败, 则cancel操作失败 (说明只能对状态是 NEW 的 task的进行cancel, 其他状态的任务进行cancel会返回false,不终止丢到线程池中的任务)
+     *  1. 一旦任务的status != NEW 或 进行cas操作失败, 则cancel操作失败
+     *     (说明只能对状态是 NEW 的 task的进行cancel, 其他状态的任务进行cancel会返回false,不终止丢到线程池中的任务)
+     *  2. cancel 是改变 Thread的中断状态, 调用 Thread.interrupt() 会对 LockSupport.park() 产生影响 (建议自己写个 demo 实践一下)
      * @param mayInterruptIfRunning
      * @return
      */
@@ -155,6 +167,9 @@ public class FutureTask<V> implements RunnableFuture<V> {
                 try{
                     Thread t = runner;
                     if(t != null){
+                        // 设置 当前的状态为中断
+                        // 若 Thread 的状态位是 interrupt, 并且 对当前线程调用了 LockSupport.park(),
+                        // 这线程会抛出 java.lang.InterruptedException: sleep interrupted 异常
                         t.interrupt();
                     }
                 }finally {
@@ -170,17 +185,22 @@ public class FutureTask<V> implements RunnableFuture<V> {
     /**
      * Removes and signals all waiting threads, invoke done(), and
      * null out callable
+     * 整个 finishCompletion 操作比较简单, 释放等待队列中的节点
+     *
      */
     private void finishCompletion(){
         // assert state > COMPLETING
+        // for 循环中第一次进行loop时 if 中执行的cas操作失败, 而第二次if中的cas操作成功
         for(WaitNode q; (q = waiters) != null;){
             if(unsafe.compareAndSwapObject(this, waitersOffset, q, null)){
                 for(;;){
                     Thread t = q.thread;
                     if(t != null){
                         q.thread = null;
+                        // 唤醒线程
                         LockSupport.unpark(t);
                     }
+                    // 将 p.next 赋值给 next 为下次检查做准备
                     WaitNode next = q.next;
                     if(next == null){
                         break;
@@ -217,6 +237,10 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * </p>
      * @param v the value
      */
+    /**
+     * 对 result 进行赋值, cas 操作, 没什么可说的
+     * @param v
+     */
     protected void set(V v){
         if(unsafe.compareAndSwapInt(this, stateOffset, NEW, COMPLETING)){
             outcome = v;
@@ -238,13 +262,18 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @param t the cause of failure
      */
     protected void setException(Throwable t){
+        // 进行 cas 操作 更新 state 值, 将 Throwable 赋值给 result
         if(unsafe.compareAndSwapInt(this, stateOffset, NEW, COMPLETING)){
             outcome = t;
+            // 直接 cas 操作赋值 state
             unsafe.putOrderedInt(this, stateOffset, EXCEPTIONAL); // final state
             finishCompletion();
         }
     }
 
+    /**
+     * run 方法比较简单
+     */
     @Override
     public void run() {
         if(state != NEW ||
@@ -307,11 +336,14 @@ public class FutureTask<V> implements RunnableFuture<V> {
     /**
      * Executes the computation without setting its result, and then
      * resets this future to initial state, failing to do so if the
-     * computation encounters an exception or is cancelled. This is designed for use with tasks that intrinsically execute more
-     * than once
+     * computation encounters(遇到) an exception or is cancelled.
+     * This is designed for use with tasks that intrinsically(本质) execute more than once
+     *
      * @return {@code true} if successfully run and reset
      */
     protected boolean runAndReset(){
+        // 进行 cas 操作更新 state 值
+        // 这一步操作(cas更新state)其实就能阻止 runAndReset 并发的执行
         if(state != NEW || !unsafe.compareAndSwapObject(this, runnerOffset, null, Thread.currentThread())){
             return false;
         }
@@ -322,6 +354,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
             Callable<V> c = callable;
             if(c != null && s == NEW){
                 try{
+                    // 调用 call 执行方法
                     c.call(); // don't set result
                     ran = true;
                 }catch (Throwable ex){
@@ -414,10 +447,11 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     /**
+     * 这个 removeWaiter 个人认为是最搞人的, 尤其在多线程环境中, 同时进行节点的删除
      * Tries to unlinked a time-out
      * @param node
      */
-    private synchronized void  removeWaiter(WaitNode node, long i){
+    private void  removeWaiter(WaitNode node, long i){
         logger.info("removeWaiter node"  + node +", i: "+ i +" begin");
         if(node != null){
             node.thread = null;
@@ -427,22 +461,29 @@ public class FutureTask<V> implements RunnableFuture<V> {
                 for(WaitNode pred = null, q = waiters, s; q != null; q = s){
                     logger.info("q : " + q +", i:"+i);
                     s = q.next;
-                    if(q.thread != null){ // 通过 thread 判断当前 q 是否是需要移除的 q节点
+                    // 通过 thread 判断当前 q 是否是需要移除的 q节点
+                    if(q.thread != null){
                         pred = q;
                         logger.info("q : " + q +", i:"+i);
-                    }else if(pred != null){
+                    }
+                    // 何时执行到这个if条件 ?
+                    // hehe 只有第一步不满足时, 也就是q.thread=null (p就是应该移除的节点)
+                    else if(pred != null){
                         logger.info("q : " + q +", i:"+i);
                         pred.next = s; // 将前一个节点的 next 指向当前节点的 next 节点
+                        // pred.thread == null 这种情况是在多线程进行并发 removeWaiter 时产生的
+                        // 而此时真好移除节点 node 和 pred
                         if(pred.thread == null){ // check for race
                             continue retry;
                         }
-                    }else if(!unsafe.compareAndSwapObject(this, waitersOffset, q, s)){
-                        logger.info("q : " + q +", i:"+i);
-                        continue retry;
                     }
-                    logger.info("q : " + q +", i:"+i);
+                    // 这一步何时操作呢?
+                    // 想想 若p是头节点
+                    else if(!unsafe.compareAndSwapObject(this, waitersOffset, q, s)){
+                        logger.info("q : " + q +", i:"+i);
+                        continue retry; // 这一步还是 cheak for race
+                    }
                 }
-                logger.info("q : i:"+i);
                 break ;
             }
             logger.info("removeWaiter node"  + node +", i: "+ i +" end");
@@ -451,6 +492,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
 
     @Override
     public V get() throws InterruptedException, ExecutionException {
+        // get 里面的操作没几步, 主要还是在 awaitDone 里面
         int s = state;
         if(s <= COMPLETING){
             s = awaitDone(false, 0L);
@@ -460,6 +502,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
 
     @Override
     public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+        // get(timeout, unit) 也很简单, 主要还是在 awaitDone里面
         if(unit == null){
             throw new NullPointerException();
         }
@@ -498,6 +541,8 @@ public class FutureTask<V> implements RunnableFuture<V> {
 
     static {
         try {
+            // unsafe 类的初始化(通过反射获取)
+            // 以后通过 unsafe 类来进行本类的数据的赋值
             unsafe = UnSafeClass.getInstance();
             Class<?> k = FutureTask.class;
             stateOffset = unsafe.objectFieldOffset((k.getDeclaredField("state")));
