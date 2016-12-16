@@ -387,12 +387,23 @@ public class FutureTask<V> implements RunnableFuture<V> {
 
     @Override
     public V get() throws InterruptedException, ExecutionException {
-        return null;
+        int s = state;
+        if(s <= COMPLETING){
+            s = awaitDone(false, 0L);
+        }
+        return report(s);
     }
 
     @Override
     public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        return null;
+        if(unit == null){
+            throw new NullPointerException();
+        }
+        int s = state;
+        if(s <= COMPLETING && (s = awaitDone(true, unit.toNanos(timeout))) <= COMPLETING){
+            throw new TimeoutException();
+        }
+        return report(s);
     }
 
 
