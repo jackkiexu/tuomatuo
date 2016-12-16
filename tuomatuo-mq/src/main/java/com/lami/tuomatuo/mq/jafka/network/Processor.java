@@ -2,7 +2,6 @@ package com.lami.tuomatuo.mq.jafka.network;
 
 import com.lami.tuomatuo.mq.jafka.api.RequestKeys;
 import com.lami.tuomatuo.mq.jafka.mx.SocketServerStats;
-import com.lami.tuomatuo.mq.netty.channel.ExceptionEvent;
 import org.apache.log4j.Logger;
 
 import java.io.EOFException;

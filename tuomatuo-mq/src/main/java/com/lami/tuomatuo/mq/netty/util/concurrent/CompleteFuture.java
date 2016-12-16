@@ -35,7 +35,7 @@ public abstract class CompleteFuture<V> extends AbstractFuture<V>{
         if(listener == null){
             throw new NullPointerException("listener");
         }
-        DefaultPromise.notifyListener(executor(), this, listener);
+//        DefaultPromise.notifyListener(executor(), this, listener);
         return this;
     }
 
@@ -48,7 +48,7 @@ public abstract class CompleteFuture<V> extends AbstractFuture<V>{
             if(l == null){
                 break;
             }
-            DefaultPromise.notifyListener(executor(), this, l);
+//            DefaultPromise.notifyListener(executor(), this, l);
         }
 
         return this;

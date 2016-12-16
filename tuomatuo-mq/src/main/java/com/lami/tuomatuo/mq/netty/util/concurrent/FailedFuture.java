@@ -39,13 +39,13 @@ public final class FailedFuture<V> extends CompleteFuture<V> {
 
     @Override
     public Future<V> sync() throws InterruptedException {
-        PlatformDependent.throwException(cause);
+//        PlatformDependent.throwException(cause);
         return this;
     }
 
     @Override
     public Future<V> syncUninterruptibly() {
-        PlatformDependent.throwException(cause);
+//        PlatformDependent.throwException(cause);
         return this;
     }
 
