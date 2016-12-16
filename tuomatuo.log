@@ -1,0 +1,371 @@
+[2016-12-16 15:29:34,519] INFO  pool-1-thread-1 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 15:29:34,520] INFO  pool-1-thread-2 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 15:29:34,522] INFO  pool-1-thread-2 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 15:29:34,520] INFO  pool-1-thread-3 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 15:29:34,522] INFO  pool-1-thread-3 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 15:29:34,521] INFO  pool-1-thread-1 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 15:29:39,522] INFO  pool-1-thread-2 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 15:29:39,522] INFO  pool-1-thread-2 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 15:29:39,522] INFO  pool-1-thread-1 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 15:29:39,522] INFO  pool-1-thread-3 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 15:29:39,523] INFO  pool-1-thread-3 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 15:29:39,522] INFO  pool-1-thread-1 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 15:29:39,523] INFO  Thread-1 (FutureMain.java:39) - future.get() :null
+[2016-12-16 15:29:39,523] INFO  Thread-1 (FutureMain.java:39) - future.get() :null
+[2016-12-16 15:29:39,523] INFO  Thread-1 (FutureMain.java:39) - future.get() :null
+[2016-12-16 15:29:39,523] INFO  Thread-2 (FutureMain.java:39) - future.get() :null
+[2016-12-16 15:29:39,524] INFO  Thread-2 (FutureMain.java:39) - future.get() :null
+[2016-12-16 15:29:39,524] INFO  Thread-2 (FutureMain.java:39) - future.get() :null
+[2016-12-16 15:29:39,523] INFO  Thread-0 (FutureMain.java:39) - future.get() :null
+[2016-12-16 15:29:39,524] INFO  Thread-0 (FutureMain.java:39) - future.get() :null
+[2016-12-16 15:29:39,524] INFO  Thread-0 (FutureMain.java:39) - future.get() :null
+[2016-12-16 15:30:44,019] INFO  pool-1-thread-1 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 15:30:44,022] INFO  pool-1-thread-2 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 15:30:44,022] INFO  pool-1-thread-2 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 15:30:44,022] INFO  pool-1-thread-1 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 15:30:44,024] INFO  pool-1-thread-3 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 15:30:44,024] INFO  pool-1-thread-3 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 15:30:49,022] INFO  pool-1-thread-2 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 15:30:49,022] INFO  pool-1-thread-2 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 15:30:49,023] INFO  pool-1-thread-1 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 15:30:49,023] INFO  pool-1-thread-1 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 15:30:49,023] INFO  Thread-2 (FutureMain.java:39) - future.get() :null
+[2016-12-16 15:30:49,023] INFO  Thread-2 (FutureMain.java:39) - future.get() :null
+[2016-12-16 15:30:49,023] INFO  Thread-1 (FutureMain.java:39) - future.get() :null
+[2016-12-16 15:30:49,024] INFO  Thread-1 (FutureMain.java:39) - future.get() :null
+[2016-12-16 15:30:49,023] INFO  Thread-0 (FutureMain.java:39) - future.get() :null
+[2016-12-16 15:30:49,024] INFO  Thread-0 (FutureMain.java:39) - future.get() :null
+[2016-12-16 15:30:49,024] INFO  pool-1-thread-3 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 15:30:49,024] INFO  pool-1-thread-3 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 15:30:49,025] INFO  Thread-2 (FutureMain.java:39) - future.get() :null
+[2016-12-16 15:30:49,025] INFO  Thread-1 (FutureMain.java:39) - future.get() :null
+[2016-12-16 15:30:49,025] INFO  Thread-0 (FutureMain.java:39) - future.get() :null
+[2016-12-16 17:02:51,968] INFO  pool-1-thread-1 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 17:02:51,970] INFO  pool-1-thread-1 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 17:02:51,968] INFO  pool-1-thread-3 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 17:02:51,971] INFO  pool-1-thread-3 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 17:02:51,973] INFO  pool-1-thread-2 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 17:02:51,973] INFO  pool-1-thread-2 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 17:03:01,970] INFO  pool-1-thread-1 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 17:03:01,970] INFO  pool-1-thread-1 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 17:03:01,971] INFO  pool-1-thread-3 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 17:03:01,971] INFO  pool-1-thread-3 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 17:03:01,973] INFO  pool-1-thread-2 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 17:03:01,973] INFO  pool-1-thread-2 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:01:57,350] INFO  main (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:01:57,353] INFO  main (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:02:07,353] INFO  main (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:02:07,353] INFO  main (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:02:07,355] INFO  main (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:02:07,355] INFO  main (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:02:17,355] INFO  main (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:02:17,355] INFO  main (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:02:17,355] INFO  main (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:02:17,355] INFO  main (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:02:27,355] INFO  main (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:02:27,355] INFO  main (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:02:27,357] INFO  Thread-0 (FutureMain.java:40) - future.get() :com.lami.tuomatuo.search.base.concurrent.future.example.LocalCacheConnection$1@6653aac1
+[2016-12-16 18:02:27,357] INFO  Thread-0 (FutureMain.java:40) - future.get() :com.lami.tuomatuo.search.base.concurrent.future.example.LocalCacheConnection$1@6cabc1b1
+[2016-12-16 18:02:27,358] INFO  Thread-0 (FutureMain.java:40) - future.get() :com.lami.tuomatuo.search.base.concurrent.future.example.LocalCacheConnection$1@52d7e016
+[2016-12-16 18:02:27,357] INFO  Thread-1 (FutureMain.java:40) - future.get() :com.lami.tuomatuo.search.base.concurrent.future.example.LocalCacheConnection$1@6653aac1
+[2016-12-16 18:02:27,358] INFO  Thread-1 (FutureMain.java:40) - future.get() :com.lami.tuomatuo.search.base.concurrent.future.example.LocalCacheConnection$1@6cabc1b1
+[2016-12-16 18:02:27,358] INFO  Thread-1 (FutureMain.java:40) - future.get() :com.lami.tuomatuo.search.base.concurrent.future.example.LocalCacheConnection$1@52d7e016
+[2016-12-16 18:02:27,357] INFO  Thread-2 (FutureMain.java:40) - future.get() :com.lami.tuomatuo.search.base.concurrent.future.example.LocalCacheConnection$1@6653aac1
+[2016-12-16 18:02:27,359] INFO  Thread-2 (FutureMain.java:40) - future.get() :com.lami.tuomatuo.search.base.concurrent.future.example.LocalCacheConnection$1@6cabc1b1
+[2016-12-16 18:02:27,359] INFO  Thread-2 (FutureMain.java:40) - future.get() :com.lami.tuomatuo.search.base.concurrent.future.example.LocalCacheConnection$1@52d7e016
+[2016-12-16 18:04:45,282] INFO  main (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:04:46,170] INFO  main (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:05:50,040] INFO  Thread-0 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:05:50,040] INFO  Thread-2 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:05:50,040] INFO  Thread-1 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:05:50,044] INFO  Thread-2 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:05:50,044] INFO  Thread-0 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:05:50,044] INFO  Thread-1 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:05:53,043] INFO  Thread-4 (FutureTask.java:421) - removeWaiter node
+[2016-12-16 18:05:53,043] INFO  Thread-3 (FutureTask.java:421) - removeWaiter node
+[2016-12-16 18:05:53,043] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=18, thread=Thread[Thread-5,5,main]}
+[2016-12-16 18:05:53,043] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=17, thread=null}
+[2016-12-16 18:05:53,044] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=16, thread=null}
+[2016-12-16 18:05:53,043] INFO  Thread-5 (FutureTask.java:421) - removeWaiter node
+[2016-12-16 18:05:53,044] INFO  Thread-5 (FutureTask.java:428) - q : WaitNode{threadId=18, thread=null}
+[2016-12-16 18:05:53,043] INFO  Thread-4 (FutureTask.java:428) - q : WaitNode{threadId=18, thread=Thread[Thread-5,5,main]}
+[2016-12-16 18:05:56,045] INFO  Thread-3 (FutureTask.java:421) - removeWaiter node
+[2016-12-16 18:05:56,045] INFO  Thread-5 (FutureTask.java:421) - removeWaiter node
+[2016-12-16 18:05:56,045] INFO  Thread-5 (FutureTask.java:428) - q : WaitNode{threadId=17, thread=Thread[Thread-4,5,main]}
+[2016-12-16 18:05:56,045] INFO  Thread-5 (FutureTask.java:428) - q : WaitNode{threadId=18, thread=null}
+[2016-12-16 18:05:56,045] INFO  Thread-5 (FutureTask.java:428) - q : WaitNode{threadId=16, thread=null}
+[2016-12-16 18:05:56,046] INFO  Thread-4 (FutureTask.java:421) - removeWaiter node
+[2016-12-16 18:05:56,046] INFO  Thread-4 (FutureTask.java:428) - q : WaitNode{threadId=17, thread=null}
+[2016-12-16 18:05:56,045] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=17, thread=Thread[Thread-4,5,main]}
+[2016-12-16 18:05:59,047] INFO  Thread-5 (FutureTask.java:421) - removeWaiter node
+[2016-12-16 18:05:59,047] INFO  Thread-4 (FutureTask.java:421) - removeWaiter node
+[2016-12-16 18:05:59,047] INFO  Thread-4 (FutureTask.java:428) - q : WaitNode{threadId=16, thread=Thread[Thread-3,5,main]}
+[2016-12-16 18:05:59,047] INFO  Thread-4 (FutureTask.java:428) - q : WaitNode{threadId=17, thread=null}
+[2016-12-16 18:05:59,047] INFO  Thread-4 (FutureTask.java:428) - q : WaitNode{threadId=18, thread=null}
+[2016-12-16 18:05:59,048] INFO  Thread-3 (FutureTask.java:421) - removeWaiter node
+[2016-12-16 18:05:59,048] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=16, thread=null}
+[2016-12-16 18:05:59,047] INFO  Thread-5 (FutureTask.java:428) - q : WaitNode{threadId=16, thread=Thread[Thread-3,5,main]}
+[2016-12-16 18:06:00,045] INFO  Thread-2 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:06:00,045] INFO  Thread-2 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:06:00,045] INFO  Thread-0 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:06:00,045] INFO  Thread-0 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:06:00,046] INFO  Thread-1 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:06:00,046] INFO  Thread-1 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:08:09,374] INFO  Thread-0 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:08:09,377] INFO  Thread-0 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:08:19,377] INFO  Thread-0 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:08:19,377] INFO  Thread-0 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:08:19,379] INFO  main (FutureMain.java:25) - com.lami.tuomatuo.search.base.concurrent.future.example.LocalCacheConnection$1@768debd
+[2016-12-16 18:09:45,580] INFO  Thread-0 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:09:45,583] INFO  Thread-0 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:09:48,581] INFO  main (FutureTask.java:421) - removeWaiter node
+[2016-12-16 18:09:48,581] INFO  main (FutureTask.java:428) - q : WaitNode{threadId=1, thread=null}
+[2016-12-16 18:09:55,583] INFO  Thread-0 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:09:55,583] INFO  Thread-0 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:25:10,219] INFO  Thread-0 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:25:10,221] INFO  Thread-0 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:25:13,224] INFO  Thread-2 (FutureTask.java:421) - removeWaiter node
+[2016-12-16 18:25:13,224] INFO  Thread-3 (FutureTask.java:421) - removeWaiter node
+[2016-12-16 18:25:13,224] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=12, thread=Thread[Thread-1,5,main]}
+[2016-12-16 18:25:13,224] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=14, thread=null}
+[2016-12-16 18:25:13,224] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=13, thread=null}
+[2016-12-16 18:25:13,224] INFO  Thread-2 (FutureTask.java:428) - q : WaitNode{threadId=12, thread=Thread[Thread-1,5,main]}
+[2016-12-16 18:25:13,226] INFO  Thread-1 (FutureTask.java:421) - removeWaiter node
+[2016-12-16 18:25:13,226] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=12, thread=null}
+[2016-12-16 18:25:20,221] INFO  Thread-0 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:25:20,221] INFO  Thread-0 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:29:45,392] INFO  Thread-0 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:29:45,395] INFO  Thread-0 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:29:48,395] INFO  Thread-2 (FutureTask.java:421) - removeWaiter node13
+[2016-12-16 18:29:48,395] INFO  Thread-3 (FutureTask.java:421) - removeWaiter node14
+[2016-12-16 18:29:48,395] INFO  Thread-2 (FutureTask.java:428) - q : WaitNode{threadId=12, thread=Thread[Thread-1,5,main]}, i:13
+[2016-12-16 18:29:48,395] INFO  Thread-2 (FutureTask.java:428) - q : WaitNode{threadId=14, thread=null}, i:13
+[2016-12-16 18:29:48,395] INFO  Thread-2 (FutureTask.java:428) - q : WaitNode{threadId=13, thread=null}, i:13
+[2016-12-16 18:29:48,395] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=12, thread=Thread[Thread-1,5,main]}, i:14
+[2016-12-16 18:29:48,396] INFO  Thread-1 (FutureTask.java:421) - removeWaiter node12
+[2016-12-16 18:29:48,396] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=12, thread=null}, i:12
+[2016-12-16 18:29:55,394] INFO  Thread-0 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:29:55,394] INFO  Thread-0 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:35:12,043] INFO  Thread-0 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:35:12,045] INFO  Thread-0 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:35:15,044] INFO  Thread-1 (FutureTask.java:421) - removeWaiter node12
+[2016-12-16 18:35:15,044] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=14, thread=Thread[Thread-3,5,main]}, i:12
+[2016-12-16 18:35:15,044] INFO  Thread-1 (FutureTask.java:432) - q : WaitNode{threadId=14, thread=Thread[Thread-3,5,main]}, i:12
+[2016-12-16 18:35:15,044] INFO  Thread-1 (FutureTask.java:443) - q : WaitNode{threadId=14, thread=Thread[Thread-3,5,main]}, i:12
+[2016-12-16 18:35:15,044] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i:12
+[2016-12-16 18:35:15,045] INFO  Thread-1 (FutureTask.java:432) - q : WaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i:12
+[2016-12-16 18:35:15,045] INFO  Thread-2 (FutureTask.java:421) - removeWaiter node13
+[2016-12-16 18:35:15,045] INFO  Thread-3 (FutureTask.java:421) - removeWaiter node14
+[2016-12-16 18:35:15,045] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=14, thread=null}, i:14
+[2016-12-16 18:35:15,045] INFO  Thread-3 (FutureTask.java:443) - q : WaitNode{threadId=14, thread=null}, i:14
+[2016-12-16 18:35:15,045] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=13, thread=null}, i:14
+[2016-12-16 18:35:15,045] INFO  Thread-2 (FutureTask.java:428) - q : WaitNode{threadId=14, thread=Thread[Thread-3,5,main]}, i:13
+[2016-12-16 18:35:15,046] INFO  Thread-2 (FutureTask.java:440) - q : WaitNode{threadId=14, thread=null}, i:13
+[2016-12-16 18:35:15,046] INFO  Thread-2 (FutureTask.java:428) - q : WaitNode{threadId=12, thread=null}, i:13
+[2016-12-16 18:35:15,045] INFO  Thread-1 (FutureTask.java:443) - q : WaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i:12
+[2016-12-16 18:35:15,046] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=12, thread=null}, i:12
+[2016-12-16 18:35:15,046] INFO  Thread-1 (FutureTask.java:434) - q : WaitNode{threadId=12, thread=null}, i:12
+[2016-12-16 18:35:15,047] INFO  Thread-1 (FutureTask.java:445) - q : i:12
+[2016-12-16 18:35:15,046] INFO  Thread-2 (FutureTask.java:443) - q : WaitNode{threadId=12, thread=null}, i:13
+[2016-12-16 18:35:15,047] INFO  Thread-2 (FutureTask.java:445) - q : i:13
+[2016-12-16 18:35:15,046] INFO  Thread-3 (FutureTask.java:443) - q : WaitNode{threadId=13, thread=null}, i:14
+[2016-12-16 18:35:15,047] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=12, thread=null}, i:14
+[2016-12-16 18:35:15,047] INFO  Thread-3 (FutureTask.java:440) - q : WaitNode{threadId=12, thread=null}, i:14
+[2016-12-16 18:35:15,047] INFO  Thread-3 (FutureTask.java:445) - q : i:14
+[2016-12-16 18:35:22,045] INFO  Thread-0 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:35:22,045] INFO  Thread-0 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:36:21,904] INFO  Thread-0 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:36:21,907] INFO  Thread-0 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:36:24,909] INFO  Thread-1 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=12, thread=Thread[Thread-1,5,main]}, i: 12 begin
+[2016-12-16 18:36:24,909] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=14, thread=Thread[Thread-3,5,main]}, i:12
+[2016-12-16 18:36:24,909] INFO  Thread-1 (FutureTask.java:432) - q : WaitNode{threadId=14, thread=Thread[Thread-3,5,main]}, i:12
+[2016-12-16 18:36:24,909] INFO  Thread-1 (FutureTask.java:443) - q : WaitNode{threadId=14, thread=Thread[Thread-3,5,main]}, i:12
+[2016-12-16 18:36:24,909] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i:12
+[2016-12-16 18:36:24,909] INFO  Thread-1 (FutureTask.java:432) - q : WaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i:12
+[2016-12-16 18:36:24,910] INFO  Thread-1 (FutureTask.java:443) - q : WaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i:12
+[2016-12-16 18:36:24,910] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=12, thread=null}, i:12
+[2016-12-16 18:36:24,910] INFO  Thread-1 (FutureTask.java:434) - q : WaitNode{threadId=12, thread=null}, i:12
+[2016-12-16 18:36:24,910] INFO  Thread-1 (FutureTask.java:443) - q : WaitNode{threadId=12, thread=null}, i:12
+[2016-12-16 18:36:24,910] INFO  Thread-1 (FutureTask.java:445) - q : i:12
+[2016-12-16 18:36:24,910] INFO  Thread-1 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=12, thread=null}, i: 12 end
+[2016-12-16 18:36:24,911] INFO  Thread-3 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=14, thread=Thread[Thread-3,5,main]}, i: 14 begin
+[2016-12-16 18:36:24,911] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=14, thread=null}, i:14
+[2016-12-16 18:36:24,912] INFO  Thread-3 (FutureTask.java:443) - q : WaitNode{threadId=14, thread=null}, i:14
+[2016-12-16 18:36:24,912] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i:14
+[2016-12-16 18:36:24,912] INFO  Thread-3 (FutureTask.java:432) - q : WaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i:14
+[2016-12-16 18:36:24,912] INFO  Thread-3 (FutureTask.java:443) - q : WaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i:14
+[2016-12-16 18:36:24,912] INFO  Thread-3 (FutureTask.java:445) - q : i:14
+[2016-12-16 18:36:24,912] INFO  Thread-3 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=14, thread=null}, i: 14 end
+[2016-12-16 18:36:24,915] INFO  Thread-2 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i: 13 begin
+[2016-12-16 18:36:24,915] INFO  Thread-2 (FutureTask.java:428) - q : WaitNode{threadId=13, thread=null}, i:13
+[2016-12-16 18:36:24,915] INFO  Thread-2 (FutureTask.java:443) - q : WaitNode{threadId=13, thread=null}, i:13
+[2016-12-16 18:36:24,915] INFO  Thread-2 (FutureTask.java:445) - q : i:13
+[2016-12-16 18:36:24,915] INFO  Thread-2 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=13, thread=null}, i: 13 end
+[2016-12-16 18:36:31,907] INFO  Thread-0 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:36:31,907] INFO  Thread-0 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:37:11,331] INFO  Thread-0 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:37:11,333] INFO  Thread-0 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:37:14,323] INFO  Thread-1 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=14, thread=Thread[Thread-1,5,main]}, i: 14 begin
+[2016-12-16 18:37:14,323] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=16, thread=Thread[Thread-3,5,main]}, i:14
+[2016-12-16 18:37:14,323] INFO  Thread-1 (FutureTask.java:432) - q : WaitNode{threadId=16, thread=Thread[Thread-3,5,main]}, i:14
+[2016-12-16 18:37:14,323] INFO  Thread-1 (FutureTask.java:443) - q : WaitNode{threadId=16, thread=Thread[Thread-3,5,main]}, i:14
+[2016-12-16 18:37:14,324] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=15, thread=Thread[Thread-2,5,main]}, i:14
+[2016-12-16 18:37:14,324] INFO  Thread-1 (FutureTask.java:432) - q : WaitNode{threadId=15, thread=Thread[Thread-2,5,main]}, i:14
+[2016-12-16 18:37:14,324] INFO  Thread-1 (FutureTask.java:443) - q : WaitNode{threadId=15, thread=Thread[Thread-2,5,main]}, i:14
+[2016-12-16 18:37:14,325] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=14, thread=null}, i:14
+[2016-12-16 18:37:14,325] INFO  Thread-1 (FutureTask.java:434) - q : WaitNode{threadId=14, thread=null}, i:14
+[2016-12-16 18:37:14,325] INFO  Thread-1 (FutureTask.java:443) - q : WaitNode{threadId=14, thread=null}, i:14
+[2016-12-16 18:37:14,325] INFO  Thread-1 (FutureTask.java:445) - q : i:14
+[2016-12-16 18:37:14,325] INFO  Thread-1 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=14, thread=null}, i: 14 end
+[2016-12-16 18:37:14,328] INFO  Thread-2 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=15, thread=Thread[Thread-2,5,main]}, i: 15 begin
+[2016-12-16 18:37:14,329] INFO  Thread-2 (FutureTask.java:428) - q : WaitNode{threadId=16, thread=Thread[Thread-3,5,main]}, i:15
+[2016-12-16 18:37:14,329] INFO  Thread-2 (FutureTask.java:432) - q : WaitNode{threadId=16, thread=Thread[Thread-3,5,main]}, i:15
+[2016-12-16 18:37:14,329] INFO  Thread-2 (FutureTask.java:443) - q : WaitNode{threadId=16, thread=Thread[Thread-3,5,main]}, i:15
+[2016-12-16 18:37:14,329] INFO  Thread-2 (FutureTask.java:428) - q : WaitNode{threadId=15, thread=null}, i:15
+[2016-12-16 18:37:14,329] INFO  Thread-2 (FutureTask.java:434) - q : WaitNode{threadId=15, thread=null}, i:15
+[2016-12-16 18:37:14,329] INFO  Thread-2 (FutureTask.java:443) - q : WaitNode{threadId=15, thread=null}, i:15
+[2016-12-16 18:37:14,329] INFO  Thread-2 (FutureTask.java:445) - q : i:15
+[2016-12-16 18:37:14,329] INFO  Thread-2 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=15, thread=null}, i: 15 end
+[2016-12-16 18:37:14,335] INFO  Thread-3 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=16, thread=Thread[Thread-3,5,main]}, i: 16 begin
+[2016-12-16 18:37:14,335] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=16, thread=null}, i:16
+[2016-12-16 18:37:14,335] INFO  Thread-3 (FutureTask.java:443) - q : WaitNode{threadId=16, thread=null}, i:16
+[2016-12-16 18:37:14,335] INFO  Thread-3 (FutureTask.java:445) - q : i:16
+[2016-12-16 18:37:14,335] INFO  Thread-3 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=16, thread=null}, i: 16 end
+[2016-12-16 18:37:21,333] INFO  Thread-0 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:37:21,333] INFO  Thread-0 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:37:36,621] INFO  Thread-0 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:37:36,626] INFO  Thread-0 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:37:39,668] INFO  Thread-3 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=16, thread=Thread[Thread-3,5,main]}, i: 16 begin
+[2016-12-16 18:37:39,673] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=16, thread=null}, i:16
+[2016-12-16 18:37:39,673] INFO  Thread-3 (FutureTask.java:443) - q : WaitNode{threadId=16, thread=null}, i:16
+[2016-12-16 18:37:39,673] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=15, thread=Thread[Thread-2,5,main]}, i:16
+[2016-12-16 18:37:39,673] INFO  Thread-3 (FutureTask.java:432) - q : WaitNode{threadId=15, thread=Thread[Thread-2,5,main]}, i:16
+[2016-12-16 18:37:39,673] INFO  Thread-3 (FutureTask.java:443) - q : WaitNode{threadId=15, thread=Thread[Thread-2,5,main]}, i:16
+[2016-12-16 18:37:39,673] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=14, thread=Thread[Thread-1,5,main]}, i:16
+[2016-12-16 18:37:39,673] INFO  Thread-3 (FutureTask.java:432) - q : WaitNode{threadId=14, thread=Thread[Thread-1,5,main]}, i:16
+[2016-12-16 18:37:39,674] INFO  Thread-3 (FutureTask.java:443) - q : WaitNode{threadId=14, thread=Thread[Thread-1,5,main]}, i:16
+[2016-12-16 18:37:39,674] INFO  Thread-3 (FutureTask.java:445) - q : i:16
+[2016-12-16 18:37:39,674] INFO  Thread-3 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=16, thread=null}, i: 16 end
+[2016-12-16 18:37:39,675] INFO  Thread-1 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=14, thread=Thread[Thread-1,5,main]}, i: 14 begin
+[2016-12-16 18:37:39,676] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=15, thread=Thread[Thread-2,5,main]}, i:14
+[2016-12-16 18:37:39,676] INFO  Thread-1 (FutureTask.java:432) - q : WaitNode{threadId=15, thread=Thread[Thread-2,5,main]}, i:14
+[2016-12-16 18:37:39,676] INFO  Thread-1 (FutureTask.java:443) - q : WaitNode{threadId=15, thread=Thread[Thread-2,5,main]}, i:14
+[2016-12-16 18:37:39,676] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=14, thread=null}, i:14
+[2016-12-16 18:37:39,676] INFO  Thread-1 (FutureTask.java:434) - q : WaitNode{threadId=14, thread=null}, i:14
+[2016-12-16 18:37:39,677] INFO  Thread-1 (FutureTask.java:443) - q : WaitNode{threadId=14, thread=null}, i:14
+[2016-12-16 18:37:39,677] INFO  Thread-1 (FutureTask.java:445) - q : i:14
+[2016-12-16 18:37:39,677] INFO  Thread-1 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=14, thread=null}, i: 14 end
+[2016-12-16 18:37:43,510] INFO  Thread-2 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=15, thread=Thread[Thread-2,5,main]}, i: 15 begin
+[2016-12-16 18:37:48,005] INFO  Thread-0 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:37:48,006] INFO  Thread-0 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:37:56,224] INFO  Thread-2 (FutureTask.java:428) - q : WaitNode{threadId=15, thread=null}, i:15
+[2016-12-16 18:37:56,224] INFO  Thread-2 (FutureTask.java:443) - q : WaitNode{threadId=15, thread=null}, i:15
+[2016-12-16 18:37:56,225] INFO  Thread-2 (FutureTask.java:445) - q : i:15
+[2016-12-16 18:37:56,225] INFO  Thread-2 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=15, thread=null}, i: 15 end
+[2016-12-16 18:37:56,225] INFO  Thread-2 (FutureMain.java:28) - future.get() : com.lami.tuomatuo.search.base.concurrent.future.example.LocalCacheConnection$1@5e8b9213
+[2016-12-16 18:38:25,664] INFO  Thread-0 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:38:25,667] INFO  Thread-0 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:38:28,728] INFO  Thread-1 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=14, thread=Thread[Thread-1,5,main]}, i: 14 begin
+[2016-12-16 18:38:28,728] INFO  Thread-2 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=15, thread=Thread[Thread-2,5,main]}, i: 15 begin
+[2016-12-16 18:38:31,804] INFO  Thread-3 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=16, thread=Thread[Thread-3,5,main]}, i: 16 begin
+[2016-12-16 18:38:31,804] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=16, thread=null}, i:16
+[2016-12-16 18:38:28,728] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=16, thread=Thread[Thread-3,5,main]}, i:14
+[2016-12-16 18:38:31,805] INFO  Thread-3 (FutureTask.java:443) - q : WaitNode{threadId=16, thread=null}, i:16
+[2016-12-16 18:38:31,804] INFO  Thread-2 (FutureTask.java:428) - q : WaitNode{threadId=16, thread=null}, i:15
+[2016-12-16 18:38:31,805] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=15, thread=null}, i:16
+[2016-12-16 18:38:31,805] INFO  Thread-3 (FutureTask.java:443) - q : WaitNode{threadId=15, thread=null}, i:16
+[2016-12-16 18:38:31,805] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=14, thread=null}, i:16
+[2016-12-16 18:38:31,806] INFO  Thread-3 (FutureTask.java:443) - q : WaitNode{threadId=14, thread=null}, i:16
+[2016-12-16 18:38:31,806] INFO  Thread-3 (FutureTask.java:445) - q : i:16
+[2016-12-16 18:38:31,806] INFO  Thread-3 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=16, thread=null}, i: 16 end
+[2016-12-16 18:38:31,805] INFO  Thread-1 (FutureTask.java:440) - q : WaitNode{threadId=16, thread=null}, i:14
+[2016-12-16 18:38:31,805] INFO  Thread-2 (FutureTask.java:440) - q : WaitNode{threadId=16, thread=null}, i:15
+[2016-12-16 18:38:31,806] INFO  Thread-2 (FutureTask.java:445) - q : i:15
+[2016-12-16 18:38:31,807] INFO  Thread-2 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=15, thread=null}, i: 15 end
+[2016-12-16 18:38:31,806] INFO  Thread-1 (FutureTask.java:445) - q : i:14
+[2016-12-16 18:38:31,807] INFO  Thread-1 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=14, thread=null}, i: 14 end
+[2016-12-16 18:38:35,667] INFO  Thread-0 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:38:35,667] INFO  Thread-0 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:39:05,730] INFO  Thread-0 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:39:05,733] INFO  Thread-0 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:39:08,731] INFO  Thread-3 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=14, thread=Thread[Thread-3,5,main]}, i: 14 begin
+[2016-12-16 18:39:08,731] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i:14
+[2016-12-16 18:39:08,731] INFO  Thread-3 (FutureTask.java:432) - q : WaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i:14
+[2016-12-16 18:39:08,731] INFO  Thread-3 (FutureTask.java:443) - q : WaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i:14
+[2016-12-16 18:39:08,731] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=12, thread=Thread[Thread-1,5,main]}, i:14
+[2016-12-16 18:39:08,731] INFO  Thread-3 (FutureTask.java:432) - q : WaitNode{threadId=12, thread=Thread[Thread-1,5,main]}, i:14
+[2016-12-16 18:39:08,732] INFO  Thread-3 (FutureTask.java:443) - q : WaitNode{threadId=12, thread=Thread[Thread-1,5,main]}, i:14
+[2016-12-16 18:39:08,732] INFO  Thread-3 (FutureTask.java:428) - q : WaitNode{threadId=14, thread=null}, i:14
+[2016-12-16 18:39:08,732] INFO  Thread-3 (FutureTask.java:434) - q : WaitNode{threadId=14, thread=null}, i:14
+[2016-12-16 18:39:08,732] INFO  Thread-3 (FutureTask.java:443) - q : WaitNode{threadId=14, thread=null}, i:14
+[2016-12-16 18:39:08,732] INFO  Thread-3 (FutureTask.java:445) - q : i:14
+[2016-12-16 18:39:08,732] INFO  Thread-3 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=14, thread=null}, i: 14 end
+[2016-12-16 18:39:08,733] INFO  Thread-2 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i: 13 begin
+[2016-12-16 18:39:08,733] INFO  Thread-2 (FutureTask.java:428) - q : WaitNode{threadId=13, thread=null}, i:13
+[2016-12-16 18:39:08,733] INFO  Thread-2 (FutureTask.java:443) - q : WaitNode{threadId=13, thread=null}, i:13
+[2016-12-16 18:39:08,733] INFO  Thread-2 (FutureTask.java:428) - q : WaitNode{threadId=12, thread=Thread[Thread-1,5,main]}, i:13
+[2016-12-16 18:39:08,733] INFO  Thread-2 (FutureTask.java:432) - q : WaitNode{threadId=12, thread=Thread[Thread-1,5,main]}, i:13
+[2016-12-16 18:39:08,733] INFO  Thread-2 (FutureTask.java:443) - q : WaitNode{threadId=12, thread=Thread[Thread-1,5,main]}, i:13
+[2016-12-16 18:39:08,733] INFO  Thread-2 (FutureTask.java:445) - q : i:13
+[2016-12-16 18:39:08,733] INFO  Thread-2 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=13, thread=null}, i: 13 end
+[2016-12-16 18:39:08,734] INFO  Thread-1 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=12, thread=Thread[Thread-1,5,main]}, i: 12 begin
+[2016-12-16 18:39:08,734] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=12, thread=null}, i:12
+[2016-12-16 18:39:08,734] INFO  Thread-1 (FutureTask.java:443) - q : WaitNode{threadId=12, thread=null}, i:12
+[2016-12-16 18:39:08,734] INFO  Thread-1 (FutureTask.java:445) - q : i:12
+[2016-12-16 18:39:08,734] INFO  Thread-1 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=12, thread=null}, i: 12 end
+[2016-12-16 18:39:15,733] INFO  Thread-0 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:39:15,733] INFO  Thread-0 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:39:30,195] INFO  Thread-0 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:39:30,198] INFO  Thread-0 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:39:42,636] INFO  Thread-1 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=14, thread=Thread[Thread-1,5,main]}, i: 14 begin
+[2016-12-16 18:39:42,637] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=16, thread=Thread[Thread-3,5,main]}, i:14
+[2016-12-16 18:39:42,637] INFO  Thread-1 (FutureTask.java:432) - q : WaitNode{threadId=16, thread=Thread[Thread-3,5,main]}, i:14
+[2016-12-16 18:39:42,637] INFO  Thread-1 (FutureTask.java:443) - q : WaitNode{threadId=16, thread=Thread[Thread-3,5,main]}, i:14
+[2016-12-16 18:39:42,637] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=15, thread=Thread[Thread-2,5,main]}, i:14
+[2016-12-16 18:39:42,637] INFO  Thread-1 (FutureTask.java:432) - q : WaitNode{threadId=15, thread=Thread[Thread-2,5,main]}, i:14
+[2016-12-16 18:39:42,638] INFO  Thread-1 (FutureTask.java:443) - q : WaitNode{threadId=15, thread=Thread[Thread-2,5,main]}, i:14
+[2016-12-16 18:39:42,638] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=14, thread=null}, i:14
+[2016-12-16 18:39:42,638] INFO  Thread-1 (FutureTask.java:434) - q : WaitNode{threadId=14, thread=null}, i:14
+[2016-12-16 18:39:42,638] INFO  Thread-1 (FutureTask.java:443) - q : WaitNode{threadId=14, thread=null}, i:14
+[2016-12-16 18:39:42,638] INFO  Thread-1 (FutureTask.java:445) - q : i:14
+[2016-12-16 18:39:42,638] INFO  Thread-1 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=14, thread=null}, i: 14 end
+[2016-12-16 18:39:42,636] INFO  Thread-0 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:39:42,639] INFO  Thread-0 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:39:49,148] INFO  Thread-3 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=16, thread=null}, i: 16 begin
+[2016-12-16 18:39:49,148] INFO  Thread-3 (FutureTask.java:445) - q : i:16
+[2016-12-16 18:39:49,148] INFO  Thread-3 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=16, thread=null}, i: 16 end
+[2016-12-16 18:39:49,148] INFO  Thread-3 (FutureMain.java:28) - future.get() : com.lami.tuomatuo.search.base.concurrent.future.example.LocalCacheConnection$1@7938ea6a
+[2016-12-16 18:39:56,156] INFO  Thread-2 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=15, thread=null}, i: 15 begin
+[2016-12-16 18:39:56,156] INFO  Thread-2 (FutureTask.java:445) - q : i:15
+[2016-12-16 18:39:56,156] INFO  Thread-2 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=15, thread=null}, i: 15 end
+[2016-12-16 18:39:56,156] INFO  Thread-2 (FutureMain.java:28) - future.get() : com.lami.tuomatuo.search.base.concurrent.future.example.LocalCacheConnection$1@7938ea6a
+[2016-12-16 18:48:59,025] INFO  Thread-0 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:48:59,027] INFO  Thread-0 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:49:09,027] INFO  Thread-0 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:49:09,027] INFO  Thread-0 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:49:09,028] INFO  Thread-1 (FutureMain.java:30) - future.get() : com.lami.tuomatuo.search.base.concurrent.future.example.LocalCacheConnection$1@38b90e60
+[2016-12-16 18:49:09,028] INFO  Thread-2 (FutureMain.java:30) - future.get() : com.lami.tuomatuo.search.base.concurrent.future.example.LocalCacheConnection$1@38b90e60
+[2016-12-16 18:49:22,305] INFO  Thread-0 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:49:22,308] INFO  Thread-0 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:49:32,308] INFO  Thread-0 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:49:32,308] INFO  Thread-0 (LocalCacheConnection.java:20) - 创建connection结束
+[2016-12-16 18:49:32,309] INFO  Thread-1 (FutureMain.java:31) - future.get() : com.lami.tuomatuo.search.base.concurrent.future.example.LocalCacheConnection$1@16f1c619
+[2016-12-16 18:49:32,309] INFO  Thread-2 (FutureMain.java:31) - future.get() : com.lami.tuomatuo.search.base.concurrent.future.example.LocalCacheConnection$1@16f1c619
+[2016-12-16 18:49:45,760] INFO  Thread-0 (LocalCacheConnection.java:10) - 创建connection开始
+[2016-12-16 18:49:45,764] INFO  Thread-0 (LocalCacheConnection.java:11) - 睡觉开始
+[2016-12-16 18:49:52,763] INFO  Thread-1 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=12, thread=Thread[Thread-1,5,main]}, i: 12 begin
+[2016-12-16 18:49:52,763] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i:12
+[2016-12-16 18:49:52,763] INFO  Thread-1 (FutureTask.java:432) - q : WaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i:12
+[2016-12-16 18:49:52,763] INFO  Thread-1 (FutureTask.java:443) - q : WaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i:12
+[2016-12-16 18:49:52,763] INFO  Thread-1 (FutureTask.java:428) - q : WaitNode{threadId=12, thread=null}, i:12
+[2016-12-16 18:49:52,763] INFO  Thread-1 (FutureTask.java:434) - q : WaitNode{threadId=12, thread=null}, i:12
+[2016-12-16 18:49:52,764] INFO  Thread-1 (FutureTask.java:443) - q : WaitNode{threadId=12, thread=null}, i:12
+[2016-12-16 18:49:52,764] INFO  Thread-1 (FutureTask.java:445) - q : i:12
+[2016-12-16 18:49:52,764] INFO  Thread-1 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=12, thread=null}, i: 12 end
+[2016-12-16 18:49:52,766] INFO  Thread-2 (FutureTask.java:421) - removeWaiter nodeWaitNode{threadId=13, thread=Thread[Thread-2,5,main]}, i: 13 begin
+[2016-12-16 18:49:52,766] INFO  Thread-2 (FutureTask.java:428) - q : WaitNode{threadId=13, thread=null}, i:13
+[2016-12-16 18:49:52,766] INFO  Thread-2 (FutureTask.java:443) - q : WaitNode{threadId=13, thread=null}, i:13
+[2016-12-16 18:49:52,766] INFO  Thread-2 (FutureTask.java:445) - q : i:13
+[2016-12-16 18:49:52,766] INFO  Thread-2 (FutureTask.java:448) - removeWaiter nodeWaitNode{threadId=13, thread=null}, i: 13 end
+[2016-12-16 18:49:55,764] INFO  Thread-0 (LocalCacheConnection.java:19) - 睡觉结束
+[2016-12-16 18:49:55,764] INFO  Thread-0 (LocalCacheConnection.java:20) - 创建connection结束

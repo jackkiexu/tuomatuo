@@ -1,6 +1,7 @@
 package com.lami.tuomatuo.search.base.concurrent.future;
 
 import com.lami.tuomatuo.search.base.concurrent.unsafe.UnSafeClass;
+import org.apache.log4j.Logger;
 import sun.misc.Unsafe;
 
 import java.util.concurrent.*;
@@ -32,6 +33,8 @@ import java.util.concurrent.locks.LockSupport;
  * Created by xujiankang on 2016/12/15.
  */
 public class FutureTask<V> implements RunnableFuture<V> {
+
+    private static final Logger logger = Logger.getLogger(FutureTask.class);
 
     /**
      * Revision note : This differs from previous versions of this
@@ -342,18 +345,70 @@ public class FutureTask<V> implements RunnableFuture<V> {
 
     /**
      * Awaits completion or aborts on interrupt or timeout
+     * 调用 awaitDone 进行线程的自旋
+     * 自旋一般调用步骤
+     *  1) 若支持线程中断, 判断当前的线程是否中断
+     *      a. 中断, 退出自旋
+     *      b. 进行下面的步骤
+     *  2) 将当前的线程构造成一个 WaiterNode 节点, 加入到当前对象的队列里面 (进行 cas 操作)
+     *  3) 判断当前的调用是否设置阻塞超时时间
+     *      a. 有 超时时间, 调用 LockSupport.parkNanos; 阻塞结束后, 再次进行 自旋 , 还是到同一个if, 但 nanos = 0L, 删除链表中对应的 WaiterdNode, 返回 state值
+     *      b. 没 超时时间, 调用 LockSupport.park
      *
      * @param timed true if use timed waits
      * @param nanos time to waits, if timed
      * @return state upon completion
      */
     private int awaitDone(boolean timed, long nanos) throws InterruptedException{
+        // default timed = false, nanos = 0, so deadline = 0
         final long deadline = timed ? System.nanoTime() + nanos : 0L;
         WaitNode q = null;
         boolean queued = false;
         for(;;){
+            // Thread.interrupted 判断当前的线程是否中断(调用两次会清楚对应的状态位)
+            // Thread.interrupt 将当前的线程设置成中断状态
             if(Thread.interrupted()){
-                removeWaiter(q);
+                removeWaiter(q, Thread.currentThread().getId());
+                throw new InterruptedException();
+            }
+
+            int s = state;
+            /** 1. s = NORMAL, 说明程序执行成功, 直接获取对应的 V
+             */
+            if(s > COMPLETING){
+                if(q != null){
+                    q.thread = null;
+                }
+                return s;
+            }
+            // s = COMPLETING ; 看了全部的代码说明整个任务在处理的中间状态, s紧接着会进行改变
+            // s 变成 NORMAL 或 EXCEPTION
+            // 所以调用 yield 让线程状态变更, 重新进行CPU时间片竞争, 并且进行下次循环
+            else if(s == COMPLETING){ // cannot time out yet
+                Thread.yield();
+            }
+            // 当程序调用 get 方法时, 一定会调用一次下面的方法, 对 q 进行赋值
+            else if(q == null){
+                q = new WaitNode();
+            }
+            // 判断有没将当前的线程构造成一个节点, 赋值到对象对应的属性里面
+            // 第一次 waiters 一定是 null 的, 进行赋值的是一个以 q 为首节点的链表
+            else if(!queued){
+                queued = unsafe.compareAndSwapObject(this, waitersOffset, q.next = waiters, q);
+            }
+            // 调用默认的 get()时, timed = false, 所以不执行这一步
+            else if(timed){
+                // 进行阻塞时间的判断, 第二次循环时, nanos = 0L, 直接 removeWaiter 返回现在 FutureTask 的 state
+                nanos = deadline - System.nanoTime();
+                if(nanos <= 0L){
+                    removeWaiter(q, Thread.currentThread().getId());
+                    return state;
+                }
+                LockSupport.parkNanos(this, nanos);
+            }
+            // 进行线程的阻塞
+            else{
+                LockSupport.park(this);
             }
         }
     }
@@ -362,26 +417,35 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * Tries to unlinked a time-out
      * @param node
      */
-    private void removeWaiter(WaitNode node){
+    private synchronized void  removeWaiter(WaitNode node, long i){
+        logger.info("removeWaiter node"  + node +", i: "+ i +" begin");
         if(node != null){
             node.thread = null;
+
             retry:
             for(;;){ // restart on removeWaiter race
                 for(WaitNode pred = null, q = waiters, s; q != null; q = s){
+                    logger.info("q : " + q +", i:"+i);
                     s = q.next;
-                    if(q.thread != null){
+                    if(q.thread != null){ // 通过 thread 判断当前 q 是否是需要移除的 q节点
                         pred = q;
+                        logger.info("q : " + q +", i:"+i);
                     }else if(pred != null){
-                        pred.next = s;
+                        logger.info("q : " + q +", i:"+i);
+                        pred.next = s; // 将前一个节点的 next 指向当前节点的 next 节点
                         if(pred.thread == null){ // check for race
                             continue retry;
                         }
                     }else if(!unsafe.compareAndSwapObject(this, waitersOffset, q, s)){
+                        logger.info("q : " + q +", i:"+i);
                         continue retry;
                     }
-                    break ;
+                    logger.info("q : " + q +", i:"+i);
                 }
+                logger.info("q : i:"+i);
+                break ;
             }
+            logger.info("removeWaiter node"  + node +", i: "+ i +" end");
         }
     }
 
@@ -408,11 +472,21 @@ public class FutureTask<V> implements RunnableFuture<V> {
 
 
     static final class WaitNode{
+        volatile long threadId;
         volatile Thread thread;
         volatile WaitNode next;
 
         public WaitNode() {
             thread = Thread.currentThread();
+            threadId = Thread.currentThread().getId();
+        }
+
+        @Override
+        public String toString() {
+            return "WaitNode{" +
+                    "threadId=" + threadId +
+                    ", thread=" + thread +
+                    '}';
         }
     }
 
