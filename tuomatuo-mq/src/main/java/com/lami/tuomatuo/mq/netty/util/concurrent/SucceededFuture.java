@@ -7,7 +7,7 @@ package com.lami.tuomatuo.mq.netty.util.concurrent;
  *
  * Created by xjk on 12/15/16.
  */
-public final class SuccessedFuture<V> extends CompleteFuture<V> {
+public final class SucceededFuture<V> extends CompleteFuture<V> {
 
     private V result;
 
@@ -16,7 +16,7 @@ public final class SuccessedFuture<V> extends CompleteFuture<V> {
      *
      * @param executor {@link EventExecutor} associated with this future
      */
-    protected SuccessedFuture(EventExecutor executor, V result) {
+    protected SucceededFuture(EventExecutor executor, V result) {
         super(executor);
         this.result = result;
     }

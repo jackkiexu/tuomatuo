@@ -35,7 +35,7 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * @param listener
      * @return
      */
-    Future<V> addlistener(GenericFutureListener<? extends Future<? super V>> listener);
+    Future<V> addListener(GenericFutureListener<? extends Future<? super V>> listener);
 
     /**
      * Adds the specified listener to this future. The

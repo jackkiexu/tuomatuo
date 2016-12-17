@@ -59,7 +59,7 @@ public interface EventExecutor extends EventExecutorGroup {
      * @param <V>
      * @return
      */
-    <V> Future<V> newSuccessedFuture(V result);
+    <V> Future<V> newSucceededFuture(V result);
 
     /**
      * Create a new {@link Future} which is marked as fakued already. So {@link Future#isSuccess()}

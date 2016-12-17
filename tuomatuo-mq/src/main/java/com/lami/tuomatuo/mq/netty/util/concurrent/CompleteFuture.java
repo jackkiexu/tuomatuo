@@ -31,7 +31,7 @@ public abstract class CompleteFuture<V> extends AbstractFuture<V>{
 
 
     @Override
-    public Future<V> addlistener(GenericFutureListener<? extends Future<? super V>> listener) {
+    public Future<V> addListener(GenericFutureListener<? extends Future<? super V>> listener) {
         if(listener == null){
             throw new NullPointerException("listener");
         }

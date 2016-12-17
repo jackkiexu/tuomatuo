@@ -5,6 +5,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.jctools.queues.MpscChunkedArrayQueue;
 
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.regex.Pattern;
 
 /**
@@ -25,6 +26,10 @@ public class PlatformDependent {
     private static final Pattern MAX_DIRECT_MEMORY_SIZE_ARG_PATTERN = Pattern.compile("\\s*-XX:MaxDirectMemorySize\\s*=\\s*([0-9]+)\\s*([kKmMgG]?)\\s*$");
 
 //    private static final boolean IS_ANDROID =
+
+    public static void throwException(Throwable t){
+
+    }
 
 
     private static final class AtomicLongCounter extends AtomicLong implements LongCounter{
@@ -52,5 +57,9 @@ public class PlatformDependent {
 
     private PlatformDependent(){
         // only static method supported
+    }
+
+    public static <U, W>AtomicReferenceFieldUpdater<U, W> newAtomicReferenceFieldUpdater(Class<? super U> tclass, String fieldName){
+        return null;
     }
 }

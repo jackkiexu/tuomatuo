@@ -7,7 +7,7 @@ package com.lami.tuomatuo.mq.netty.util.concurrent;
 public interface ProgressiveFuture<V> extends Future<V> {
 
     @Override
-    ProgressiveFuture<V> addlistener(GenericFutureListener<? extends Future<? super V>> listener);
+    ProgressiveFuture<V> addListener(GenericFutureListener<? extends Future<? super V>> listener);
 
     @Override
     ProgressiveFuture<V> addListeners(GenericFutureListener<? extends Future<? super V>>... listeners);

@@ -51,7 +51,7 @@ public interface Promise<V> extends Future<V> {
     boolean setUncancellable();
 
     @Override
-    Future<V> addlistener(GenericFutureListener<? extends Future<? super V>> listener);
+    Future<V> addListener(GenericFutureListener<? extends Future<? super V>> listener);
 
     @Override
     Future<V> addListeners(GenericFutureListener<? extends Future<? super V>>... listeners);
