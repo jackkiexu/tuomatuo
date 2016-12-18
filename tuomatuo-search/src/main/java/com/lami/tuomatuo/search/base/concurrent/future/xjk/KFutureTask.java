@@ -29,7 +29,10 @@ public class KFutureTask<V> implements Future<V> {
     private static final int INTERRUPTED     = 4; // 主动调用Thread.interrupted进行线程的中断
 
     private static Unsafe unsafe;
-
+    // 等待线程队列的首节点
+    private transient volatile WaiterNode head;
+    // 等待线程队列的尾节点
+    private transient volatile WaiterNode tail;
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
@@ -62,15 +65,56 @@ public class KFutureTask<V> implements Future<V> {
      */
     static final class WaiterNode{
         Thread thread;
+        WaiterNode   preNode;
         WaiterNode   nextNode;
+
+        public WaiterNode(){}
+
+        public WaiterNode(Thread thread) {
+            this.thread = thread;
+        }
+
+        public WaiterNode(Thread thread, WaiterNode nextNode) {
+            this.nextNode = nextNode;
+            this.thread = thread;
+        }
+
     }
 
     /**
      * 当前线程入队列方法
      * @return
      */
-    private WaiterNode enqueue(){
-        return null;
+    private WaiterNode enqueue(final WaiterNode waiterNode){
+        for(;;){
+            WaiterNode t = tail;
+            if(t == null){ // Must initialize
+                if(compareAndSetHead(new WaiterNode())){
+                    tail = head;
+                }
+            }else{
+                waiterNode.preNode = t;
+                if(compareAndSetTail(t, waiterNode)){
+                    t.nextNode = waiterNode;
+                    return t;
+                }
+            }
+        }
+    }
+
+    private WaiterNode addWaiter(WaiterNode insertNode){
+        WaiterNode node = new WaiterNode(Thread.currentThread(), insertNode);
+
+        WaiterNode pred = tail;
+        if(pred != null){
+            node.preNode = pred;
+            if(compareAndSetTail(pred, node)){
+                pred.nextNode = node;
+                return node;
+            }
+        }
+        enqueue(node);
+        return node;
     }
 
     /**
@@ -87,7 +131,40 @@ public class KFutureTask<V> implements Future<V> {
 
     }
 
+    private static long headOffset;
+    private static long tailOffset;
 
+    static {
+        try {
+            unsafe = UnSafeClass.getInstance();
+            headOffset = unsafe.objectFieldOffset(
+                    KFutureTask.class.getDeclaredField("head")
+            );
+            tailOffset = unsafe.objectFieldOffset(
+                    KFutureTask.class.getDeclaredField("tail")
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
+    /**
+     * CAS head field. Used only by enq
+     * @param update
+     * @return
+     */
+    private final boolean compareAndSetHead(WaiterNode update){
+        return unsafe.compareAndSwapObject(this, headOffset, null, update);
+    }
+
+    /**
+     * CAS tail field. Used only by enq
+     * @param expect
+     * @param update
+     * @return
+     */
+    private final boolean compareAndSetTail(WaiterNode expect, WaiterNode update){
+        return unsafe.compareAndSwapObject(this, tailOffset, expect, update);
+    }
 
 }
