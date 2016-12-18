@@ -3,6 +3,7 @@ package com.lami.tuomatuo.search.base.concurrent.future.example;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.*;
@@ -17,31 +18,32 @@ public class FutureMain {
     public static void main(String[] args) throws Exception{
 
         LocalCacheConnection localCacheConnection = new LocalCacheConnection();
+        Future<?> future = localCacheConnection.getResult("connection");
 
-        List<Future<?>> futureList = new ArrayList<>();
-
-        Future<?> future = localCacheConnection.getResult("connection : 0" );
-        for(int i = 1; i < 3 ; i++){
-            final Random random = new Random(1000);
-            new Thread(){
-                @Override
-                public void run() {
-                    try {
-
-                        logger.info("future.get() : " + future.get(random.nextInt(10) , TimeUnit.SECONDS));
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    } catch (ExecutionException e) {
-                        e.printStackTrace();
-                    } catch (TimeoutException e) {
-                        e.printStackTrace();
-                    }
+        new Thread(){
+            @Override
+            public void run() {
+                try {
+                    logger.info("future.get() : " + future.get(2 , TimeUnit.SECONDS));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }finally {
+                    logger.info("future.get() over");
                 }
-            }.start();
+            }
+        }.start();
 
-        }
-
-
+        new Thread(){
+            @Override
+            public void run() {
+                try {
+                    logger.info("future.get() : " + future.get(4, TimeUnit.SECONDS));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }finally {
+                    logger.info("future.get() over");
+                }
+            }
+        }.start();
     }
-
 }

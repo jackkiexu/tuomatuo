@@ -85,4 +85,48 @@ public interface InternalLogger {
      * @return
      */
     boolean isDebugEnabled();
+
+    /**
+     * Log a message at the WARN level according to the specified format
+     * and argument
+     * <p>
+     *     This form avoids superfluous object creation when the logger
+     *     is disabled for the WARN level
+     * </p>
+     * @param format    the format string
+     * @param arg       the argument
+     */
+    void warn(String format, Object arg);
+
+    /**
+     * Log a message at the WARN level according to the specified format
+     * and argument
+     * <p>
+     *     This form avoids superfluous object creation when the logger
+     *     is disabled for the WARN level
+     * </p>
+     * @param format    the format string
+     * @param argA       the argument
+     */
+    void warn(String format, Object argA, Object argB);
+
+    /**
+     * Log a message at the WARN level according to specified format
+     * and argument
+     *
+     * <p>
+     *     This form avoids superfluous string concatenation when the logger
+     *     is disabled for the WARN level. However, this variant incurs the hidden
+     *     (and relatively small) cost of creating an {@code Object[]} before invoking the method
+     *     even if this logger is disabled for WARN. The variants taking
+     *     {@link #warn(String, Object)} and {@link #warn(String, Object)}
+     *     arguments exist solely in order to avoid this hidden cost
+     * </p>
+     *
+     * @param format
+     * @param arguments
+     */
+    void warn(String format, Object... arguments);
+
+
 }

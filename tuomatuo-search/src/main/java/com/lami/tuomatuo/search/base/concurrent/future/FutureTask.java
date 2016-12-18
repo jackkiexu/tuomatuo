@@ -276,6 +276,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      */
     @Override
     public void run() {
+        // 判断 state 是否是new, 防止并发重复执行
         if(state != NEW ||
                 !unsafe.compareAndSwapObject(this, runnerOffset, null, Thread.currentThread())){
             return;
@@ -286,12 +287,13 @@ public class FutureTask<V> implements RunnableFuture<V> {
             if(c != null && state == NEW){
                 V result ;
                 boolean ran;
-                try{
+                try{ // 调用call方法执行计算
                     result = c.call();
                     ran = true;
                 }catch (Throwable ex){
                     result = null;
                     ran = false;
+                    // 执行中抛异常, 更新state状态, 释放等待的线程(调用finishCompletion)
                     setException(ex);
                 }
                 if(ran){
@@ -381,7 +383,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * 调用 awaitDone 进行线程的自旋
      * 自旋一般调用步骤
      *  1) 若支持线程中断, 判断当前的线程是否中断
-     *      a. 中断, 退出自旋
+     *      a. 中断, 退出自旋, 在线程队列中移除对应的节点
      *      b. 进行下面的步骤
      *  2) 将当前的线程构造成一个 WaiterNode 节点, 加入到当前对象的队列里面 (进行 cas 操作)
      *  3) 判断当前的调用是否设置阻塞超时时间
@@ -454,7 +456,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
     private void  removeWaiter(WaitNode node, long i){
         logger.info("removeWaiter node"  + node +", i: "+ i +" begin");
         if(node != null){
-            node.thread = null;
+            node.thread = null; // 将移除的节点的thread＝null, 为移除做标示
 
             retry:
             for(;;){ // restart on removeWaiter race
@@ -472,7 +474,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
                         logger.info("q : " + q +", i:"+i);
                         pred.next = s; // 将前一个节点的 next 指向当前节点的 next 节点
                         // pred.thread == null 这种情况是在多线程进行并发 removeWaiter 时产生的
-                        // 而此时真好移除节点 node 和 pred
+                        // 而此时真好移除节点 node 和 pred, 所以loop跳到retry, 在进行一次
                         if(pred.thread == null){ // check for race
                             continue retry;
                         }
@@ -507,9 +509,11 @@ public class FutureTask<V> implements RunnableFuture<V> {
             throw new NullPointerException();
         }
         int s = state;
+        // 判断state状态是否 <= Completing, 调用awaitDone进行旋转
         if(s <= COMPLETING && (s = awaitDone(true, unit.toNanos(timeout))) <= COMPLETING){
             throw new TimeoutException();
         }
+        // 根据state的值进行返回结果或抛出异常
         return report(s);
     }
 

@@ -4,6 +4,7 @@ package com.lami.tuomatuo.search.base.concurrent.future.example;
  * Created by xujiankang on 2016/12/16.
  */
 public class LocalCacheConnection extends AbstractLocalCache<String , Connection> {
+
     @Override
     public Connection computeV(String s) {
 
@@ -11,7 +12,7 @@ public class LocalCacheConnection extends AbstractLocalCache<String , Connection
         logger.info("睡觉开始");
 
         try {
-            Thread.sleep(10*1000);
+            Thread.sleep(3*1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -21,8 +22,13 @@ public class LocalCacheConnection extends AbstractLocalCache<String , Connection
 
         return new Connection() {
             @Override
-            public Connection getConnection() {
-                return null;
+            public String getName() {
+                return s;
+            }
+
+            @Override
+            public String toString() {
+                return "A connection(" + s + ")";
             }
         };
     }
