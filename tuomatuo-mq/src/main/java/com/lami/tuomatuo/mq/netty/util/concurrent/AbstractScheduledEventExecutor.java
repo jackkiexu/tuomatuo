@@ -64,4 +64,9 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
             execute(() -> {removeScheduled(task);});
         }
     }
+
+    protected void cancelScheduledTasks(){
+
+    }
+
 }

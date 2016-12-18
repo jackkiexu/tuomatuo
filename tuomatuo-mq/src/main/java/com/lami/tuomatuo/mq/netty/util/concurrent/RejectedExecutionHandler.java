@@ -1,6 +1,5 @@
 package com.lami.tuomatuo.mq.netty.util.concurrent;
 
-import io.netty.util.concurrent.SingleThreadEventExecutor;
 
 /**
  * Similar to {@link java.util.concurrent.RejectedExecutionHandler} but specific to {@link io.netty.util.concurrent.SingleThreadEventExecutor}

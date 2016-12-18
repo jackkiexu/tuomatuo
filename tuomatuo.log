@@ -1,0 +1,5 @@
+[2016-12-18 16:53:11,722] INFO  main (SemaphoreTest.java:18) - semaphore.acquire 1
+[2016-12-18 16:53:11,725] INFO  main (SemaphoreTest.java:20) - semaphore.acquire 2
+[2016-12-18 16:53:11,726] INFO  main (SemaphoreTest.java:22) - semaphore.acquire 3
+[2016-12-18 16:53:11,726] INFO  main (SemaphoreTest.java:24) - semaphore.acquire 4
+[2016-12-18 16:53:11,726] INFO  main (SemaphoreTest.java:26) - semaphore.acquire 5
