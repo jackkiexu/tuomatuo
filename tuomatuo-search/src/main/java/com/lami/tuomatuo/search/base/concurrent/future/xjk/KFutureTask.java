@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.LockSupport;
 
 /**
  * 实现自己的Future要点
@@ -29,10 +30,15 @@ public class KFutureTask<V> implements Future<V> {
     private static final int INTERRUPTED     = 4; // 主动调用Thread.interrupted进行线程的中断
 
     private static Unsafe unsafe;
+
     // 等待线程队列的首节点
     private transient volatile WaiterNode head;
+
     // 等待线程队列的尾节点
     private transient volatile WaiterNode tail;
+
+    // 执行计划最终的结果
+    private Object result;
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
@@ -51,19 +57,88 @@ public class KFutureTask<V> implements Future<V> {
 
     @Override
     public V get() throws InterruptedException, ExecutionException {
+        int s = state;
+        if(s < COMPLETED){
+            s = awaitDone(false, 0l);
+        }
         return null;
     }
 
     @Override
     public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        return null;
+        if(unit == null) throw new NullPointerException();
+        awaitDone(true, unit.toNanos(timeout));
+        return (V)result;
     }
 
+
+    private V report(int s) throws Exception{
+        if(s == COMPLETED){
+            return (V)result;
+        }else{
+            throw new Exception((String)result);
+        }
+
+    }
+
+    /**
+     * 1. 检测是否当前线程中断, 且是否await支持中断, 若同时满足, 则抛出异常
+     * 2. 计算 线程阻塞的时间
+     * 3. 进行自旋
+     *      1) 将自己封装成一个 node
+     *      2) 将 node 加入到队列
+     *      3) 根据timeoutNano 进行 阻塞
+     *      4) 阻塞结束后再次循环 timeoutNano = 0, 直接 return
+     *
+     * @param timeoutNanos
+     * @throws InterruptedException
+     */
+    public int awaitDone(boolean timed, long timeoutNanos) throws InterruptedException {
+
+        // 线程阻塞时间
+        final long blockingTime = timed ? System.nanoTime() + timeoutNanos : 0L;
+
+        WaiterNode q = null;
+        boolean queued = false;
+
+        for(;;){
+            // 判断是否中断
+            if(Thread.interrupted()){
+                removeWaiterNode(q);
+                throw new InterruptedException();
+            }
+            // task 完成
+            if(state > COMPLETED){
+                if(q != null){
+                    q.thread = null;
+                }
+                return state;
+            }
+            // 将当前线程组装成WaiterNode
+            else if(q == null){
+                q = new WaiterNode(Thread.currentThread());
+            }
+            // 将 WaiterNode 加入队列
+            else if(!queued){
+                queued = unsafe.compareAndSwapObject(this, tailOffset, q.nextNode = head, q);
+            }
+            // 进行线程阻塞
+            else if(timed){
+                if(blockingTime <= 0L){
+                    removeWaiterNode(q);
+                    return state;
+                }
+                LockSupport.parkNanos(this, blockingTime);
+            }else {
+                LockSupport.park(this);
+            }
+        }
+    }
 
     /**
      * 链表节点
      */
-    static final class WaiterNode{
+    public static final class WaiterNode{
         Thread thread;
         WaiterNode   preNode;
         WaiterNode   nextNode;
@@ -83,13 +158,14 @@ public class KFutureTask<V> implements Future<V> {
 
     /**
      * 当前线程入队列方法
+     * 第一次 循环时
      * @return
      */
-    private WaiterNode enqueue(final WaiterNode waiterNode){
+    public WaiterNode enqueue(final WaiterNode waiterNode){
         for(;;){
             WaiterNode t = tail;
-            if(t == null){ // Must initialize
-                if(compareAndSetHead(new WaiterNode())){
+            if(t == null){ // 第一次 head 为 null
+                if(compareAndSetHead(new WaiterNode())){ //
                     tail = head;
                 }
             }else{
@@ -120,8 +196,27 @@ public class KFutureTask<V> implements Future<V> {
     /**
      * 队列中移除指定的 WaiterNode
      */
-    private void removeWaiterNode(){
-
+    private void removeWaiterNode(WaiterNode node){
+        if (node != null) {
+            node.thread = null;
+            retry:
+            for (;;) {          // restart on removeWaiter race
+                for (WaiterNode pred = null, q = head, s; q != null; q = s) {
+                    s = q.nextNode;
+                    if (q.thread != null)
+                        pred = q;
+                    else if (pred != null) {
+                        pred.nextNode = s;
+                        if (pred.thread == null) // check for race
+                            continue retry;
+                    }
+                    else if (!unsafe.compareAndSwapObject(this, headOffset,
+                            q, s))
+                        continue retry;
+                }
+                break;
+            }
+        }
     }
 
     /**
