@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.search.base.concurrent.myaqs;
+package com.lami.tuomatuo.search.base.concurrent.aqs;
 
 import sun.misc.Unsafe;
 
