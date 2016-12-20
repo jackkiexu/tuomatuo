@@ -4,10 +4,7 @@ import com.lami.tuomatuo.search.base.concurrent.unsafe.UnSafeClass;
 import org.apache.log4j.Logger;
 import sun.misc.Unsafe;
 
-import java.util.AbstractQueue;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * An unbounded thread-safe {@linkplain Queue queue} based on linked nodes
@@ -154,11 +151,17 @@ public class KConcurrentLinkedList<E> extends AbstractQueue<E> implements Queue<
                 }
                 // Lost CAS race to another thread; re-read next
             }
+            // 调用 poll 时, 调用 updateHead 导致的
             else if(p == q){
                 // We have fallen off list. If tail is unchanged, it
                 // will also be off-list, in which case we need to
                 // jump to head, from which all live nodes are always
                 // reachable. Else the new tail is a better bet
+                /** 1. 大前提 p 是已经被删除的节点
+                 *  2. 判断 tail 是否已经改变
+                 *      1) tail 已经变化, 则说明 tail 已经重新定位
+                 *      2) tail 未变化, 而 tail 指向的节点是要删除的节点, 所以让 p 指向 head
+                 */
                 p = (t != (t = tail))? t : head;
             }else{
                 // Check for tail update after two hops
@@ -248,13 +251,210 @@ public class KConcurrentLinkedList<E> extends AbstractQueue<E> implements Queue<
         return first() == null;
     }
 
+    /**
+     * Returns the number of the elements in this queue. If this queue
+     * contains more than {@code Integer.MAX_VALUE} elements, returns
+     * {@code Integer.MAX_VALUE}
+     *
+     * <p>
+     *     Beware that, unlike in most collections, this method is
+     *     <em>NOT</em> a constant-time operation. Because of the
+     *     asynchrouns nature of these queue, determining the current
+     *     number of the elements requires an 0(n) traversal
+     *     Additionally, if the elements are added or removed during execution
+     *     of the method, the returned result may be inaccurate. Thus,
+     *     this method is typically not very useful in concurrent
+     *     applications
+     * </p>
+     *
+     * @return the number of the elements in this queue
+     */
     public int size(){
         int count = 0;
         for(Node<E> p =first(); p!=null; p = succ(p)){
-
+            if(p.item != null){
+                // Collection.size() spec says to max out
+                if(++count == Integer.MAX_VALUE){
+                    break;
+                }
+            }
         }
         return count;
     }
+
+    /**
+     * Return {@code true} if this queue contains the specified element.
+     * More formally, return {@code true} if and only if this queue contains
+     * at least one element {@code e} such that {@code o.equels(e)}
+     *
+     * @param o object to be checked for containment in this queue
+     * @return {@code true} if this queue contains the specified element
+     */
+    public boolean contains(Object o){
+        if(o == null) return false;
+        for(Node<E> p = first(); p != null; p = succ(p)){
+            E item = p.item;
+            if(item != null && o.equals(item)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Removes a single instance of the specified element from this queu,
+     * if it is present. More formally, remove an element {@code e} such
+     * that {@code o.equals(e)}, if this queue contains one or more such
+     * elements
+     *
+     * Returns {@code true} if this queue contained the specified element
+     * (or equivalently, if this queue changed as a result of the call)
+     *
+     * @param o element to be removed from this queue, if present
+     * @return {@code} if this queue changed as a result of the call
+     */
+    public boolean remove(Object o){
+       if(o == null) return false;
+        Node<E> pred = null;
+
+        for(Node<E> p = first(); p != null; p = succ(p)){
+            E item = p.item;
+            if(item != null &&
+                    o.equals(item) &&
+                    p.casItem(item, null)
+                    ){
+                Node<E> next = succ(p);
+                if(pred != null && next != null){
+                    pred.casNext(p, next);
+                }
+            }
+            pred = p;
+        }
+
+        return false;
+    }
+
+    public boolean addAll(Collection<? extends E> c){
+        if(c == this){
+            // As historically specified in AbstractQueue#addAll
+            throw new IllegalArgumentException();
+        }
+
+        // Copy c into a private chain of Nodes
+        Node<E> beginningOfTheEnd = null, last = null;
+        for(E e : c){
+            checkNotNull(e);
+            Node<E> newNode = new Node<E>(e);
+            if(beginningOfTheEnd == null){
+                beginningOfTheEnd = last = newNode;
+            }else{
+                last.lazySetNext(newNode);
+                last = newNode;
+            }
+        }
+
+        if(beginningOfTheEnd == null){
+            return false;
+        }
+
+        // Atomically append the chain at the tail of this collection
+        for(Node<E> t = tail, p = t;;){
+            Node<E> q = p.next;
+            if(q == null){
+                // p is last node
+                if(p.casNext(null, beginningOfTheEnd)){
+                    // Successful CAS is the linearization point
+                    // for all elements to be added to this queue.
+                    if(!casTail(t, last)){
+                        // Try a little harder to update tail
+                        // since we may be adding many elements
+                        t = tail;
+                        if(last.next == null){
+                            casTail(t, last);
+                        }
+                    }
+
+                    return true;
+                }
+                // Lost CAS race to another thread; re-read next
+            }
+            else if(p == q){
+                /** We have fallen off list. If tail is unchanged, it
+                 * will also be off-list, iwhich case we need to jump
+                 * to head, from which all live nodes are are always
+                 * reachable. Else the new tail is a better bet
+                 */
+                p = (t != (t = tail)) ? t : head;
+            }else{
+                // Check for tail updates after two hops
+                p = (p != t && t != (t = tail)) ? t : q;
+            }
+        }
+    }
+
+    /**
+     * Returns an array containing all of the elements in this queue, in
+     * proper sequence.
+     *
+     * <p>
+     *     The returned array will be 'safe' in that no references to it are
+     *     maintained by this queue. (In other words, this method must allocate
+     *     a new array). The caller is thus free to modify the returned array
+     *
+     *     This method acts as bridge between array-based and collection-based APIs
+     * </p>
+     *
+     * @return an array containing all of the elements in this queue
+     */
+    public Object[] toArray(){
+        // Use ArrayList to deal with resizing
+        ArrayList<E> al = new ArrayList<E>();
+        for(Node<E> p = first(); p != null; p = succ(p)){
+            E item = p.item;
+            if(item != null){
+                al.add(item);
+            }
+        }
+        return al.toArray();
+    }
+
+
+    /**
+     * Returns an array containing all of the elements in this queue, in
+     * proper sequence; the running type
+     *
+     * @param a
+     * @param <T>
+     * @return
+     */
+    public <T> T[] toArray(T[] a){
+        // try to use sent-in array
+        int k = 0;
+        Node<E> p;
+        for(p = first(); p != null && k < a.length; p = succ(p)){
+            E item = p.item;
+            if(item != null){
+                a[k++] = (T)item;
+            }
+        }
+        if(p == null){
+            if(k < a.length){
+                a[k] = null;
+            }
+            return a;
+        }
+
+        // If won't fit, use ArrayList version
+        ArrayList<E> al = new ArrayList<E>();
+        for(Node<E> q = first(); q != null; q = succ(q)){
+            E item = q.item;
+            if(item != null){
+                al.add(item);
+            }
+        }
+        return al.toArray(a);
+    }
+
 
     @Override
     public Iterator<E> iterator() {
