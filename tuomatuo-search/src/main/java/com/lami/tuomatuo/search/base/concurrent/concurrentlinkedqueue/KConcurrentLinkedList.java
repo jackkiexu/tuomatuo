@@ -421,11 +421,39 @@ public class KConcurrentLinkedList<E> extends AbstractQueue<E> implements Queue<
 
     /**
      * Returns an array containing all of the elements in this queue, in
-     * proper sequence; the running type
+     * proper sequence; the running type of the returned array is that of
+     * the specified array. If the queue fits in the specified array, it
+     * is returned therein. Otherwise, a new array is allocated with the
+     * runtime type of the specified array and the size of this queue
      *
-     * @param a
-     * @param <T>
-     * @return
+     * <p>
+     *     If this queue fits in the specified array with room to space
+     *     (i.e, the array has more elements than this queue), the element in
+     *     the array immediately following the end of the queue is set to
+     *     {@code null}
+     * </p>
+     *
+     * <p>
+     *     Like the {@link #toArray(Object[])} method, this method acts as bridge between
+     *     array-based and collection-based APIs, Futher, this method allows
+     *     precise control over the runtime type of the output array, and may,
+     *     under certain circumstances, be used to save allocation costs
+     * </p>
+     *
+     * <pre> {@code String[] y = x.toArray(new String[0])}</pre>
+     *
+     * Note that {@code toArray(new Object[0])} is identical in fuction to
+     * {@code toArray}
+     *
+     * @param a the array into which the elements of the queue are to
+     *          to stored, if it is big enough; otherwise, a new array of the
+     *          same runtime type is allocated for this purpose
+     *
+     * @return an array containing all of the elements in this queue
+     * @throws ArrayStoreException if the runtime type of the specified array
+     *          is not a supertype of the runtime type of every element in
+     *          this queue
+     * @throws NullPointerException if the specified array is null
      */
     public <T> T[] toArray(T[] a){
         // try to use sent-in array
@@ -455,10 +483,20 @@ public class KConcurrentLinkedList<E> extends AbstractQueue<E> implements Queue<
         return al.toArray(a);
     }
 
-
+    /**
+     * Returns an iterator over the elements in this queue in proper sequence
+     * The elements will be returned in order from first (head) to last (tail)
+     *
+     * <p>
+     *     The returned iterator is
+     *     <a href="package-summary.html#Weakly"> weakly consistent</>
+     * </p>
+     *
+     * @return an iterator over the elements in this queue in proper sequence
+     */
     @Override
     public Iterator<E> iterator() {
-        return null;
+        return new Itr();
     }
 
     /**
@@ -540,7 +578,25 @@ public class KConcurrentLinkedList<E> extends AbstractQueue<E> implements Queue<
             }
 
             for(;;){
-
+                if(p == null){
+                    nextNode = null;
+                    nextItem = null;
+                    return x;
+                }
+                E item = p.item;
+                if(item != null){
+                    nextNode = p;
+                    nextItem = item;
+                    return x;
+                }
+                else{
+                    // skip over nulls
+                    Node<E> next = succ(p);
+                    if(pred != null && next != null){
+                        pred.casNext(p, next);
+                    }
+                    p = next;
+                }
             }
         }
     }
