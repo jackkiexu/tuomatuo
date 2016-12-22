@@ -3,9 +3,15 @@ package com.lami.tuomatuo.search.base.concurrent.concurrentskiplistmap;
 import com.lami.tuomatuo.search.base.concurrent.unsafe.UnSafeClass;
 import sun.misc.Unsafe;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * A scalable concurrent {@link ConcurrentNavigableMap} implementation
@@ -338,6 +344,14 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
      Comparator<? super K> comparator;
 
     /** Lazily initialized key set */
+    private transient KeySet<K> keySet;
+    /** Lazily initialized entry set */
+    private transient EntrySet<K, V> entrySet;
+    /** Lazily initialized values collection */
+    private transient Values<V> values;
+    /** Lazily initialized descending key set */
+    private transient ConcurrentNavigableMap<K, V> descendingMap;
+
 
     @Override
     public ConcurrentNavigableMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
@@ -555,9 +569,135 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
         outer:
         for(;;){
             for(Node<K, V> b = findPredecessor(key, cmp), n = b.next;;){
+                if(n != null){
+                    Object v; int c;
+                    Node<K, V> f = n.next;
+                    if(n != b.next){ // inconsistent read
+                        break ;
+                    }
+                    if((v = n.value) == null){
+                        n.helpDelete(b, f);
+                        break ;
+                    }
 
+                    if(b.value == null || v == n){ // b is deleted
+                        break ;
+                    }
+                    if((c = cpr(cmp, key, n.key)) > 0){
+                        b = n;
+                        n = f;
+                        continue ;
+                    }
+                    if(c == 0){
+                        if(onlyIfAbstsent || n.casValue(v, value)){
+                            V vv = (V) v;
+                            return vv;
+                        }
+                        break ; // restart if lost race to replace value
+                    }
+                    // else c < 0; fall through
+                }
+
+                z = new Node<K, V> (key, value, n);
+                if(!b.casNext(n, z)){
+                    break ; // restart if lost race to append to b
+                }
+                break outer;
             }
         }
+
+        int rnd = ThreadLocalRandom.nextSecondarySeed();
+        if((rnd & 0x80000001) == 0){ // test hightest and lowest bits
+            int level = 1, max;
+            while(((rnd >>>= 1) & 1) != 0){
+                ++level;
+            }
+            Index<K, V> idx = null;
+            HeadIndex<K, V> h = head;
+            if(level <= (max = h.level)){
+                for(int i = 1; i < level; ++i){
+                    idx = new Index<K, V>(z, idx, null);
+                }
+            }
+            else{ // try to grow by one level
+                level = max + 1; // hold in array and later pick the one to use
+                Index<K, V>[] idxs =
+                        (Index<K, V>[])new Index<?, ?>[level + 1];
+                for(int i = 1; i <= level; ++i){
+                    idxs[i] = idx = new Index<K, V>(z, idx, null);
+                }
+                for(;;){
+                    h = head;
+                    int oldLevel = h.level;
+                    if(level <= oldLevel){ // lost race to add level
+                        break;
+                    }
+                    HeadIndex<K, V> newh = h;
+                    Node<K, V> oldbase = h.node;
+                    for(int j = oldLevel+1; j <= level; ++j){
+                        newh = new HeadIndex<K, V>(oldbase, newh, idxs[j], j);
+                    }
+                    if(casHead(h, newh)){
+                        h = newh;
+                        idx = idxs[level = oldLevel];
+                        break;
+                    }
+                }
+            }
+
+            // find insertion points and splice in
+            splice:
+            for(int insertionLevel = level;;){
+                int j = h.level;
+                for(Index<K, V> q = h, r = q.right, t = idx;;){
+                    if(q == null || t == null){
+                        break splice;
+                    }
+                    if(r != null){
+                        Node<K, V> n = r.node;
+                        // compare before deletion check avoids needing recheck
+                        int c = cpr(cmp, key, n.key);
+                        if(n.value == null){
+                            if(!q.unlink(r)){
+                                break ;
+                            }
+                            r = q.right;
+                            continue ;
+                        }
+
+                        if(c > 0){
+                            q = r;
+                            r = r.right;
+                            continue ;
+                        }
+                    }
+
+                    if(j == insertionLevel){
+                        if(!q.link(r, t)){
+                            break ; // restrt
+                        }
+                        if(t.node.value == null){
+                            findNode(key);
+                            break splice;
+                        }
+                        if(--insertionLevel == 0){
+                            break splice;
+                        }
+                    }
+
+                    if(--j >= insertionLevel && j < level){
+                        t = t.down;
+                    }
+                    q = q.down;
+                    r = q.right;
+
+                }
+            }
+
+        }
+
+
+        return null;
     }
 
     @Override
@@ -758,10 +898,228 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
         return new EntryIterator();
     }
 
+    /* ----------------------- Deletion ------------------------- */
+
+    /**
+     * Main deletion method. Locates node, nulls value, appends a
+     * deletion marker, unlinks predecessor, removes associated index
+     * nodes, and possibly reduces head index level
+     *
+     * Index nodes are cleared out simply by calling findPredecessor.
+     * which unlinks indexes to deleted nodes found along path to key,
+     * which will include the indexes to this node. This is node
+     * unconditionally. We can't check beforehand whether there are
+     * indexes hadn't been inserted yet for this node during initial
+     * search for it, and we'd like to ensure lack of garbage
+     * retention, so must call to be sure
+     *
+     * @param key the key
+     * @param value if non-null, the value that must be
+     *              associated with key
+     * @return the node, or null if not found
+     */
+    final V doRemove(Object key, Object value){
+        if(key == null){
+            throw new NullPointerException();
+        }
+        Comparator<? super K> cmp = comparator;
+        outer:
+        for(;;){
+            for(Node<K, V> b = findPredecessor(key, cmp), n = b.next;;){
+                Object v; int c;
+                if(n == null){
+                    break outer;
+                }
+                Node<K, V> f = n.next;
+                if(n != b.next){ // inconsistent read
+                    break ;
+                }
+                if((v = n.value) == null){ // n is deleted
+                    n.helpDelete(b, f);
+                    break ;
+                }
+
+                if(b.value == null || v == n){ // b is deleted
+                    break ;
+                }
+                if((c = cpr(cmp, key, n.key)) < 0){
+                    break outer;
+                }
+
+                if(c > 0){
+                    b = n;
+                    n = f;
+                    continue ;
+                }
+
+                if(value != null && !value.equals(v)){
+                    break outer;
+                }
+                if(!n.casValue(v, null)){
+                    break ;
+                }
+                if(!n.appendMarker(f) || !b.casNext(n, f)){
+                    findNode(key); // retry via findNode
+                }
+                else{
+                    findPredecessor(key, cmp); // clean index
+                    if(head.right == null){
+                        tryReduceLevel();
+                    }
+                }
+
+                V vv = (V) v;
+                return vv;
+
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * compareAndSet head node
+     */
+    private boolean casHead(HeadIndex<K, V> cmp, HeadIndex<K, V> val){
+        return unsafe.compareAndSwapObject(this, headOffset, cmp, val);
+    }
+
+    /**
+     * Possibly reduce head level if it has no nodes. This method can
+     * (rarely) make mistakes, in which case levels can disappear even
+     * though they are about to contain index nodes. This impatcs
+     * performance, not correctness. To minimize mistakes as well as
+     * to reduce hysteresis, the level is reduced by one only if the
+     * topmost three levels look empty. Also, if the removed level
+     * looks non-empty after CAS, we try to change it back quick
+     * before anyone notices our mistake! (This trick works pretty
+     * well because this method will practically never make mistakes
+     * unless current thread stalls immediately before first CAS, in
+     * which case it is very unlikely to stall again immediately
+     * afterwards, so will recover)
+     *
+     * We put up with all this rather than just let levels grow
+     * because otherwise, even a small map that has undergone a large
+     * number of insertions and removals will have a lot of levels
+     * slowing down access more than would an occasional unwanted
+     * reduction
+     *
+     */
+    private void tryReduceLevel(){
+        HeadIndex<K, V> h = head;
+        HeadIndex<K, V> d;
+        HeadIndex<K, V> e;
+        if(h.level > 3 &&
+                (d = (HeadIndex<K, V>)h.down) != null &&
+                (e = (HeadIndex<K, V>)d.down) != null &&
+                e.right == null &&
+                d.right == null &&
+                h.right == null &&
+                casHead(h, d) && // try to set
+                h.right == null
+                ){
+            casHead(d, h); // try to backout
+        }
+    }
+
+
+    /* ------------------- Finding and removing first element ----------------- */
+
+    /**
+     * Specified variant of findNode to get first valid node.
+     * @return first node or null if empty
+     */
+    final Node<K, V> findFirst(){
+        for(Node<K, V> b, n;;){
+            if((n = (b = head.node).next) == null){
+                return null;
+            }
+            if(n.value != null){
+                return n;
+            }
+            n.helpDelete(b, n.next);
+        }
+    }
+
+    /**
+     * Clears out index nodes associated with deleted first entry
+     */
+    private void clearIndexToFirst(){
+        for(;;){
+            for(Index<K, V> q = head;;){
+                Index<K, V> r = q.right;
+                if(r != null && r.indexesDeletedNode() && !q.unlink(r)){
+                    break;
+                }
+                if((q = q.down) == null){
+                    tryReduceLevel();
+                }
+                return;
+            }
+        }
+    }
+
+    /**
+     * Removes first entry; returns its snapshots
+     * @return null if empty, else snapshot of first entry
+     */
+    private Map.Entry<K, V> doRemoveFirstEntry(){
+        for(Node<K, V> b, n;;){
+            if((n = (b = head.node).next) == null){
+                return null;
+            }
+            Node<K, V> f = n.next;
+            if(n != b.next){
+                continue;
+            }
+            Object v = n.value;
+            if(v == null){
+                n.helpDelete(b, f);
+                continue;
+            }
+            if(!n.casValue(v, null)){
+                continue;
+            }
+            if(!n.appendMarker(f) || !b.casNext(n, f)){
+                findFirst();
+            }
+            clearIndexToFirst();
+            V vv = (V) v;
+            return new AbstractMap.SimpleImmutableEntry<K, V>(n.key, vv);
+        }
+    }
+
+
+
     /* ----------------------------- Serialization ------------------ */
     /**
      * Saves this map to a stream (that is, serializes it ).
      */
+
+    /**
+     *
+     * @param s the stream
+     * @throws IOException if an I/O error occurs
+     * @serialData The key (Object) and value (Object) for each
+     * key-value mapping represented by the mappings are emitted in kay-order
+     * (as determined by the Comparator, or by the key's natural
+     * ordering if no Comparator)
+     */
+    private void writeObject(ObjectOutputStream s) throws IOException{
+        // Write out the Comparator and any hidden stuff
+        s.defaultWriteObject();
+
+        // Write out keys and values (alternating)
+
+        for(Node<K, V> n = findFirst(); n != null; n = n.next){
+            V v = n.getValidValue();
+            if(v != null){
+                s.writeObject(n.key);
+                s.writeObject(v);
+            }
+        }
+        s.writeObject(null);
+    }
 
 
 
@@ -933,8 +1291,207 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
             }
             return null;
         }
+    }
+
+    /**
+     * 
+     * @param <K>
+     * @param <V>
+     */
+    static final class SubMap<K, V> extends AbstractMap<K, V> implements ConcurrentNavigableMap<K, V>, Cloneable, Serializable{
+
+        @Override
+        public Set<Entry<K, V>> entrySet() {
+            return null;
+        }
+
+        @Override
+        public ConcurrentNavigableMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
+            return null;
+        }
+
+        @Override
+        public ConcurrentNavigableMap<K, V> headMap(K toKey, boolean inclusive) {
+            return null;
+        }
+
+        @Override
+        public ConcurrentNavigableMap<K, V> tailMap(K fromKey, boolean inclusive) {
+            return null;
+        }
+
+        @Override
+        public Comparator<? super K> comparator() {
+            return null;
+        }
+
+        @Override
+        public ConcurrentNavigableMap<K, V> subMap(K fromKey, K toKey) {
+            return null;
+        }
+
+        @Override
+        public ConcurrentNavigableMap<K, V> headMap(K toKey) {
+            return null;
+        }
+
+        @Override
+        public ConcurrentNavigableMap<K, V> tailMap(K fromKey) {
+            return null;
+        }
+
+        @Override
+        public K firstKey() {
+            return null;
+        }
+
+        @Override
+        public K lastKey() {
+            return null;
+        }
+
+        @Override
+        public Entry<K, V> lowerEntry(K key) {
+            return null;
+        }
+
+        @Override
+        public K lowerKey(K key) {
+            return null;
+        }
+
+        @Override
+        public Entry<K, V> floorEntry(K key) {
+            return null;
+        }
+
+        @Override
+        public K floorKey(K key) {
+            return null;
+        }
+
+        @Override
+        public Entry<K, V> ceilingEntry(K key) {
+            return null;
+        }
+
+        @Override
+        public K ceilingKey(K key) {
+            return null;
+        }
+
+        @Override
+        public Entry<K, V> higherEntry(K key) {
+            return null;
+        }
+
+        @Override
+        public K higherKey(K key) {
+            return null;
+        }
+
+        @Override
+        public Entry<K, V> firstEntry() {
+            return null;
+        }
+
+        @Override
+        public Entry<K, V> lastEntry() {
+            return null;
+        }
+
+        @Override
+        public Entry<K, V> pollFirstEntry() {
+            return null;
+        }
+
+        @Override
+        public Entry<K, V> pollLastEntry() {
+            return null;
+        }
+
+        @Override
+        public ConcurrentNavigableMap<K, V> descendingMap() {
+            return null;
+        }
+
+        @Override
+        public NavigableSet<K> navigableKeySet() {
+            return null;
+        }
+
+        @Override
+        public NavigableSet<K> descendingKeySet() {
+            return null;
+        }
+
+        @Override
+        public V getOrDefault(Object key, V defaultValue) {
+            return null;
+        }
+
+        @Override
+        public void forEach(BiConsumer<? super K, ? super V> action) {
+
+        }
+
+        @Override
+        public boolean remove(Object key, Object value) {
+            return false;
+        }
+
+        @Override
+        public boolean replace(K key, V oldValue, V newValue) {
+            return false;
+        }
+
+        @Override
+        public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+
+        }
+
+        @Override
+        public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+            return null;
+        }
+
+        @Override
+        public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+            return null;
+        }
+
+        @Override
+        public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+            return null;
+        }
+
+        @Override
+        public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+            return null;
+        }
+    }
 
 
+    static final class EntrySet<K1, V1> extends AbstractSet<Map.Entry<K1, V1>>{
+        final ConcurrentNavigableMap<K1, V1> m;
+
+        public EntrySet(ConcurrentNavigableMap<K1, V1> m) {
+            this.m = m;
+        }
+
+        @Override
+        public Iterator<Entry<K1, V1>> iterator() {
+            if(m instanceof KConcurrentSkipListMap){
+                return ((KConcurrentSkipListMap<K1, V1>)m).entryIterator();
+            }else{
+                return ((SubMap<K1, V1>)m).entryIterator();
+            }
+        }
+
+        @Override
+        public int size() {
+            return 0;
+        }
     }
 
 
