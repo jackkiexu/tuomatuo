@@ -5,6 +5,7 @@ import sun.misc.Unsafe;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
  * A scalable concurrent {@link ConcurrentNavigableMap} implementation
@@ -46,7 +47,7 @@ import java.util.concurrent.ConcurrentNavigableMap;
  * <p>
  *     Beware that, unlike in most collections, the {@code size}
  *     method is <em>not</em> a constant-time operation, Because of the
- *     asynchrounous nature of these maps, determining the current number
+ *     asynchronous nature of these maps, determining the current number
  *     of the elements requires a traversal of the elements, and so may report
  *     inaccurate results, if this collection is modified during traversal
  *     Additionally, the bulk operations {@code putAll}, {@code equals},
@@ -60,7 +61,7 @@ import java.util.concurrent.ConcurrentNavigableMap;
  *     This class and its views and iterators implement all of the
  *     <em>optional</em> methods of the {@link Map} and {@link Iterator}
  *     interface. Like most other concurrent collections, this class does
- *     <em>mot</em> permit the use of {@code null} keys or values because some
+ *     <em>not</em> permit the use of {@code null} keys or values because some
  *     null return values cannot be reliably distinguished from the absence of
  *     elements.
  * </p>
@@ -75,6 +76,247 @@ import java.util.concurrent.ConcurrentNavigableMap;
  * Created by xujiankang on 2016/12/21.
  */
 public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V>, Cloneable, java.io.Serializable {
+
+    /**
+     * This class implements a tree-like two dimensionally linked skip
+     * list in which the index levels are represented in separate
+     * nodes from the base nodes holding data. There are two reasons
+     * for taking this approach instead of the usual array-based
+     * structure:
+     * 1) Array based implementations seem to encounter
+     * more complexity and overhead
+     * 2) We can use cheaper algorithms for the heavily-traversed index lists than can be used for the
+     * base lists.
+     * Here's picture of some of the basics for a possible list with 2 levels of index
+     *
+     * Head nodes          Index nodes
+     * +-+    right        +-+                      +-+
+     * |2|---------------->| |--------------------->| |->null
+     * +-+                 +-+                      +-+
+     *  | down              |                        |
+     *  v                   v                        v
+     * +-+            +-+  +-+       +-+            +-+       +-+
+     * |1|----------->| |->| |------>| |----------->| |------>| |->null
+     * +-+            +-+  +-+       +-+            +-+       +-+
+     *  v              |    |         |              |         |
+     * Nodes  next     v    v         v              v         v
+     * +-+  +-+  +-+  +-+  +-+  +-+  +-+  +-+  +-+  +-+  +-+  +-+
+     * | |->|A|->|B|->|C|->|D|->|E|->|F|->|G|->|H|->|I|->|J|->|K|->null
+     * +-+  +-+  +-+  +-+  +-+  +-+  +-+  +-+  +-+  +-+  +-+  +-+
+     *
+     * The base lists use a variant of the HM linked ordered set
+     * algorithm. See Tim Harris, "A pragmatic implementation of
+     * non-blocking linked lists"
+     *
+     * http://wwwcl.cam.ac.uk/~tlh20/publications.html and maged
+     * Michael "High Performance Dynamic Lock-Free Hash Tables and
+     * List-Based Sets"
+     *
+     * http://www.research.ibm.com/people/m/michael/pubs.htm. The
+     * basic idea in there lists is to mark the "next" pointers of
+     * deleted nodes when deleting t oavoid conflicts with concurrent
+     * insertions, and when traversion to keep track of triples
+     * (predecessor, node, succor) in order to detect when and how
+     * to unlink these deleted nodes
+     *
+     * Rather than using mark-bits to mark list deletions (which can
+     * be slow and space-intensive using AtomicMarkedReference), nodes
+     * use diect CAS's able next pointers. On deletion, instead of
+     * marking a pointer, they splice in another node that can be
+     * thought of as standing for a marked pointer (indicating this by
+     * using otherwise impossible field values Using plain nodes
+     * acts roughly like "boxed" implementations of marked pointers
+     * but uses new nodex only when nodes are deleted, not for every
+     * link. This requires less space and supports faster
+     * traversal. Even if marked references were better supported by
+     * JVMs, traversal using this trchnique might still be faster
+     * because any search need only read ahead one more node than
+     * otherwise required (to check for trailing marker) rather than
+     * unmasking mark bits or whatever on each read
+     *
+     * This approach maintains the essential property needed in the HM
+     * algorithm of changing the next-pointer of a deleted node so
+     * that any other CAS of it will fail, but implements the idea by
+     * changing the pointer to point to a different node, not by
+     * marking it. While it would be possible to further squeeze
+     * space by defining marker nodes not to have key/value fields. it
+     * isn't worth the extra type-testing overhead. The deletion
+     * markers are rarely encountered duringtraversal and are
+     * normally quickly garbage collected. (Note that this technique
+     * would not work well in systems without garbage collection)
+     *
+     * In addition to using deletion marker. the lists also use
+     * nullness of value fields to indicate deletion, in a style
+     * similar to typical lazy-deletion schemes. If a node's value is
+     * null, then it is considered logically deleted and ignored even
+     * though it is still reachable. This maintains proper control of
+     * concurrent replace vs delete operations -- an attempted replace
+     * must fail if a delete beat it by nulling field, and a delete
+     * must return the last non-null value held in the field. (Note:
+     * Null, rather than some special marker, is used for value fields
+     * here because it just so happens to mesh with the Map API
+     * requirement that method get returns null if there is no
+     * mapping, which allows nodes to remain concurrently readable
+     * even when deleted. Using any other marker value here would be
+     * messy at best.)
+     *
+     * Here's the sequence of the events for a deletion of node n with
+     * predecessor b and successor f, initially:
+     *
+     *        +------+       +------+      +------+
+     *   ...  |   b  |------>|   n  |----->|   f  | ...
+     *        +------+       +------+      +------+
+     * 1. CAS n's value field from non-null to null
+     *    from this point on, no public operations encountering
+     *    the node consider this mapping to exist. However. other
+     *    ongoing insertions and deletion might still modify
+     *    n's next pointer
+     *
+     * 2.CAS n's next pointer to point to a new marker node.
+     *   From this point on, no other nodes can be appended to
+     *   n, which avoids deletion errors in CAS-based linked lists.
+     *
+     *        +------+       +------+      +------+       +------+
+     *   ...  |   b  |------>|   n  |----->|marker|------>|   f  | ...
+     *        +------+       +------+      +------+       +------+
+     *
+     * 3. CAS b's next pointer over both a and its marker
+     *    From this point on , on new traversals will encounter n,
+     *    and it can eventually be GCed
+     *        +------+                                    +------+
+     *   ...  |   b  |----------------------------------->|   f  | ...
+     *        +------+                                    +------+
+     * A failure at step a leads to simple retry due to a lost race
+     * with another operation. Step 2-3 can fail because some other
+     * thread noticed during a traversal a node with null value and
+     * helped out by marking and/or unlinking. This helping-out
+     * ensures that no thread can become stuck waiting for progress of
+     * the deleting thread. The use of marker nodes slightly
+     * complicate help-out code because traversals must track
+     * consistent reads of up to four nodes (b, n, marker, f), not
+     * just (b, n, f), although the next field of a marker is
+     * immutable, and once a next field is CAS'ed to point to a
+     * marker, it never again changes, so this requires less care
+     *
+     * Skip lists add indexing to this scheme, so that the base-level
+     * traversal start close to the locations being found, inserted
+     * or deleted -- usually base level traversals only traverse a few
+     * nodes. This doesn't change the basic algorithm except for the
+     * need to make sure base traversals start at predecessors (here,
+     * b) that are not (structurally) deleted, otherwise retrying
+     * after processing the deletion
+     *
+     * Index levels are maintained as lists with volatile next fields,
+     * using CAS to link and unlink. Races are allowed in index-list
+     * operations that can (rarely) fail to link in a new index node
+     * or delete one. (We can't do this of course for data nodes)
+     * However, even when this happens, the index lists remain sorted,
+     * so correctly serve as indices. This can impact performance,
+     * but since skip lists are probabilistic anyway, that net result
+     * is that under contention, the effective "p" value may be lower
+     * than its nominal value. And race windows are kept smalll enough
+     * that in practice these failure are rare. even under a lot of
+     * contention.
+     *
+     * The fact that retries (for both base and index lists) are
+     * relatively cheap due to indexing allows some minor
+     * simplification of retry logic. Traversal restart are
+     * performed after most "helping-out" CASes. This isn't always
+     * strictly necessary. but the implicit backoffs tend to help
+     * reduce other downstream failed CAS's enough to outweigh restart
+     * cost. This worsens the worst case, but seems to improve even
+     * highly contended case.
+     *
+     * Unlike most skip-list implementations, index insertion and
+     * deletion here require a separate traversal pass occuring after
+     * the base-level action, to add or remove index nodes. This adds
+     * to single-thread overhead, but improves contented
+     * multithreaded performance by narrowing interference windows,
+     * and allows deletion to ensure that all index nodes will be made
+     * unreachable upon return from a publi remove operation, thus
+     * avoiding unwanted garbage retention. This is more inportant
+     * here than in some other data structures because we cannot null
+     * out node fields referencing user keys since they might still be
+     * read by other ongoing traversals
+     *
+     * Indexing uses skip list parameters that maintain good search
+     * performance while using sparser-than-usual indices: The
+     * hardwired parameters k=1, p=0.5 (see method doPut) mean
+     * that about one-quarter of the nodes have indices. Of those that
+     * do, half have one level, a quarter have two, and so on (see
+     * Pugh's Skip List Cookbook, sec 3.4 ). The expected total space
+     * requirement for a map is slightly less than for the current
+     * implementation of java.util.TreeMap
+     *
+     * Changing the level of the index (i.e, the height of the tree-like
+     * structures) also uses CAS. The head index has initial
+     * level/height of one , Creation of an index with height greater
+     * than the current level adds a level to the head index by
+     * CAS'ing on a new top-most head. To maintain good performance
+     * afetr a lot of removals, deletion methods heuristically try to
+     * reduce the height if the topmost levelsappear to be empty
+     * This may encounter races in which it possible (but race) to
+     * reduce and "lose" a level just as it is about to contain an
+     * index (that will than never be encountered). This does no
+     * structural harm, and in practice appears to be a better option
+     * than allowing unrestrained groth of levels
+     *
+     * The code for all this is more verbose than you'd like. Most
+     * operation entail locating an element (or position to insert an
+     * element). The code to do this can't be nicely factored out
+     * because subsequent and/or value fields which can't be returned
+     * all at once, at least not without creating yet another object
+     * to hold them -- creating such little objects is an especially
+     * bad idea for basic internal search operations because it adds
+     * to GC overhead. (This is one of the few times I've wished Java
+     * had macros) Instead, some traversal code is interleaved within
+     * insertion and removal operations. The control logic to handle
+     * all retry conditions is sometimes twisty. Most search is
+     * broken into 2 parts. findPredecessor() searches index nodes
+     * only, returning a base-level predecessor of the key. findNode()
+     * finishes out the base-level search. Even with this factoring
+     * there is a fair amount of near-duplication of code to handle
+     * variants
+     *
+     * To produce random values without interface across threads
+     * we use within-JDK thread local random support (via the
+     * "secondary seed", to avoid interference with user-level
+     * ThreadLocalRandom)
+     *
+     * A previous version of this class wrapped non-comparable keys
+     * with their comparators to emulate Comparables when using
+     * comparators vs Comparables. However, JVMs now appear to better
+     * handle infusing comparator-vs-comparable choice into search
+     * loops. Static method cpr (comparator, x, y) is used for all
+     * comparsions, which woeks well as long as the comparator
+     * argument is set up outside of loops (thus sometimes passed as
+     * an argument to internal methods) to avoid field re-reads
+     *
+     * For explanation of algorithms sharing at least a couple of
+     * features with this one, see Mikhail Fomitchev's thesis
+     * (http://www.cs.yorku.ca/~mikhail/), Keir Fraser's thesis
+     * (http://www.cl.cam.ac.uk/users/kaf24/), and Hakan Sundell's
+     * thesis (http://www.cs.chalmers.se/phs/)
+     *
+     * Given the use of tree-like index nodes, you might wonder why
+     * this doesn't use some kind of search tree instead, which would
+     * support somewhat faster search operations, The reason is that
+     * there are no known efficient lock-free insertion and deletion
+     * algorithms for search trees. The immutability of the "down"
+     * links of the index nodes (as opposed to mutable "left" fields in
+     * true trees) makes this tractable using only CAS operations
+     *
+     * Notation guide for local variables
+     * Node:        b, n, f     for predecessor, node, successor
+     * Index:       q, r, d     for another node, right, down
+     *              t           for another index node
+     * Head:        n
+     * Levels:      j
+     * Keys:        k, key
+     * Values:      v, value
+     * Comparisons: c
+     *
+     */
 
     private static final long serialVersionUID = -8627078645895051609L;
 
@@ -110,6 +352,212 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
     @Override
     public ConcurrentNavigableMap<K, V> tailMap(K fromKey, boolean inclusive) {
         return null;
+    }
+
+    /* ------------------------------------ Comparison utilities ------------------------------- */
+
+    /**
+     * Compares using comparator or natural ordering if null
+     * Called only by methods that have performed required type checks
+     */
+    static final int cpr(Comparator c, Object x, Object y){
+        return (c != null) ? c.compare(x, y) : ((Comparable)x).compareTo(y);
+    }
+
+
+    /* ------------------------------------ Traversal ------------------------------------------ */
+
+    /**
+     * Returns a base-level node with key strictly less than given key,
+     * or the base-level header if there is no such node. Also
+     * unlinks indexes to deleted nodes found along the way. Callers
+     * rely on this side-effect of clearing indices to deleted nodes
+     * @param key the key
+     * @return a predecessor of the key
+     */
+    private Node<K, V> findPredecessor(Object key, Comparator<? super K> cmp){
+        if(key == null)
+            throw new NullPointerException(); // don't postpone errors
+        for(;;){
+            for(Index<K, V> q = head, r = q.right, d;;){
+                if(r != null){
+                    Node<K, V> n = r.node;
+                    K k = n.key;
+                    if(n.value == null){
+                        if(!q.unlink(r)){
+                            break; // restart
+                        }
+                        r = q.right; //reread r
+                        continue;
+                    }
+
+                    if(cpr(cmp, key, k) > 0){
+                        q = r;
+                        r = r.right;
+                        continue;
+                    }
+                }
+
+                if((d = q.down) == null){
+                    return q.node;
+                }
+
+                q = d;
+                r = d.right;
+            }
+        }
+    }
+
+    /**
+     * Returns node holding key or null if no such, clearing out any
+     * deleted nodes seen along the way. Repeatedly traverses at
+     * base-level looking for key staring at predecessor returned
+     * from findPredecessor, processing base-level deletions as
+     * encountered. Some callers rely on this side-effect of clearing
+     * deleted nodes
+     *
+     * Restarts occur, at traversal step centered on node n, if:
+     *
+     *  (1) After reading n's next field, n is no longer assumed
+     *      predecessor b's current successor, which means that
+     *      we don't have a consistent 3-node snapshot and so cannot
+     *      unlink any subsequent deleted nodes encountered
+     *
+     *  (2) n's value field is null, indicating n is deleted, in
+     *      which case we help out an ongoing structural deletion
+     *      before retrying. Event though there are cases where such
+     *      unlinking doesn't require restart, they aren't sorted out
+     *      here because doing so would not usually outweight cost of
+     *      restarting
+     *
+     *  (3) n is a marker or n's predecessor's value field is null,
+     *      indicating (among other possibilities) that
+     *      findPredecessor returned a deleted node. We can't unlink
+     *      the node because we don't know its predecessor, so rely
+     *      on another call to findPredecessor to notice and return
+     *      some earlier predecessor, which is will do. this check is
+     *      only strictly needed at begining of loop. (and the
+     *      b.value check isn't strictly needed at all) but is done
+     *      each iteration to help avoid contention with other
+     *      threads by callers that will fail to be able to change
+     *      links, and so will retry anyway
+     *
+     *  The traversal loops in doPost, doRemove, and findNear all
+     *  include the same three kinds of checks, And specialized
+     *  versions appear in findFirst, and findLast and their
+     *  variants. They can't easily share code because each uses the
+     *  reads of fields held in locals occurring in the orders they
+     *  were performed
+     *
+     * @param key the key
+     * @return node holding key, or null if no such
+     */
+    private Node<K, V> findNode(Object key){
+        if(key == null){
+            throw new NullPointerException(); // don't postpone errors
+        }
+
+        Comparator<? super K> cmp = comparator;
+        outer:
+        for(;;){
+            for(Node<K, V> b = findPredecessor(key, cmp), n = b.next;;){
+                Object v; int c;
+                if(n == null){
+                    break outer;
+                }
+                Node<K, V> f = n.next;
+                if(n != b.next){ // inconsistent read
+                    break ;
+                }
+                if((v = n.value) == null){ // n is deleted
+                    n.helpDelete(b, f);
+                    break ;
+                }
+                if(b.value == null || v == n){ // b is deleted
+                    break ;
+                }
+                if((c = cpr(cmp, key, n.key)) == 0){
+                    return n;
+                }
+                if(c < 0){
+                    break outer;
+                }
+                b = n;
+                n = f;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets value for key. Almost the same as findNode, but returns
+     * the found value (to avoid retires during ret-reads)
+     *
+     * @param key the key
+     * @return the value, or null if absent
+     */
+    private V doGet(Object key){
+        if(key == null){
+            throw new NullPointerException();
+        }
+        Comparator<? super K> cmp = comparator;
+        outer:
+        for(;;){
+            for(Node<K, V> b = findPredecessor(key, cmp), n = b.next;;){
+                Object v; int c;
+                if(n == null){
+                    break outer;
+                }
+                Node<K, V> f = n.next;
+                if(n != b.next){ // inconsistent read
+                    break ;
+                }
+                if((v = n.value) == null){ // n is deleted
+                    n.helpDelete(b, f);
+                    break ;
+                }
+                if(b.value == null || v == n){ // b is deleted
+                    break ;
+                }
+                if((c = cpr(cmp, key, n.key)) == 0){
+                    V vv = (V) v;
+                    return vv;
+                }
+                if(c < 0){
+                    break outer;
+                }
+                b = n;
+                n = f;
+            }
+        }
+
+        return null;
+    }
+
+    /* ------------------------------------- Insertion ----------------------------------------- */
+
+    /**
+     * Main insetion method. Adds element if not present, or
+     * replaces value if present and onlyIfAbsent is false.
+     *
+     * @param key the key
+     * @param value the values that must be associated with key
+     * @param onlyIfAbstsent if should not insert if already present
+     * @return the old value, or null if newly inserted
+     */
+    private V doPut(K key, V value, boolean onlyIfAbstsent){
+        Node<K, V> z; // adde node
+        if(key == null){
+            throw new NullPointerException();
+        }
+        Comparator<? super K> cmp = comparator;
+        outer:
+        for(;;){
+            for(Node<K, V> b = findPredecessor(key, cmp), n = b.next;;){
+
+            }
+        }
     }
 
     @Override
@@ -297,6 +745,19 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
         return null;
     }
 
+    // Factory methods for iterators need by KConcurrentSkipListSet etc
+    Iterator<V> keyIterator(){
+        return null;
+    }
+
+    Iterator<V> valueIterator(){
+        return new ValueIterator();
+    }
+
+    Iterator<Map.Entry<K, V>> entryIterator(){
+        return new EntryIterator();
+    }
+
     /* ----------------------------- Serialization ------------------ */
     /**
      * Saves this map to a stream (that is, serializes it ).
@@ -366,6 +827,31 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
 
     }
 
+    final class ValueIterator extends Iter<V>{
+        public V next(){
+            V v = nextValue;
+            advance();
+            return v;
+        }
+    }
+
+    final class KeyIterator extends Iter<K>{
+        public K next(){
+            Node<K, V> n = next;
+            advance();
+            return n.key;
+        }
+    }
+
+    final class EntryIterator extends Iter<Map.Entry<K, V>>{
+        public Map.Entry<K, V> next(){
+            Node<K, V> n = next;
+            V v = nextValue;
+            advance();
+            return new AbstractMap.SimpleImmutableEntry<K, V>(n.key, v);
+        }
+    }
+
     /**
      * Nodes heading each level keep track of their level
      */
@@ -385,6 +871,72 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
             this.level = level;
         }
     }
+    /* ----------------------------- View Classes ------------------- */
+    /**
+     * View classes are static, delegating to a ConcurrentNavigableMap
+     * to allow use by SubMaps, which outweighs the ugliness of
+     * needing type-tests for Iterator methods
+     */
+
+    static final <E> List<E> toList(Collection<E> c){
+        // Using size() here would be a pessimization
+        ArrayList<E> list = new ArrayList<E>();
+        for(E e : c){
+            list.add(e);
+        }
+        return list;
+    }
+
+    static final class KeySet<E> extends AbstractSet<E> implements NavigableSet<E>{
+        final ConcurrentNavigableMap<E, ?> m;
+        KeySet(ConcurrentNavigableMap<E, ?> map) { m = map; }
+        public int size() { return m.size(); }
+        public boolean isEmpty() { return m.isEmpty(); }
+        public boolean contains(Object o) { return m.containsKey(o); }
+        public boolean remove(Object o) { return m.remove(o) != null; }
+        public void clear(){
+            m.clear();
+        }
+        public E lower(E e){
+            return m.lowerKey(e);
+        }
+
+        public E floor(E e){
+            return m.floorKey(e);
+        }
+
+        public E ceiling(E e){
+            return m.ceilingKey(e);
+        }
+
+        public E higher(E e){
+            return m.higherKey(e);
+        }
+
+        public Comparator<? super E> comparator(){
+            return m.comparator();
+        }
+
+        public E pollFirst(){
+            Map.Entry<E, ?> e = m.pollFirstEntry();
+            return (e == null) ? null : e.getKey();
+        }
+
+        public E pollLast(){
+            Map.Entry<E, ?> e = m.pollLastEntry();
+            return (e == null)? null : e.getKey();
+        }
+
+        public Iterator<E> iterator(){
+            if(m instanceof KConcurrentSkipListMap){
+                return ((KConcurrentSkipListMap<E, Object>)m).keyIterator();
+            }
+            return null;
+        }
+
+
+    }
+
 
     /* ----------------------------- Indexing ----------------------- */
 
