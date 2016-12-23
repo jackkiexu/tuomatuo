@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -886,7 +887,7 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
     }
 
     // Factory methods for iterators need by KConcurrentSkipListSet etc
-    Iterator<V> keyIterator(){
+    Iterator<K> keyIterator() {
         return null;
     }
 
@@ -978,6 +979,24 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
     }
 
     /**
+     * Compares using comparator or natural ordering. Used when the
+     * ComparableUsingComparator approach doesn't apply
+     *
+     * @param k1
+     * @param k2
+     * @return
+     * @throws ClassCastException
+     */
+    int compare(K k1, K k2) throws ClassCastException{
+        Comparator<? super K> cmp = comparator;
+        if(cmp != null){
+            return cmp.compare(k1, k2);
+        }else{
+            return ((Comparable<? super K>) k1).compareTo(k2);
+        }
+    }
+
+    /**
      * compareAndSet head node
      */
     private boolean casHead(HeadIndex<K, V> cmp, HeadIndex<K, V> val){
@@ -1022,6 +1041,19 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
         }
     }
 
+
+    // factory method for KeySpliterator
+    final KeySpliterator<K,V> keySpliterator() {
+        Comparator<? super K> cmp = comparator;
+        for (;;) { // ensure h corresponds to origin p
+            HeadIndex<K,V> h; Node<K,V> p;
+            Node<K,V> b = (h = head).node;
+            if ((p = b.next) == null || p.value != null)
+                return new KeySpliterator<K,V>(cmp, h, p, null, (p == null) ?
+                        0 : Integer.MAX_VALUE);
+            p.helpDelete(b, p.next);
+        }
+    }
 
     /* ------------------- Finding and removing first element ----------------- */
 
@@ -1122,6 +1154,114 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
     }
 
 
+    /**
+     * Base class providing common structure for Spliterators.
+     * (Although not all that much common functionality; as usual for
+     * view classes, details annoyingly vary in key, value, and entry
+     * subclasses in ways that are not worth abstracting out for
+     * internal classes.)
+     *
+     * The basic split strategy is to recursively descend from top
+     * level, row by row, descending to next row when either split
+     * off, or the end of row is encountered. Control of the number of
+     * splits relies on some statistical estimation: The expected
+     * remaining number of elements of a skip list when advancing
+     * either across or down decreases by about 25%. To make this
+     * observation useful, we need to know initial size, which we
+     * don't. But we can just use Integer.MAX_VALUE so that we
+     * don't prematurely zero out while splitting.
+     */
+    abstract static class CSLMSpliterator<K,V> {
+        final Comparator<? super K> comparator;
+        final K fence;     // exclusive upper bound for keys, or null if to end
+        Index<K,V> row;    // the level to split out
+        Node<K,V> current; // current traversal node; initialize at origin
+        int est;           // pseudo-size estimate
+        CSLMSpliterator(Comparator<? super K> comparator, Index<K,V> row,
+                        Node<K,V> origin, K fence, int est) {
+            this.comparator = comparator; this.row = row;
+            this.current = origin; this.fence = fence; this.est = est;
+        }
+
+        public final long estimateSize() { return (long)est; }
+    }
+
+
+    static final class KeySpliterator<K,V> extends CSLMSpliterator<K,V>
+            implements Spliterator<K> {
+        KeySpliterator(Comparator<? super K> comparator, Index<K,V> row,
+                       Node<K,V> origin, K fence, int est) {
+            super(comparator, row, origin, fence, est);
+        }
+
+        public Spliterator<K> trySplit() {
+            Node<K,V> e; K ek;
+            Comparator<? super K> cmp = comparator;
+            K f = fence;
+            if ((e = current) != null && (ek = e.key) != null) {
+                for (Index<K,V> q = row; q != null; q = row = q.down) {
+                    Index<K,V> s; Node<K,V> b, n; K sk;
+                    if ((s = q.right) != null && (b = s.node) != null &&
+                            (n = b.next) != null && n.value != null &&
+                            (sk = n.key) != null && cpr(cmp, sk, ek) > 0 &&
+                            (f == null || cpr(cmp, sk, f) < 0)) {
+                        current = n;
+                        Index<K,V> r = q.down;
+                        row = (s.right != null) ? s : s.down;
+                        est -= est >>> 2;
+                        return new KeySpliterator<K,V>(cmp, r, e, sk, est);
+                    }
+                }
+            }
+            return null;
+        }
+
+        public void forEachRemaining(Consumer<? super K> action) {
+            if (action == null) throw new NullPointerException();
+            Comparator<? super K> cmp = comparator;
+            K f = fence;
+            Node<K,V> e = current;
+            current = null;
+            for (; e != null; e = e.next) {
+                K k; Object v;
+                if ((k = e.key) != null && f != null && cpr(cmp, f, k) <= 0)
+                    break;
+                if ((v = e.value) != null && v != e)
+                    action.accept(k);
+            }
+        }
+
+        public boolean tryAdvance(Consumer<? super K> action) {
+            if (action == null) throw new NullPointerException();
+            Comparator<? super K> cmp = comparator;
+            K f = fence;
+            Node<K,V> e = current;
+            for (; e != null; e = e.next) {
+                K k; Object v;
+                if ((k = e.key) != null && f != null && cpr(cmp, f, k) <= 0) {
+                    e = null;
+                    break;
+                }
+                if ((v = e.value) != null && v != e) {
+                    current = e.next;
+                    action.accept(k);
+                    return true;
+                }
+            }
+            current = e;
+            return false;
+        }
+
+        public int characteristics() {
+            return Spliterator.DISTINCT | Spliterator.SORTED |
+                    Spliterator.ORDERED | Spliterator.CONCURRENT |
+                    Spliterator.NONNULL;
+        }
+
+        public final Comparator<? super K> getComparator() {
+            return comparator;
+        }
+    }
 
 
     /* ----------------------------- Iterators ---------------------- */
@@ -1185,6 +1325,100 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
 
     }
 
+
+    /** -------------------------- Releational operations --------------------- */
+    // Control values OR's ed as arguments to findNear
+    private static final int EQ = 1;
+    private static final int LT = 2;
+    private static final int GT = 0; // Actually checked as LT
+
+    Node<K, V> findNear(K key, int rel, Comparator<? super K> cmp){
+        if(key == null){
+            throw new NullPointerException();
+        }
+        for(;;){
+           for(Node<K, V> b = findPredecessor(key, cmp), n = b.next;;){
+                Object v;
+               if(n == null){
+                   return ((rel & LT) == 0 || b.isBaseHeader())? null : b;
+               }
+
+               Node<K, V> f = n.next;
+               if(n != b.next){ // inconsistent read
+                   break;
+               }
+               if((v = n.value) == null){ // n is deleted
+                   n.helpDelete(b ,f);
+                   break;
+               }
+               if(b.value == null || v == n){ // b is deleted
+                   break;
+               }
+               int c = cpr(cmp, key, n.key);
+               if((c == 0 && (rel & EQ) != 0 )||
+                       (c < 0 && (rel & LT) == 0)
+                       ){
+                   return n;
+               }
+               if(c <= 0 && (rel & LT) != 0){
+                   return b.isBaseHeader()? null : b;
+               }
+               b = n;
+               n = f;
+           }
+        }
+    }
+
+    /**
+     * Specified version of find to get last valid node.
+     *
+     * @return last node or null if empty
+     */
+    final Node<K, V> findLast(){
+        /**
+         * findPredecessor can't be used to traverse index level
+         * because this doesn't use comparisons, So traversals of
+         * both levels are folded together
+         */
+
+        Index<K ,V> q = head;
+        for(;;){
+            Index<K, V> d, r;
+            if((r = q.right) != null){
+                if(r.indexesDeletedNode()){
+                    q.unlink(r);
+                    q = head; // restart
+                }
+                else
+                    q = r;
+            }
+            else if((d = q.down) != null){
+                q = d;
+            }else {
+                for(Node<K, V> b = q.node, n = b.next;;){
+                    if(n == null){
+                        return b.isBaseHeader()? null : b;
+                    }
+                    Node<K, V> f = n.next; // inconsistent read
+                    if(n != b.next){
+                        break;
+                    }
+                    Object v = n.value;
+                    if(v == null){ // n is deleted
+                        n.helpDelete(b, f);
+                        break;
+                    }
+                    if(b.value == null || v == n){ // b is deleted
+                        break;
+                    }
+                    b = n;
+                    n = f;
+                }
+                q = head; // restart
+            }
+        }
+    }
+
     final class ValueIterator extends Iter<V>{
         public V next(){
             V v = nextValue;
@@ -1245,229 +1479,774 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
         return list;
     }
 
-    static final class KeySet<E> extends AbstractSet<E> implements NavigableSet<E>{
-        final ConcurrentNavigableMap<E, ?> m;
-        KeySet(ConcurrentNavigableMap<E, ?> map) { m = map; }
+    static final class KeySet<E>
+            extends AbstractSet<E> implements NavigableSet<E> {
+        final ConcurrentNavigableMap<E,?> m;
+        KeySet(ConcurrentNavigableMap<E,?> map) { m = map; }
         public int size() { return m.size(); }
         public boolean isEmpty() { return m.isEmpty(); }
         public boolean contains(Object o) { return m.containsKey(o); }
         public boolean remove(Object o) { return m.remove(o) != null; }
-        public void clear(){
-            m.clear();
-        }
-        public E lower(E e){
-            return m.lowerKey(e);
-        }
-
-        public E floor(E e){
-            return m.floorKey(e);
-        }
-
-        public E ceiling(E e){
-            return m.ceilingKey(e);
-        }
-
-        public E higher(E e){
-            return m.higherKey(e);
-        }
-
-        public Comparator<? super E> comparator(){
-            return m.comparator();
-        }
-
-        public E pollFirst(){
-            Map.Entry<E, ?> e = m.pollFirstEntry();
+        public void clear() { m.clear(); }
+        public E lower(E e) { return m.lowerKey(e); }
+        public E floor(E e) { return m.floorKey(e); }
+        public E ceiling(E e) { return m.ceilingKey(e); }
+        public E higher(E e) { return m.higherKey(e); }
+        public Comparator<? super E> comparator() { return m.comparator(); }
+        public E first() { return m.firstKey(); }
+        public E last() { return m.lastKey(); }
+        public E pollFirst() {
+            Map.Entry<E,?> e = m.pollFirstEntry();
             return (e == null) ? null : e.getKey();
         }
-
-        public E pollLast(){
-            Map.Entry<E, ?> e = m.pollLastEntry();
-            return (e == null)? null : e.getKey();
+        public E pollLast() {
+            Map.Entry<E,?> e = m.pollLastEntry();
+            return (e == null) ? null : e.getKey();
         }
-
-        public Iterator<E> iterator(){
-            if(m instanceof KConcurrentSkipListMap){
-                return ((KConcurrentSkipListMap<E, Object>)m).keyIterator();
+        @SuppressWarnings("unchecked")
+        public Iterator<E> iterator() {
+            if (m instanceof ConcurrentSkipListMap)
+                return ((KConcurrentSkipListMap<E,Object>)m).keyIterator();
+            else
+                return ((KConcurrentSkipListMap.SubMap<E,Object>)m).keyIterator();
+        }
+        public boolean equals(Object o) {
+            if (o == this)
+                return true;
+            if (!(o instanceof Set))
+                return false;
+            Collection<?> c = (Collection<?>) o;
+            try {
+                return containsAll(c) && c.containsAll(this);
+            } catch (ClassCastException unused) {
+                return false;
+            } catch (NullPointerException unused) {
+                return false;
             }
-            return null;
+        }
+        public Object[] toArray()     { return toList(this).toArray();  }
+        public <T> T[] toArray(T[] a) { return toList(this).toArray(a); }
+        public Iterator<E> descendingIterator() {
+            return descendingSet().iterator();
+        }
+        public NavigableSet<E> subSet(E fromElement,
+                                      boolean fromInclusive,
+                                      E toElement,
+                                      boolean toInclusive) {
+            return new KeySet<E>(m.subMap(fromElement, fromInclusive,
+                    toElement,   toInclusive));
+        }
+        public NavigableSet<E> headSet(E toElement, boolean inclusive) {
+            return new KeySet<E>(m.headMap(toElement, inclusive));
+        }
+        public NavigableSet<E> tailSet(E fromElement, boolean inclusive) {
+            return new KeySet<E>(m.tailMap(fromElement, inclusive));
+        }
+        public NavigableSet<E> subSet(E fromElement, E toElement) {
+            return subSet(fromElement, true, toElement, false);
+        }
+        public NavigableSet<E> headSet(E toElement) {
+            return headSet(toElement, false);
+        }
+        public NavigableSet<E> tailSet(E fromElement) {
+            return tailSet(fromElement, true);
+        }
+        public NavigableSet<E> descendingSet() {
+            return new KeySet<E>(m.descendingMap());
+        }
+        @SuppressWarnings("unchecked")
+        public Spliterator<E> spliterator() {
+            if (m instanceof ConcurrentSkipListMap)
+                return ((KConcurrentSkipListMap<E,?>)m).keySpliterator();
+            else
+                return (Spliterator<E>)((SubMap<E,?>)m).keyIterator();
         }
     }
 
+
     /**
+     * Submaps returned by {@link ConcurrentSkipListMap} submap operations
+     * represent a subrange of mappings of their underlying
+     * maps. Instances of this class support all methods of their
+     * underlying maps, differing in that mappings outside their range are
+     * ignored, and attempts to add mappings outside their ranges result
+     * in {@link IllegalArgumentException}.  Instances of this class are
+     * constructed only using the {@code subMap}, {@code headMap}, and
+     * {@code tailMap} methods of their underlying maps.
      *
-     * @param <K>
-     * @param <V>
+     * @serial include
      */
-    static final class SubMap<K, V> extends AbstractMap<K, V> implements ConcurrentNavigableMap<K, V>, Cloneable, Serializable{
+    static final class SubMap<K,V> extends AbstractMap<K,V>
+            implements ConcurrentNavigableMap<K,V>, Cloneable, Serializable {
+        private static final long serialVersionUID = -7647078645895051609L;
 
-        @Override
-        public Set<Entry<K, V>> entrySet() {
-            return null;
+        /** Underlying map */
+        private final KConcurrentSkipListMap<K,V> m;
+        /** lower bound key, or null if from start */
+        private final K lo;
+        /** upper bound key, or null if to end */
+        private final K hi;
+        /** inclusion flag for lo */
+        private final boolean loInclusive;
+        /** inclusion flag for hi */
+        private final boolean hiInclusive;
+        /** direction */
+        private final boolean isDescending;
+
+        // Lazily initialized view holders
+        private transient KeySet<K> keySetView;
+        private transient Set<Map.Entry<K,V>> entrySetView;
+        private transient Collection<V> valuesView;
+
+        /**
+         * Creates a new submap, initializing all fields.
+         */
+        SubMap(KConcurrentSkipListMap<K,V> map,
+               K fromKey, boolean fromInclusive,
+               K toKey, boolean toInclusive,
+               boolean isDescending) {
+            Comparator<? super K> cmp = map.comparator;
+            if (fromKey != null && toKey != null &&
+                    cpr(cmp, fromKey, toKey) > 0)
+                throw new IllegalArgumentException("inconsistent range");
+            this.m = map;
+            this.lo = fromKey;
+            this.hi = toKey;
+            this.loInclusive = fromInclusive;
+            this.hiInclusive = toInclusive;
+            this.isDescending = isDescending;
         }
 
-        @Override
-        public ConcurrentNavigableMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
-            return null;
+        /* ----------------  Utilities -------------- */
+
+        boolean tooLow(Object key, Comparator<? super K> cmp) {
+            int c;
+            return (lo != null && ((c = cpr(cmp, key, lo)) < 0 ||
+                    (c == 0 && !loInclusive)));
         }
 
-        @Override
-        public ConcurrentNavigableMap<K, V> headMap(K toKey, boolean inclusive) {
-            return null;
+        boolean tooHigh(Object key, Comparator<? super K> cmp) {
+            int c;
+            return (hi != null && ((c = cpr(cmp, key, hi)) > 0 ||
+                    (c == 0 && !hiInclusive)));
         }
 
-        @Override
-        public ConcurrentNavigableMap<K, V> tailMap(K fromKey, boolean inclusive) {
-            return null;
+        boolean inBounds(Object key, Comparator<? super K> cmp) {
+            return !tooLow(key, cmp) && !tooHigh(key, cmp);
         }
 
-        @Override
-        public Comparator<? super K> comparator() {
-            return null;
+        void checkKeyBounds(K key, Comparator<? super K> cmp) {
+            if (key == null)
+                throw new NullPointerException();
+            if (!inBounds(key, cmp))
+                throw new IllegalArgumentException("key out of range");
         }
 
-        @Override
-        public ConcurrentNavigableMap<K, V> subMap(K fromKey, K toKey) {
-            return null;
+        /**
+         * Returns true if node key is less than upper bound of range.
+         */
+        boolean isBeforeEnd(KConcurrentSkipListMap.Node<K,V> n,
+                            Comparator<? super K> cmp) {
+            if (n == null)
+                return false;
+            if (hi == null)
+                return true;
+            K k = n.key;
+            if (k == null) // pass by markers and headers
+                return true;
+            int c = cpr(cmp, k, hi);
+            if (c > 0 || (c == 0 && !hiInclusive))
+                return false;
+            return true;
         }
 
-        @Override
-        public ConcurrentNavigableMap<K, V> headMap(K toKey) {
-            return null;
+        /**
+         * Returns lowest node. This node might not be in range, so
+         * most usages need to check bounds.
+         */
+        KConcurrentSkipListMap.Node<K,V> loNode(Comparator<? super K> cmp) {
+            if (lo == null)
+                return m.findFirst();
+            else if (loInclusive)
+                return m.findNear(lo, GT|EQ, cmp);
+            else
+                return m.findNear(lo, GT, cmp);
         }
 
-        @Override
-        public ConcurrentNavigableMap<K, V> tailMap(K fromKey) {
-            return null;
+        /**
+         * Returns highest node. This node might not be in range, so
+         * most usages need to check bounds.
+         */
+        KConcurrentSkipListMap.Node<K,V> hiNode(Comparator<? super K> cmp) {
+            if (hi == null)
+                return m.findLast();
+            else if (hiInclusive)
+                return m.findNear(hi, LT|EQ, cmp);
+            else
+                return m.findNear(hi, LT, cmp);
         }
 
-        @Override
-        public K firstKey() {
-            return null;
+        /**
+         * Returns lowest absolute key (ignoring directonality).
+         */
+        K lowestKey() {
+            Comparator<? super K> cmp = m.comparator;
+            KConcurrentSkipListMap.Node<K,V> n = loNode(cmp);
+            if (isBeforeEnd(n, cmp))
+                return n.key;
+            else
+                throw new NoSuchElementException();
         }
 
-        @Override
-        public K lastKey() {
-            return null;
+        /**
+         * Returns highest absolute key (ignoring directonality).
+         */
+        K highestKey() {
+            Comparator<? super K> cmp = m.comparator;
+            KConcurrentSkipListMap.Node<K,V> n = hiNode(cmp);
+            if (n != null) {
+                K last = n.key;
+                if (inBounds(last, cmp))
+                    return last;
+            }
+            throw new NoSuchElementException();
         }
 
-        @Override
-        public Entry<K, V> lowerEntry(K key) {
-            return null;
+        Map.Entry<K,V> lowestEntry() {
+            Comparator<? super K> cmp = m.comparator;
+            for (;;) {
+                KConcurrentSkipListMap.Node<K,V> n = loNode(cmp);
+                if (!isBeforeEnd(n, cmp))
+                    return null;
+                Map.Entry<K,V> e = n.createSnapshot();
+                if (e != null)
+                    return e;
+            }
         }
 
-        @Override
-        public K lowerKey(K key) {
-            return null;
+        Map.Entry<K,V> highestEntry() {
+            Comparator<? super K> cmp = m.comparator;
+            for (;;) {
+                KConcurrentSkipListMap.Node<K,V> n = hiNode(cmp);
+                if (n == null || !inBounds(n.key, cmp))
+                    return null;
+                Map.Entry<K,V> e = n.createSnapshot();
+                if (e != null)
+                    return e;
+            }
         }
 
-        @Override
-        public Entry<K, V> floorEntry(K key) {
-            return null;
+        Map.Entry<K,V> removeLowest() {
+            Comparator<? super K> cmp = m.comparator;
+            for (;;) {
+                Node<K,V> n = loNode(cmp);
+                if (n == null)
+                    return null;
+                K k = n.key;
+                if (!inBounds(k, cmp))
+                    return null;
+                V v = m.doRemove(k, null);
+                if (v != null)
+                    return new AbstractMap.SimpleImmutableEntry<K,V>(k, v);
+            }
         }
 
-        @Override
-        public K floorKey(K key) {
-            return null;
+        Map.Entry<K,V> removeHighest() {
+            Comparator<? super K> cmp = m.comparator;
+            for (;;) {
+                Node<K,V> n = hiNode(cmp);
+                if (n == null)
+                    return null;
+                K k = n.key;
+                if (!inBounds(k, cmp))
+                    return null;
+                V v = m.doRemove(k, null);
+                if (v != null)
+                    return new AbstractMap.SimpleImmutableEntry<K,V>(k, v);
+            }
         }
 
-        @Override
-        public Entry<K, V> ceilingEntry(K key) {
-            return null;
+        /**
+         * Submap version of ConcurrentSkipListMap.getNearEntry
+         */
+        Map.Entry<K,V> getNearEntry(K key, int rel) {
+            Comparator<? super K> cmp = m.comparator;
+            if (isDescending) { // adjust relation for direction
+                if ((rel & LT) == 0)
+                    rel |= LT;
+                else
+                    rel &= ~LT;
+            }
+            if (tooLow(key, cmp))
+                return ((rel & LT) != 0) ? null : lowestEntry();
+            if (tooHigh(key, cmp))
+                return ((rel & LT) != 0) ? highestEntry() : null;
+            for (;;) {
+                Node<K,V> n = m.findNear(key, rel, cmp);
+                if (n == null || !inBounds(n.key, cmp))
+                    return null;
+                K k = n.key;
+                V v = n.getValidValue();
+                if (v != null)
+                    return new AbstractMap.SimpleImmutableEntry<K,V>(k, v);
+            }
         }
 
-        @Override
-        public K ceilingKey(K key) {
-            return null;
+        // Almost the same as getNearEntry, except for keys
+        K getNearKey(K key, int rel) {
+            Comparator<? super K> cmp = m.comparator;
+            if (isDescending) { // adjust relation for direction
+                if ((rel & LT) == 0)
+                    rel |= LT;
+                else
+                    rel &= ~LT;
+            }
+            if (tooLow(key, cmp)) {
+                if ((rel & LT) == 0) {
+                    KConcurrentSkipListMap.Node<K,V> n = loNode(cmp);
+                    if (isBeforeEnd(n, cmp))
+                        return n.key;
+                }
+                return null;
+            }
+            if (tooHigh(key, cmp)) {
+                if ((rel & LT) != 0) {
+                    KConcurrentSkipListMap.Node<K,V> n = hiNode(cmp);
+                    if (n != null) {
+                        K last = n.key;
+                        if (inBounds(last, cmp))
+                            return last;
+                    }
+                }
+                return null;
+            }
+            for (;;) {
+                Node<K,V> n = m.findNear(key, rel, cmp);
+                if (n == null || !inBounds(n.key, cmp))
+                    return null;
+                K k = n.key;
+                V v = n.getValidValue();
+                if (v != null)
+                    return k;
+            }
         }
 
-        @Override
-        public Entry<K, V> higherEntry(K key) {
-            return null;
+        /* ----------------  Map API methods -------------- */
+
+        public boolean containsKey(Object key) {
+            if (key == null) throw new NullPointerException();
+            return inBounds(key, m.comparator) && m.containsKey(key);
         }
 
-        @Override
-        public K higherKey(K key) {
-            return null;
+        public V get(Object key) {
+            if (key == null) throw new NullPointerException();
+            return (!inBounds(key, m.comparator)) ? null : m.get(key);
         }
 
-        @Override
-        public Entry<K, V> firstEntry() {
-            return null;
+        public V put(K key, V value) {
+            checkKeyBounds(key, m.comparator);
+            return m.put(key, value);
         }
 
-        @Override
-        public Entry<K, V> lastEntry() {
-            return null;
+        public V remove(Object key) {
+            return (!inBounds(key, m.comparator)) ? null : m.remove(key);
         }
 
-        @Override
-        public Entry<K, V> pollFirstEntry() {
-            return null;
+        public int size() {
+            Comparator<? super K> cmp = m.comparator;
+            long count = 0;
+            for (KConcurrentSkipListMap.Node<K,V> n = loNode(cmp);
+                 isBeforeEnd(n, cmp);
+                 n = n.next) {
+                if (n.getValidValue() != null)
+                    ++count;
+            }
+            return count >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int)count;
         }
 
-        @Override
-        public Entry<K, V> pollLastEntry() {
-            return null;
+        public boolean isEmpty() {
+            Comparator<? super K> cmp = m.comparator;
+            return !isBeforeEnd(loNode(cmp), cmp);
         }
 
-        @Override
-        public ConcurrentNavigableMap<K, V> descendingMap() {
-            return null;
+        public boolean containsValue(Object value) {
+            if (value == null)
+                throw new NullPointerException();
+            Comparator<? super K> cmp = m.comparator;
+            for (KConcurrentSkipListMap.Node<K,V> n = loNode(cmp);
+                 isBeforeEnd(n, cmp);
+                 n = n.next) {
+                V v = n.getValidValue();
+                if (v != null && value.equals(v))
+                    return true;
+            }
+            return false;
         }
 
-        @Override
-        public NavigableSet<K> navigableKeySet() {
-            return null;
+        public void clear() {
+            Comparator<? super K> cmp = m.comparator;
+            for (KConcurrentSkipListMap.Node<K,V> n = loNode(cmp);
+                 isBeforeEnd(n, cmp);
+                 n = n.next) {
+                if (n.getValidValue() != null)
+                    m.remove(n.key);
+            }
         }
 
-        @Override
-        public NavigableSet<K> descendingKeySet() {
-            return null;
+        /* ----------------  ConcurrentMap API methods -------------- */
+
+        public V putIfAbsent(K key, V value) {
+            checkKeyBounds(key, m.comparator);
+            return m.putIfAbsent(key, value);
         }
 
-        @Override
-        public V getOrDefault(Object key, V defaultValue) {
-            return null;
-        }
-
-        @Override
-        public void forEach(BiConsumer<? super K, ? super V> action) {
-
-        }
-
-        @Override
         public boolean remove(Object key, Object value) {
-            return false;
+            return inBounds(key, m.comparator) && m.remove(key, value);
         }
 
-        @Override
         public boolean replace(K key, V oldValue, V newValue) {
-            return false;
+            checkKeyBounds(key, m.comparator);
+            return m.replace(key, oldValue, newValue);
         }
 
-        @Override
-        public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+        public V replace(K key, V value) {
+            checkKeyBounds(key, m.comparator);
+            return m.replace(key, value);
+        }
+
+        /* ----------------  SortedMap API methods -------------- */
+
+        public Comparator<? super K> comparator() {
+            Comparator<? super K> cmp = m.comparator();
+            if (isDescending)
+                return Collections.reverseOrder(cmp);
+            else
+                return cmp;
+        }
+
+        /**
+         * Utility to create submaps, where given bounds override
+         * unbounded(null) ones and/or are checked against bounded ones.
+         */
+        SubMap<K,V> newSubMap(K fromKey, boolean fromInclusive,
+                              K toKey, boolean toInclusive) {
+            Comparator<? super K> cmp = m.comparator;
+            if (isDescending) { // flip senses
+                K tk = fromKey;
+                fromKey = toKey;
+                toKey = tk;
+                boolean ti = fromInclusive;
+                fromInclusive = toInclusive;
+                toInclusive = ti;
+            }
+            if (lo != null) {
+                if (fromKey == null) {
+                    fromKey = lo;
+                    fromInclusive = loInclusive;
+                }
+                else {
+                    int c = cpr(cmp, fromKey, lo);
+                    if (c < 0 || (c == 0 && !loInclusive && fromInclusive))
+                        throw new IllegalArgumentException("key out of range");
+                }
+            }
+            if (hi != null) {
+                if (toKey == null) {
+                    toKey = hi;
+                    toInclusive = hiInclusive;
+                }
+                else {
+                    int c = cpr(cmp, toKey, hi);
+                    if (c > 0 || (c == 0 && !hiInclusive && toInclusive))
+                        throw new IllegalArgumentException("key out of range");
+                }
+            }
+            return new SubMap<K,V>(m, fromKey, fromInclusive,
+                    toKey, toInclusive, isDescending);
+        }
+
+        public SubMap<K,V> subMap(K fromKey, boolean fromInclusive,
+                                  K toKey, boolean toInclusive) {
+            if (fromKey == null || toKey == null)
+                throw new NullPointerException();
+            return newSubMap(fromKey, fromInclusive, toKey, toInclusive);
+        }
+
+        public SubMap<K,V> headMap(K toKey, boolean inclusive) {
+            if (toKey == null)
+                throw new NullPointerException();
+            return newSubMap(null, false, toKey, inclusive);
+        }
+
+        public SubMap<K,V> tailMap(K fromKey, boolean inclusive) {
+            if (fromKey == null)
+                throw new NullPointerException();
+            return newSubMap(fromKey, inclusive, null, false);
+        }
+
+        public SubMap<K,V> subMap(K fromKey, K toKey) {
+            return subMap(fromKey, true, toKey, false);
+        }
+
+        public SubMap<K,V> headMap(K toKey) {
+            return headMap(toKey, false);
+        }
+
+        public SubMap<K,V> tailMap(K fromKey) {
+            return tailMap(fromKey, true);
+        }
+
+        public SubMap<K,V> descendingMap() {
+            return new SubMap<K,V>(m, lo, loInclusive,
+                    hi, hiInclusive, !isDescending);
+        }
+
+        /* ----------------  Relational methods -------------- */
+
+        public Map.Entry<K,V> ceilingEntry(K key) {
+            return getNearEntry(key, GT|EQ);
+        }
+
+        public K ceilingKey(K key) {
+            return getNearKey(key, GT|EQ);
+        }
+
+        public Map.Entry<K,V> lowerEntry(K key) {
+            return getNearEntry(key, LT);
+        }
+
+        public K lowerKey(K key) {
+            return getNearKey(key, LT);
+        }
+
+        public Map.Entry<K,V> floorEntry(K key) {
+            return getNearEntry(key, LT|EQ);
+        }
+
+        public K floorKey(K key) {
+            return getNearKey(key, LT|EQ);
+        }
+
+        public Map.Entry<K,V> higherEntry(K key) {
+            return getNearEntry(key, GT);
+        }
+
+        public K higherKey(K key) {
+            return getNearKey(key, GT);
+        }
+
+        public K firstKey() {
+            return isDescending ? highestKey() : lowestKey();
+        }
+
+        public K lastKey() {
+            return isDescending ? lowestKey() : highestKey();
+        }
+
+        public Map.Entry<K,V> firstEntry() {
+            return isDescending ? highestEntry() : lowestEntry();
+        }
+
+        public Map.Entry<K,V> lastEntry() {
+            return isDescending ? lowestEntry() : highestEntry();
+        }
+
+        public Map.Entry<K,V> pollFirstEntry() {
+            return isDescending ? removeHighest() : removeLowest();
+        }
+
+        public Map.Entry<K,V> pollLastEntry() {
+            return isDescending ? removeLowest() : removeHighest();
+        }
+
+        /* ---------------- Submap Views -------------- */
+
+        public NavigableSet<K> keySet() {
+            KeySet<K> ks = keySetView;
+            return (ks != null) ? ks : (keySetView = new KeySet<K>(this));
+        }
+
+        public NavigableSet<K> navigableKeySet() {
+            KeySet<K> ks = keySetView;
+            return (ks != null) ? ks : (keySetView = new KeySet<K>(this));
+        }
+
+        public Collection<V> values() {
+            Collection<V> vs = valuesView;
+            return (vs != null) ? vs : (valuesView = new Values<V>(null));
+        }
+
+        public Set<Map.Entry<K,V>> entrySet() {
+            Set<Map.Entry<K,V>> es = entrySetView;
+            return (es != null) ? es : (entrySetView = new EntrySet<K,V>(this));
+        }
+
+        public NavigableSet<K> descendingKeySet() {
+            return descendingMap().navigableKeySet();
+        }
+
+        Iterator<K> keyIterator() {
+            return new SubMapKeyIterator();
+        }
+
+        Iterator<V> valueIterator() {
+            return new SubMapValueIterator();
+        }
+
+        Iterator<Map.Entry<K,V>> entryIterator() {
+            return new SubMapEntryIterator();
+        }
+
+        /**
+         * Variant of main Iter class to traverse through submaps.
+         * Also serves as back-up Spliterator for views
+         */
+        abstract class SubMapIter<T> implements Iterator<T>, Spliterator<T> {
+            /** the last node returned by next() */
+            Node<K,V> lastReturned;
+            /** the next node to return from next(); */
+            Node<K,V> next;
+            /** Cache of next value field to maintain weak consistency */
+            V nextValue;
+
+            SubMapIter() {
+                Comparator<? super K> cmp = m.comparator;
+                for (;;) {
+                    next = isDescending ? hiNode(cmp) : loNode(cmp);
+                    if (next == null)
+                        break;
+                    Object x = next.value;
+                    if (x != null && x != next) {
+                        if (! inBounds(next.key, cmp))
+                            next = null;
+                        else {
+                            @SuppressWarnings("unchecked") V vv = (V)x;
+                            nextValue = vv;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            public final boolean hasNext() {
+                return next != null;
+            }
+
+            final void advance() {
+                if (next == null)
+                    throw new NoSuchElementException();
+                lastReturned = next;
+                if (isDescending)
+                    descend();
+                else
+                    ascend();
+            }
+
+            private void ascend() {
+                Comparator<? super K> cmp = m.comparator;
+                for (;;) {
+                    next = next.next;
+                    if (next == null)
+                        break;
+                    Object x = next.value;
+                    if (x != null && x != next) {
+                        if (tooHigh(next.key, cmp))
+                            next = null;
+                        else {
+                            @SuppressWarnings("unchecked") V vv = (V)x;
+                            nextValue = vv;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            private void descend() {
+                Comparator<? super K> cmp = m.comparator;
+                for (;;) {
+                    next = m.findNear(lastReturned.key, LT, cmp);
+                    if (next == null)
+                        break;
+                    Object x = next.value;
+                    if (x != null && x != next) {
+                        if (tooLow(next.key, cmp))
+                            next = null;
+                        else {
+                            @SuppressWarnings("unchecked") V vv = (V)x;
+                            nextValue = vv;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            public void remove() {
+                Node<K,V> l = lastReturned;
+                if (l == null)
+                    throw new IllegalStateException();
+                m.remove(l.key);
+                lastReturned = null;
+            }
+
+            public Spliterator<T> trySplit() {
+                return null;
+            }
+
+            public boolean tryAdvance(Consumer<? super T> action) {
+                if (hasNext()) {
+                    action.accept(next());
+                    return true;
+                }
+                return false;
+            }
+
+            public void forEachRemaining(Consumer<? super T> action) {
+                while (hasNext())
+                    action.accept(next());
+            }
+
+            public long estimateSize() {
+                return Long.MAX_VALUE;
+            }
 
         }
 
-        @Override
-        public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
-            return null;
+        final class SubMapValueIterator extends SubMapIter<V> {
+            public V next() {
+                V v = nextValue;
+                advance();
+                return v;
+            }
+            public int characteristics() {
+                return 0;
+            }
         }
 
-        @Override
-        public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-            return null;
+        final class SubMapKeyIterator extends SubMapIter<K> {
+            public K next() {
+                Node<K,V> n = next;
+                advance();
+                return n.key;
+            }
+            public int characteristics() {
+                return Spliterator.DISTINCT | Spliterator.ORDERED |
+                        Spliterator.SORTED;
+            }
+            public final Comparator<? super K> getComparator() {
+                return SubMap.this.comparator();
+            }
         }
 
-        @Override
-        public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-            return null;
-        }
-
-        @Override
-        public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
-            return null;
+        final class SubMapEntryIterator extends SubMapIter<Map.Entry<K,V>> {
+            public Map.Entry<K,V> next() {
+                Node<K,V> n = next;
+                V v = nextValue;
+                advance();
+                return new AbstractMap.SimpleImmutableEntry<K,V>(n.key, v);
+            }
+            public int characteristics() {
+                return Spliterator.DISTINCT;
+            }
         }
     }
 
@@ -1491,6 +2270,52 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
         @Override
         public int size() {
             return 0;
+        }
+    }
+
+    static final class Values<E> extends AbstractCollection<E>{
+        private final ConcurrentNavigableMap<Object, E> m;
+
+        public Values(ConcurrentNavigableMap<Object, E> m) {
+            this.m = m;
+        }
+
+        @Override
+        public Iterator<E> iterator() {
+            if(m instanceof KConcurrentSkipListMap){
+                return ((KConcurrentSkipListMap<Object, E>)m).valueIterator();
+            }else{
+                return ((SubMap<Object, E>)m).valueIterator();
+            }
+        }
+
+        public boolean isEmpty(){
+            return m.isEmpty();
+        }
+
+        @Override
+        public boolean contains(Object o) {
+            return m.containsValue(o);
+        }
+
+        @Override
+        public void clear() {
+            m.clear();
+        }
+
+        @Override
+        public Object[] toArray() {
+            return toList(this).toArray();
+        }
+
+        @Override
+        public <T> T[] toArray(T[] a) {
+            return toList(this).toArray(a);
+        }
+
+        @Override
+        public int size() {
+            return m.size();
         }
     }
 
@@ -1551,6 +2376,12 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
          * @param newSucc the new successor
          * @return true if successful
          */
+        /**
+         * 在 index 本身 和 succ 之间插入一个新的节点 newSucc
+         * @param succ
+         * @param newSucc
+         * @return
+         */
         final boolean link(Index<K, V> succ, Index<K, V> newSucc){
             Node<K, V> n = node;
             newSucc.right = succ;
@@ -1563,6 +2394,11 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
          * is known to be deleted
          * @param succ the expected current successor
          * @return true if successful
+         */
+        /**
+         * 将当前的节点 index 设置其的 right 为 succ.right 等于删除 succ 节点
+         * @param succ
+         * @return
          */
         final boolean unlink(Index<K, V> succ){
             return node.value != null && casRight(succ, succ.right);
