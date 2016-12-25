@@ -1576,7 +1576,7 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
      *
      * @serial include
      */
-    static final class SubMap<K,V> extends AbstractMap<K,V>
+    static abstract  class SubMap<K,V> extends AbstractMap<K,V>
             implements ConcurrentNavigableMap<K,V>, Cloneable, Serializable {
         private static final long serialVersionUID = -7647078645895051609L;
 
@@ -1961,8 +1961,7 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
                         throw new IllegalArgumentException("key out of range");
                 }
             }
-            return new SubMap<K,V>(m, fromKey, fromInclusive,
-                    toKey, toInclusive, isDescending);
+            return null;
         }
 
         public SubMap<K,V> subMap(K fromKey, boolean fromInclusive,
@@ -1997,8 +1996,7 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
         }
 
         public SubMap<K,V> descendingMap() {
-            return new SubMap<K,V>(m, lo, loInclusive,
-                    hi, hiInclusive, !isDescending);
+            return null;
         }
 
         /* ----------------  Relational methods -------------- */
