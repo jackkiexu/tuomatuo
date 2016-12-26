@@ -228,14 +228,25 @@ public class KCopyOnWriteArrayList<E> implements List<E>, RandomAccess, Cloneabl
     }
 
     /**
+     * Returns the index of the the first occurence of the specified element in
+     * this last, searching forwards from {@code index}, or return -1 if
+     * the element is not found
+     * More formally, returns the lowest index {@code i} such that
+     * or -1 if there is no such index
      *
-     * @param e
-     * @param index
-     * @return
+     * @param e element to search for
+     * @param index index to start searching from
+     * @return the idex of the forst occurence of the element in
+     *          this list at position {@code index} or index in the list
+     *          {@code -1} if the lement is not found
      */
     public int lastIndexOf(E e, int index){
        Object[] elements = getArray();
         return lastIndexOf(e, elements, index);
+    }
+
+    public Object clone(){
+        return null;
     }
 
     @Override
