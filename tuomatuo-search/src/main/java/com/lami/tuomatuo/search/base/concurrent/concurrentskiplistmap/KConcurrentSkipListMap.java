@@ -686,6 +686,35 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
                         }
                     }
 
+                    /**
+                     * 1. --j 为什么要 减1
+
+                     2. --j >= insertionLevel 为什么要做这个比较
+
+                     3. --j >= insertionLevel 何时出现
+
+                     4. --j < insertionLevel 何时出现
+
+                     5. j < indexLevel 为什么要加这个条件
+
+                     6. j < indexLevel 何时出现
+
+                     7. j > indexLevel 何时出现
+
+                     答案:
+                     j: for loop 中当前的链表的level值, 每次for循环, j减1
+                     insertionLevel: 进行 Index 插入的起始Level, 当for循环从最高层的level循环到 j== insertionLevel 后 每次都会减1, 已表示这一层的 Index 已经处理好了
+                     indexLevel: 起始处理Index的Level值
+
+                     1: 每次for循环--j,来表示这层Level中的Index已经处理好了, --j是为下次for循环时处理Index做准备
+                     2:
+
+
+                     addIndex方法中的
+                     if (--j >= insertionLevel && j < indexLevel)
+                     在这个 If 判断中, 我怎么觉得 --j>= insertionLevel 是很成立的
+                     有没有 --j < insertionLevel 的场景出现过
+                     */
                     if(--j >= insertionLevel && j < level){
                         t = t.down;
                     }
