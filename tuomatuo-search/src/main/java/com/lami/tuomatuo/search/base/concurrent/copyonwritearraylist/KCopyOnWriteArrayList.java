@@ -1,5 +1,8 @@
 package com.lami.tuomatuo.search.base.concurrent.copyonwritearraylist;
 
+import com.lami.tuomatuo.search.base.concurrent.unsafe.UnSafeClass;
+import sun.misc.Unsafe;
+
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -245,7 +248,22 @@ public class KCopyOnWriteArrayList<E> implements List<E>, RandomAccess, Cloneabl
         return lastIndexOf(e, elements, index);
     }
 
+
+    /**
+     * Returns a shallow copy this list, (The lement themselves
+     * are not copied)
+     *
+     * @return a clone of this list
+     */
     public Object clone(){
+        try{
+            KCopyOnWriteArrayList c = (KCopyOnWriteArrayList)(super.clone());
+            c.resetLock();
+            return c;
+        }catch (CloneNotSupportedException e){
+            // this shouldn't happen, since we are Cloneable
+            throw new Exception(e);
+        }
         return null;
     }
 
@@ -343,4 +361,211 @@ public class KCopyOnWriteArrayList<E> implements List<E>, RandomAccess, Cloneabl
     public List<E> subList(int fromIndex, int toIndex) {
         return null;
     }
+
+    void removeRange(int fromIndex, int toIndex){
+
+    }
+
+    /**
+     * Sublist for CopyOnWriteArrayList.
+     * This class extends AbstractList merely for convenience, to
+     * avoiding having to define addAll, etc. This doesn't hurt, but
+     * is wasteful. This class does not need or use modCount
+     * mechanics in AbstractList, but does need to check for
+     * concurrent modification using similar mechanics. On each
+     * operation,the array that we expect the backing list to use
+     * is checked and updated. Since we do this for all of the
+     * base operations invoked by those defined in AbstractList,
+     * all is well. While inefficient, this is not worth
+     * improving. The kinds of list operations inherited from
+     * AbstractList are already so slow on COW sublists that
+     * adding a bit more space/time doesn't seem even noticeable
+     *
+     * @param <E>
+     */
+    private static class COWSubList<E> extends AbstractList<E> implements RandomAccess{
+
+        private final KCopyOnWriteArrayList<E> l;
+        private final int offset;
+        private int size;
+        private Object[] expectedArray;
+
+        // only call this holding l's lock
+        public COWSubList(KCopyOnWriteArrayList<E> list, int fromIndex, int toIndex) {
+            l = list;
+            expectedArray = l.getArray();
+            offset = fromIndex;
+            size = toIndex - fromIndex;
+        }
+
+        // only call this holding l's lock
+        private void checkForComodification(){
+            if(l.getArray() != expectedArray){
+                throw new ConcurrentModificationException();
+            }
+        }
+
+        private void rangeCheck(int index){
+            if(index < 0 || index >= size){
+                throw new IndexOutOfBoundsException("Index: " + index + ", Size:" + size());
+            }
+        }
+
+        public E set(int index, E element){
+            final ReentrantLock lock = l.lock;
+            lock.lock();
+            try{
+                rangeCheck(index);
+                checkForComodification();
+                E x = l.set(index + offset, element);
+                expectedArray = l.getArray();
+                return x;
+            }finally {
+                lock.unlock();
+            }
+        }
+
+        @Override
+        public E get(int index) {
+            final ReentrantLock lock = l.lock;
+            lock.lock();
+            try{
+                rangeCheck(index);
+                checkForComodification();
+                return l.get(index + offset);
+            }finally {
+                lock.unlock();
+            }
+        }
+
+        @Override
+        public int size() {
+            final ReentrantLock lock = l.lock;
+            lock.lock();
+            try{
+                checkForComodification();
+                return size;
+            }finally {
+                lock.unlock();
+            }
+        }
+
+        public void add(int index, E element){
+            final ReentrantLock lock = l.lock;
+            lock.lock();
+            try{
+                checkForComodification();
+                if(index < 0 || index > size){
+                    throw new IndexOutOfBoundsException();
+                }
+                l.add(index + offset, element);
+                expectedArray = l.getArray();
+                size++;
+            }finally {
+                lock.unlock();
+            }
+        }
+
+        public void clear(){
+            final ReentrantLock lock = l.lock;
+            lock.lock();
+            try {
+                checkForComodification();
+                l.removeR
+            }finally {
+                lock.unlock();
+            }
+        }
+    }
+
+    private static class COWSubListIterator<E> implements ListIterator<E>{
+
+        private final ListIterator<E> i;
+        private final int index;
+        private final int offset;
+        private final int size;
+
+        public COWSubListIterator(List<E> l, int index, int offset, int size) {
+            this.index = index;
+            this.offset = offset;
+            this.size = size;
+            i = l.listIterator();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return nextIndex() < size;
+        }
+
+        @Override
+        public E next() {
+            if(hasNext()){
+                return i.next();
+            }else{
+                throw new NoSuchElementException();
+            }
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return previousIndex() >= 0;
+        }
+
+        @Override
+        public E previous() {
+            if(hasPrevious()){
+                return i.previous();
+            }else{
+                throw new NoSuchElementException();
+            }
+        }
+
+        @Override
+        public int nextIndex() {
+            return i.nextIndex() - offset;
+        }
+
+        @Override
+        public int previousIndex() {
+            return i.previousIndex() - offset;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void set(E e) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void add(E e) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    // Support for resetting lock while deserializing
+    private void resetLock(){
+        unsafe.putObject(this, lockOffset, new ReentrantLock());
+    }
+
+    // 为什么 unsafe 只能通过反射得到
+    // Unsafe.getUnsafe() 通过这种方式来获取 unsafe 时, 代码必须是受信任的
+    // 比如 java -Xbootclasspath:rt.jar 来获取
+    private static final Unsafe unsafe ;
+    private static final long lockOffset;
+
+    static {
+        try {
+            unsafe = UnSafeClass.getInstance();
+            Class<?> k = KCopyOnWriteArrayList.class;
+            lockOffset = unsafe.objectFieldOffset(k.getDeclaredField("lock"));
+        }catch (Exception e){
+            throw new Error(e);
+        }
+    }
+
+
 }
