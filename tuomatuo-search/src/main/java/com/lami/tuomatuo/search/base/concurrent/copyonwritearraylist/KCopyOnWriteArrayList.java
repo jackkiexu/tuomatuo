@@ -262,7 +262,6 @@ public class KCopyOnWriteArrayList<E> implements List<E>, RandomAccess, Cloneabl
             return c;
         }catch (CloneNotSupportedException e){
             // this shouldn't happen, since we are Cloneable
-            throw new Exception(e);
         }
         return null;
     }
@@ -471,7 +470,6 @@ public class KCopyOnWriteArrayList<E> implements List<E>, RandomAccess, Cloneabl
             lock.lock();
             try {
                 checkForComodification();
-                l.removeR
             }finally {
                 lock.unlock();
             }
