@@ -1,5 +1,88 @@
-[2016-12-18 16:53:11,722] INFO  main (SemaphoreTest.java:18) - semaphore.acquire 1
-[2016-12-18 16:53:11,725] INFO  main (SemaphoreTest.java:20) - semaphore.acquire 2
-[2016-12-18 16:53:11,726] INFO  main (SemaphoreTest.java:22) - semaphore.acquire 3
-[2016-12-18 16:53:11,726] INFO  main (SemaphoreTest.java:24) - semaphore.acquire 4
-[2016-12-18 16:53:11,726] INFO  main (SemaphoreTest.java:26) - semaphore.acquire 5
+[2016-12-28 14:26:18,800] INFO  main (UnsafeTest.java:52) - start
+[2016-12-28 14:26:19,811] INFO  main (UnsafeTest.java:54) - end
+[2016-12-28 14:26:19,811] INFO  main (UnsafeTest.java:58) - start
+[2016-12-28 14:26:19,811] INFO  main (UnsafeTest.java:61) - end
+[2016-12-28 14:26:19,811] INFO  main (UnsafeTest.java:63) - start
+[2016-12-28 14:26:19,811] INFO  main (UnsafeTest.java:67) - inner
+[2016-12-28 14:26:20,811] INFO  main (UnsafeTest.java:69) - end
+[2016-12-28 14:27:15,859] INFO  main (UnsafeTest.java:34) - longFieldOffsetset : 16
+[2016-12-28 14:27:16,668] INFO  main (UnsafeTest.java:35) - longField by unsafe : 6
+[2016-12-28 14:27:20,461] INFO  main (UnsafeTest.java:40) - change result:false
+[2016-12-28 14:27:21,012] INFO  main (UnsafeTest.java:41) - longField by unsafe after update failed:6
+[2016-12-28 14:27:21,427] INFO  main (UnsafeTest.java:43) - change result:true
+[2016-12-28 14:27:21,739] INFO  main (UnsafeTest.java:44) - longField by unsafe after update successfully:100
+[2016-12-28 14:27:22,483] INFO  main (UnsafeTest.java:47) - longField by unsafe after put a new value: 200
+[2016-12-28 14:33:05,544] INFO  main (UnsafeTest.java:35) - longFieldOffsetset : 16
+[2016-12-28 14:33:05,546] INFO  main (UnsafeTest.java:36) - longField by unsafe : 6
+[2016-12-28 14:33:05,547] INFO  main (UnsafeTest.java:41) - change result:false
+[2016-12-28 14:33:05,547] INFO  main (UnsafeTest.java:42) - longField by unsafe after update failed:6
+[2016-12-28 14:33:05,547] INFO  main (UnsafeTest.java:44) - change result:true
+[2016-12-28 14:33:05,548] INFO  main (UnsafeTest.java:45) - longField by unsafe after update successfully:100
+[2016-12-28 14:33:05,548] INFO  main (UnsafeTest.java:48) - longField by unsafe after put a new value: 200
+[2016-12-28 14:33:05,548] INFO  main (UnsafeTest.java:50) - /********************************************************************************************/
+[2016-12-28 14:33:05,549] INFO  main (UnsafeTest.java:54) - secondField:aa
+[2016-12-28 14:33:05,549] INFO  main (UnsafeTest.java:55) - customer.getStrField():bb
+[2016-12-28 14:37:23,559] INFO  main (UnsafeTest.java:38) - longFieldOffsetset : 16
+[2016-12-28 14:37:23,562] INFO  main (UnsafeTest.java:39) - longField by unsafe : 6
+[2016-12-28 14:37:23,562] INFO  main (UnsafeTest.java:44) - change result:false
+[2016-12-28 14:37:23,562] INFO  main (UnsafeTest.java:45) - longField by unsafe after update failed:6
+[2016-12-28 14:37:23,563] INFO  main (UnsafeTest.java:47) - change result:true
+[2016-12-28 14:37:23,563] INFO  main (UnsafeTest.java:48) - longField by unsafe after update successfully:100
+[2016-12-28 14:37:23,563] INFO  main (UnsafeTest.java:51) - longField by unsafe after put a new value: 200
+[2016-12-28 14:37:23,563] INFO  main (UnsafeTest.java:53) - /********************************************************************************************/
+[2016-12-28 14:37:23,563] INFO  main (UnsafeTest.java:57) - customer.getPerson() :com.lami.tuomatuo.search.base.concurrent.unsafe.CustomerClass$Person@27082746
+[2016-12-28 14:38:24,066] INFO  main (UnsafeTest.java:38) - longFieldOffsetset : 16
+[2016-12-28 14:38:24,072] INFO  main (UnsafeTest.java:39) - longField by unsafe : 6
+[2016-12-28 14:38:24,072] INFO  main (UnsafeTest.java:44) - change result:false
+[2016-12-28 14:38:24,072] INFO  main (UnsafeTest.java:45) - longField by unsafe after update failed:6
+[2016-12-28 14:38:24,072] INFO  main (UnsafeTest.java:47) - change result:true
+[2016-12-28 14:38:24,072] INFO  main (UnsafeTest.java:48) - longField by unsafe after update successfully:100
+[2016-12-28 14:38:24,072] INFO  main (UnsafeTest.java:51) - longField by unsafe after put a new value: 200
+[2016-12-28 14:38:24,072] INFO  main (UnsafeTest.java:53) - /********************************************************************************************/
+[2016-12-28 14:38:24,073] INFO  main (UnsafeTest.java:57) - customer.getPerson() :2
+[2016-12-28 14:39:40,212] INFO  main (UnsafeTest.java:38) - longFieldOffsetset : 16
+[2016-12-28 14:39:40,214] INFO  main (UnsafeTest.java:39) - longField by unsafe : 6
+[2016-12-28 14:39:40,214] INFO  main (UnsafeTest.java:44) - change result:false
+[2016-12-28 14:39:40,215] INFO  main (UnsafeTest.java:45) - longField by unsafe after update failed:6
+[2016-12-28 14:39:40,215] INFO  main (UnsafeTest.java:47) - change result:true
+[2016-12-28 14:39:40,215] INFO  main (UnsafeTest.java:48) - longField by unsafe after update successfully:100
+[2016-12-28 14:39:40,215] INFO  main (UnsafeTest.java:51) - longField by unsafe after put a new value: 200
+[2016-12-28 14:39:40,215] INFO  main (UnsafeTest.java:53) - /********************************************************************************************/
+[2016-12-28 14:39:40,215] INFO  main (UnsafeTest.java:58) - customer.getPerson() :null
+[2016-12-28 14:39:40,215] INFO  main (UnsafeTest.java:59) - customer.getPerson() :2
+[2016-12-28 14:42:55,664] INFO  main (UnsafeTest.java:38) - longFieldOffsetset : 16
+[2016-12-28 14:42:55,667] INFO  main (UnsafeTest.java:39) - longField by unsafe : 6
+[2016-12-28 14:42:55,667] INFO  main (UnsafeTest.java:44) - change result:false
+[2016-12-28 14:42:55,667] INFO  main (UnsafeTest.java:45) - longField by unsafe after update failed:6
+[2016-12-28 14:42:55,667] INFO  main (UnsafeTest.java:47) - change result:true
+[2016-12-28 14:42:55,667] INFO  main (UnsafeTest.java:48) - longField by unsafe after update successfully:100
+[2016-12-28 14:42:55,668] INFO  main (UnsafeTest.java:51) - longField by unsafe after put a new value: 200
+[2016-12-28 14:42:55,668] INFO  main (UnsafeTest.java:53) - /********************************************************************************************/
+[2016-12-28 14:42:55,668] INFO  main (UnsafeTest.java:58) - customer.getPerson() :null
+[2016-12-28 14:42:55,668] INFO  main (UnsafeTest.java:59) - customer.getPerson() :2
+[2016-12-28 14:42:55,668] INFO  main (UnsafeTest.java:61) - customer.getPerson() :null
+[2016-12-28 14:42:55,669] INFO  main (UnsafeTest.java:62) - customer.getPerson() :2
+[2016-12-28 14:43:46,081] INFO  main (UnsafeTest.java:38) - longFieldOffsetset : 16
+[2016-12-28 14:43:46,084] INFO  main (UnsafeTest.java:39) - longField by unsafe : 6
+[2016-12-28 14:43:46,084] INFO  main (UnsafeTest.java:44) - change result:false
+[2016-12-28 14:43:46,084] INFO  main (UnsafeTest.java:45) - longField by unsafe after update failed:6
+[2016-12-28 14:43:46,084] INFO  main (UnsafeTest.java:47) - change result:true
+[2016-12-28 14:43:46,085] INFO  main (UnsafeTest.java:48) - longField by unsafe after update successfully:100
+[2016-12-28 14:43:46,085] INFO  main (UnsafeTest.java:51) - longField by unsafe after put a new value: 200
+[2016-12-28 14:43:46,085] INFO  main (UnsafeTest.java:53) - /********************************************************************************************/
+[2016-12-28 14:43:46,085] INFO  main (UnsafeTest.java:60) - customer.getPerson() :null
+[2016-12-28 14:43:46,085] INFO  main (UnsafeTest.java:61) - customer.getPerson() :2
+[2016-12-28 14:43:46,086] INFO  main (UnsafeTest.java:63) - customer.getPerson() :null
+[2016-12-28 14:43:46,086] INFO  main (UnsafeTest.java:64) - customer.getPerson() :3
+[2016-12-28 14:44:48,464] INFO  main (UnsafeTest.java:38) - longFieldOffsetset : 16
+[2016-12-28 14:44:48,466] INFO  main (UnsafeTest.java:39) - longField by unsafe : 6
+[2016-12-28 14:44:48,467] INFO  main (UnsafeTest.java:44) - change result:false
+[2016-12-28 14:44:48,467] INFO  main (UnsafeTest.java:45) - longField by unsafe after update failed:6
+[2016-12-28 14:44:48,467] INFO  main (UnsafeTest.java:47) - change result:true
+[2016-12-28 14:44:48,467] INFO  main (UnsafeTest.java:48) - longField by unsafe after update successfully:100
+[2016-12-28 14:44:48,467] INFO  main (UnsafeTest.java:51) - longField by unsafe after put a new value: 200
+[2016-12-28 14:44:48,468] INFO  main (UnsafeTest.java:53) - /********************************************************************************************/
+[2016-12-28 14:44:48,468] INFO  main (UnsafeTest.java:60) - customer.getPerson() :null
+[2016-12-28 14:44:48,468] INFO  main (UnsafeTest.java:62) - customer.getPerson() :CustomerClass.Person(id=2, name=null)
+[2016-12-28 14:44:48,469] INFO  main (UnsafeTest.java:64) - customer.getPerson() :null
+[2016-12-28 14:44:48,469] INFO  main (UnsafeTest.java:65) - customer.getPerson() :CustomerClass.Person(id=2, name=null)

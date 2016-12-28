@@ -14,6 +14,11 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
+ *
+ * <a href="https://www.cs.rochester.edu/u/scott/papers/2009_Scherer_CACM_SSQ.pdf">
+ *      Scalable Synchronous Queues
+ * </a>
+ *
  * A {@linkplain BlockingQueue blocking queue} in which each insert
  * operation must wait for a corresponding remove operation by another
  * thread, and vice versa. A synchronous queue does not have any

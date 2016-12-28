@@ -25,11 +25,15 @@ public class UnsafeTest {
         System.out.println("--------------------------------------- Field Offset End ----------------------");
     }
 
-    public static void main2(String[] args) throws  Exception{
+    public static void main(String[] args) throws  Exception{
         printFieldOffset(fields);
         CustomerClass obj = new CustomerClass();
 
         long longFieldOffsetset = unsafe.objectFieldOffset(customerClass.getDeclaredField("longField"));
+        long stringFieldOffsetset = unsafe.objectFieldOffset(customerClass.getDeclaredField("strField"));
+        long personFieldOffsetset = unsafe.objectFieldOffset(customerClass.getDeclaredField("person"));
+
+
 
         logger.info("longFieldOffsetset : " + longFieldOffsetset);
         logger.info("longField by unsafe : " + unsafe.getLong(obj, longFieldOffsetset));
@@ -45,10 +49,25 @@ public class UnsafeTest {
         unsafe.putLong(obj, longFieldOffsetset, 200);
 
         logger.info("longField by unsafe after put a new value: " + unsafe.getLong(obj, longFieldOffsetset));
+
+        logger.info("/********************************************************************************************/");
+        CustomerClass customer = new CustomerClass("aa");
+        String firstField = customer.getStrField();
+        CustomerClass.Person pp = customer.getPerson();
+
+        CustomerClass.Person person = new CustomerClass.Person(2);
+        unsafe.compareAndSwapObject(customer, personFieldOffsetset, null, person);
+        logger.info("customer.getPerson() :" + pp);
+        CustomerClass.Person personEnd = customer.getPerson();
+        logger.info("customer.getPerson() :" + personEnd);
+        unsafe.compareAndSwapObject(customer, personFieldOffsetset, person, new CustomerClass.Person(3));
+        logger.info("customer.getPerson() :" + pp);
+        logger.info("customer.getPerson() :" + personEnd);
+
     }
 
 
-    public static void main(String[] args) {
+    public static void main3(String[] args) {
         logger.info("start");
         LockSupport.parkNanos(1000000000);
         logger.info("end");
