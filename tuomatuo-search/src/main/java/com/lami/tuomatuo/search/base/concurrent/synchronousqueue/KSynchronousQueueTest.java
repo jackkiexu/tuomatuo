@@ -13,7 +13,7 @@ public class KSynchronousQueueTest {
      * @param args
      */
     public static void main(String[] args) throws Exception{
-        KSynchronousQueue<Object> queue = new KSynchronousQueue<Object>();
+        KSynchronousQueue<Object> queue = new KSynchronousQueue<Object>(true);
         for(int i=0;i<5;i++){
             Thread t = new SQThread(queue, 1);
             t.start();
