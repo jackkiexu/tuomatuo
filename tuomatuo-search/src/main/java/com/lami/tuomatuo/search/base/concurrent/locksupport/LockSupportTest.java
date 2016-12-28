@@ -6,6 +6,7 @@ import java.util.concurrent.locks.LockSupport;
 
 /**
  * http://www.cnblogs.com/zhanjindong/p/java-concurrent-package-aqs-locksupport-and-thread-interrupt.html
+ * http://www.ibm.com/developerworks/java/library/j-jtp05236/index.html
  * http://www.cnblogs.com/wanly3643/p/3992186.html
  *
  * Created by xjk on 12/16/16.
