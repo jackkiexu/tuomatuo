@@ -2,6 +2,7 @@ package com.lami.tuomatuo.search.base.concurrent.synchronousqueue;
 
 import com.lami.tuomatuo.search.base.concurrent.future.xjk.KFutureTask;
 import com.lami.tuomatuo.search.base.concurrent.unsafe.UnSafeClass;
+import org.apache.log4j.Logger;
 import sun.misc.Unsafe;
 
 import java.io.IOException;
@@ -14,6 +15,18 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
+ * 参考资料
+ * http://www.cnblogs.com/leesf456/p/5560362.html
+ * http://www.cnblogs.com/wanly3643/p/3904681.html
+ * http://vickyqi.com/2015/11/30/JDK%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7%E7%B1%BB%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0%E7%B3%BB%E5%88%97%E2%80%94%E2%80%94SynchronousQueue/
+ *
+ *
+ *http://www.infoq.com/cn/articles/java-blocking-queue/
+ * 阻塞队列提供的四种处理方式
+ *  方法/处理方式       抛出异常        返回特殊值       一直阻塞        超时退出
+ *      插入方法         add(e)          offer(e)         put(e)          offer(e, time, TimeUnit)
+ *      移除方法         remove()        poll()           take()          poll(time, TimeUnit)
+ *      检查方法         element()       peek()           不可用          不可用
  *
  * <a href="https://www.cs.rochester.edu/u/scott/papers/2009_Scherer_CACM_SSQ.pdf">
  *      Scalable Synchronous Queues
@@ -64,6 +77,8 @@ import java.util.concurrent.locks.ReentrantLock;
  * Created by xjk on 12/25/16.
  */
 public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQueue<E>, java.io.Serializable {
+
+    private static final Logger logger = Logger.getLogger(KSynchronousQueue.class);
 
     private static final long serialVersionUID = -2835992386168676443L;
 
@@ -209,7 +224,11 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
         /** Node is fulfilling another unfulfilled DATA or REQUEST */
         static final int FULFILLING = 2;
         /** Returns true if m has fulfilling bit set. */
-        static boolean isFulfilling(int m) { return (m & FULFILLING) != 0; }
+        static boolean isFulfilling(int m) {
+            boolean result = (m & FULFILLING) != 0;
+            logger.info("isFulfilling m : " + m + ", result:"+ result);
+            return result;
+        }
 
         /** Node class for TransferStacks */
         static final class SNode{
@@ -266,6 +285,16 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
                 return match == this;
             }
 
+            @Override
+            public String toString() {
+                return "SNode{" +
+                        "match=" + match +
+                        ", waiter=" + waiter +
+                        ", item=" + item +
+                        ", mode=" + mode +
+                        '}';
+            }
+
             // Unsafe mechanics
             private static Unsafe unsafe;
             private static long matchOffset;
@@ -287,8 +316,12 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
         volatile SNode head;
 
         boolean casHead(SNode h, SNode nh){
-            return h == head &&
-                    unsafe.compareAndSwapObject(this, headOffset, h, nh);
+//            new RuntimeException().printStackTrace();
+            logger.info("head:"+head+", h:"+h + ", nh:"+nh);
+            boolean first = h == head;
+            boolean second = unsafe.compareAndSwapObject(this, headOffset, h, nh);
+            logger.info("first: " + first + ", second:"+second);
+            return first && second;
         }
 
         /**
@@ -305,6 +338,7 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
          * @return
          */
         static SNode snode(SNode s, Object e, SNode next, int mode){
+            logger.info("init SNode :" + s + ", e:"+e+", next:"+next+", mode:"+mode);
             if(s == null) s = new SNode(e);
             s.mode = mode;
             s.next = next;
@@ -347,9 +381,11 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
 
             SNode s = null; // constructed/reused as needed
             int mode = (e == null)? REQUEST : DATA;
+            logger.info("head:"+head + ", mde:"+mode);
 
             for(;;){
                 SNode h = head;
+                logger.info("head:"+head);
                 if(h == null || h.mode == mode){ // empty or same-mode
                     if(timed && nanos <= 0){ // cann't wait
                         if(h != null && h.isCancelled()){
@@ -372,6 +408,7 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
                     }
                 }
                 else if(!isFulfilling(h.mode)){ // try to fulfill
+                    logger.info("h:"+h+", h.isCancelled():"+h.isCancelled());
                     if(h.isCancelled()){        // already cancelled
                         casHead(h, h.next);     // pop and retry
                     }
@@ -384,7 +421,9 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
                                 break;              // restart main loop
                             }
                             SNode mn = m.next;
-                            if(m.tryMatch(s)){
+                            boolean tryMatch = m.tryMatch(s);
+                            logger.info(" m.tryMatch(s):"+tryMatch+", m:"+m+", s:"+s);
+                            if(tryMatch){
                                 casHead(s, mn);     // pop both s and m
                                 return (E) ((mode == REQUEST) ? m.item : s.item);
                             }
@@ -400,7 +439,9 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
                     }
                     else{
                         SNode mn = m.next;
-                        if(m.tryMatch(h)){  // help match
+                        boolean tryMatch = m.tryMatch(h);
+                        logger.info("  m.tryMatch(h):"+tryMatch+", m:"+m+", h:"+h);
+                        if(tryMatch){  // help match
                             casHead(h, mn); // pop both h and m
                         }
                         else{               // lost match
@@ -486,6 +527,7 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
          */
         boolean shouldSpin(SNode s){
             SNode h = head;
+            logger.info("h == s:"+(h == s)+", head:"+head+", h:"+h+", s:"+s +", isFulfilling(h.mode):"+isFulfilling(h.mode));
             return (h == s || h == null || isFulfilling(h.mode));
         }
 

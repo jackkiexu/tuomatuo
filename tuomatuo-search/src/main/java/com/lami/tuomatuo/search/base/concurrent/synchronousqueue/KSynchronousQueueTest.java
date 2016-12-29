@@ -2,6 +2,8 @@ package com.lami.tuomatuo.search.base.concurrent.synchronousqueue;
 
 import org.apache.log4j.Logger;
 
+import java.util.concurrent.SynchronousQueue;
+
 /**
  * Created by xujiankang on 2016/12/27.
  */
@@ -13,22 +15,26 @@ public class KSynchronousQueueTest {
      * @param args
      */
     public static void main(String[] args) throws Exception{
-        KSynchronousQueue<Object> queue = new KSynchronousQueue<Object>(true);
-        for(int i=0;i<5;i++){
-            Thread t = new SQThread(queue, 1);
+        KSynchronousQueue<Object> queue = new KSynchronousQueue<Object>();
+        for(int i=0;i<1;i++){
+            Thread t = new SQThread(queue, 1, "SynchronousQueueTest Thread :" + i);
             t.start();
         }
-        //Thread.sleep(1000);
-        for(int i=0;i<10;i++){
-            if(!queue.offer(new Object())){
+        Thread.sleep(2 * 1000);
+        for(int i=0;i<1;i++){
+            queue.put("" + i);
+           /* if(!){
                 logger.info("Failure");
-            }
+            }else{
+                logger.info("queue.offer success " + i);
+            }*/
         }
     }
     public static class SQThread extends Thread{
         private KSynchronousQueue<Object> queue;
         int mode;
-        SQThread(KSynchronousQueue<Object> queue,int mode){
+        SQThread(KSynchronousQueue<Object> queue,int mode, String name){
+            super(name);
             this.queue = queue;
             this.mode = mode;
         }
@@ -36,10 +42,13 @@ public class KSynchronousQueueTest {
         public void run(){
             Object item = null;
             try{
-                logger.info(Thread.currentThread().getId());
                 if(mode == 1){
+                    logger.info("consumer begin to consumer, but he need sleep");
+                    Thread.sleep(10 * 1000);
+                    logger.info("consumer begin to consumer, but he need sleep, and he is OK");
                     while((item = queue.take()) != null){
-                        logger.info(item.toString());
+                        Thread.sleep(1000*1000);
+                        logger.info("getitem.toString():"+item.toString());
                     }
                 }else{
                     //
