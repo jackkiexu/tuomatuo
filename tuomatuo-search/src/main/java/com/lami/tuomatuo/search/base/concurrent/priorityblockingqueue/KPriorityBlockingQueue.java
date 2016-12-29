@@ -1,7 +1,11 @@
 package com.lami.tuomatuo.search.base.concurrent.priorityblockingqueue;
 
+import com.lami.tuomatuo.search.base.concurrent.unsafe.UnSafeClass;
+import sun.misc.Unsafe;
+
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -141,7 +145,19 @@ public class KPriorityBlockingQueue<E> extends AbstractQueue<E> implements Block
     private PriorityQueue<E> q;
 
     /**
-     * Creates
+     * A plain PriorityQueue used only for serialization.
+     * to maintain compatibility with previous versions
+     * of this class. No-null udring serialization/deserialization
+     */
+    public KPriorityBlockingQueue() {
+        this(DEFAULT_INITIAL_CAPACITY, null);
+    }
+
+    /**
+     * Creates a {@code PriorityBlockingQueue} with the default
+     * initial capacity (11) that orders its elements according to
+     * their {@linkplain Comparable natural ordering}
+     *
      * @param initialCapacity
      */
     public KPriorityBlockingQueue(int initialCapacity) {
@@ -167,6 +183,46 @@ public class KPriorityBlockingQueue<E> extends AbstractQueue<E> implements Block
         this.notEmpty = lock.newCondition();
         this.comparator = comparator;
         this.queue = new Object[initialCapacity];
+    }
+
+    public KPriorityBlockingQueue(Collection<? extends E> c){
+        this.lock = new ReentrantLock();
+        this.notEmpty = lock.newCondition();
+        boolean heapify = true; // true if not known to be in heap order
+        boolean screen = true; // true if must screen for nulls
+        if(c instanceof SortedSet<?>){
+            SortedSet<? extends E> ss = (SortedSet<? extends E>) c;
+            this.comparator = (Comparator<? super E>)ss.comparator();
+            heapify = false;
+        }
+        else if(c instanceof KPriorityBlockingQueue<?>){
+            KPriorityBlockingQueue<? extends E> pq =
+                    (KPriorityBlockingQueue<? extends E>)c;
+            this.comparator = (Comparator<? super E>)pq.comparator;
+            screen = false;
+            if(pq.getClass() == KPriorityBlockingQueue.class){ // exact match
+                heapify = false;
+            }
+        }
+
+        Object[] a = c.toArray();
+        int n = a.length;
+        // If c.toArray incorrectly doesn't return Object[]. copy it.
+        if(a.getClass() != Object[].class){
+            a = Arrays.copyOf(a, n , Object[].class);
+        }
+        if(screen && (n == 1 || this.comparator != null)){
+            for(int i = 0; i < n; ++i){
+                if(a[i] == null)
+                    throw new NullPointerException();
+            }
+        }
+
+        this.queue = a;
+        this.size = n;
+        if(heapify){
+            heapify();
+        }
     }
 
     @Override
@@ -227,5 +283,131 @@ public class KPriorityBlockingQueue<E> extends AbstractQueue<E> implements Block
     @Override
     public E peek() {
         return null;
+    }
+
+
+    /**
+     * Returns an array containing all of the elements in this queue; the
+     * runtime type og the returned array is that of the specified array
+     * The returned array elements are in no particular order.
+     * The the queue fits in the specified array, it is returned therein.
+     * Otherwise, a new array is allocated with the runtime type of the
+     * specified array and the size of this queue
+     *
+     * <p>
+     *      If this queue fits in the specified array with room to spare
+     *      (i.e, the array has more elements than this queue), the element in
+     *      the array immediately following the end of the queue is set to
+     *      {@code null}
+     * </p>
+     *
+     * <p>
+     *     Like the {@link #toArray} method, this method acts as bridge between
+     *     array-based and collection-based APIs. Further, this method allows
+     *     precise control over the runtime type of the output array, and may,
+     *     under certain circumstances, be used to save allocation costs
+     * </p>
+     *
+     * <p>
+     *     
+     * </p>
+     *
+     * @param a
+     * @param <T>
+     * @return
+     */
+    public <T> T[] toArray(T[] a){
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            int n = size;
+            if(a.length < n){
+                // Make a new array of a's runtime type, but my contents
+                return (T[])Arrays.copyOf(queue, size, a.getClass());
+            }
+            System.arraycopy(queue, 0, a, 0, n);
+            if(a.length > n){
+                a[n] = null;
+            }
+            return a;
+        }finally {
+            lock.unlock();
+        }
+    }
+
+
+    /**
+     * Establishes the heap invariant (described above) in the entire tree
+     * assuming nothing about the order of the elements prior to the call
+     */
+    private void heapify(){
+        Object[] array = queue;
+        int n = size;
+        int half = (n >>> 1) -1;
+        Comparator<? super E> cmp = comparator;
+        if(cmp == null){
+
+        }
+    }
+
+    /**
+     * Inserts item x at position k, maintaining heap invariant by
+     * demoting x down the tree repeatedly until it is less than or
+     * equal to its children or is a leaf
+     *
+     * @param k     the position to fill
+     * @param x     the item to insert
+     * @param array the heap array
+     * @param n     the heap array
+     * @param <T>
+     */
+    private static <T> void siftDownComparable(int k, T x, Object[] array, int n){
+        if(n > 0){
+            Comparable<? super T> key = (Comparable<? super T>)x;
+            int half = n >>> 1;
+            while(k < half){
+                int child = (k << 1) + 1; // assume left child is least
+                Object c = array[child];
+                int right = child + 1;
+                if(right < n &&
+                        ((Comparable<? super T>)c).compareTo((T)array[right]) > 0
+                        ){
+                    c = array[child = right];
+                }
+                if(key.compareTo((T)c) <= 0){
+                    break;
+                }
+                array[k] = c;
+                k = child;
+            }
+            array[k] = key;
+        }
+    }
+
+    private static <T> void siftDownUsingComparator(int k, T x, Object[] array,
+                                                    int n,
+                                                    Comparator<? super T> cmp
+                                                    ){
+        if(n > 0){
+            int half = n >>> 1;
+            while(k < half){
+                int child = (k << 1) + 1;
+
+            }
+        }
+    }
+
+
+    // Unsafe mechanics
+    private static final Unsafe unsafe;
+    private static final long allocationSpinLockOffset;
+    static {
+        try{
+         unsafe = UnSafeClass.getInstance();
+            Class<?> k = KPriorityBlockingQueue.class;
+            allocationSpinLockOffset = unsafe.objectFieldOffset(k.getDeclaredField("allocationSpinLock"));
+        }catch(Exception e){
+            throw new Error(e);
+        }
     }
 }
