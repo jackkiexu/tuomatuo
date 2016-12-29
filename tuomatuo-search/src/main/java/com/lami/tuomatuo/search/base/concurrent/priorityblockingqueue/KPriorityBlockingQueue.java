@@ -141,7 +141,7 @@ public class KPriorityBlockingQueue<E> extends AbstractQueue<E> implements Block
     private PriorityQueue<E> q;
 
     /**
-     * Creates 
+     * Creates
      * @param initialCapacity
      */
     public KPriorityBlockingQueue(int initialCapacity) {
