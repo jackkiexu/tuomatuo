@@ -166,6 +166,16 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
      */
     abstract static class Transferer<E>{
         /**
+         * 逻辑
+         * 1. 开始时队列肯定是空的
+         * 2. 线程进入队列, 如果队列是空的, 那么就添加该线程进入队列, 然后进行等待(要么有匹配的线程出现, 要么就是该请求超时取消)
+         * 3. 第二个线程进入, 如果前面一个线程跟它属于不同类型, 也就是说两者可以匹配的, 那么就从队列删除第一个线程
+         * 4. 如果相同的线程, 那么做法参照2.
+         *
+         * 理清了基本的逻辑, 也就是会有两种情况:
+         * 1. 队列为空或者队列中等待线程是相同的类型
+         * 2. 队列的等待线程是匹配的类型
+         *
          * Performs a put or take
          *
          * @param e  if non-null, the item to be handed to a consumer;

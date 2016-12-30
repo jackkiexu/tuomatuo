@@ -44,7 +44,7 @@ public class KSynchronousQueueTest {
             try{
                 if(mode == 1){
                     logger.info("consumer begin to consumer, but he need sleep");
-                    Thread.sleep(10 * 1000);
+                    Thread.sleep(1 * 1000);
                     logger.info("consumer begin to consumer, but he need sleep, and he is OK");
                     while((item = queue.take()) != null){
                         Thread.sleep(1000*1000);

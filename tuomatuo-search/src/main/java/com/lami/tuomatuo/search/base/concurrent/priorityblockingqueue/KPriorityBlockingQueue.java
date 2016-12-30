@@ -232,57 +232,334 @@ public class KPriorityBlockingQueue<E> extends AbstractQueue<E> implements Block
 
     @Override
     public int size() {
-        return 0;
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            return size;
+        }finally {
+            lock.lock();
+        }
     }
 
+    /**
+     * Inserts the specified element into this priority queue
+     * As the queue is unbounded, this method will never block
+     *
+     * @param e the element to add
+     * @throws ClassCastException if the specified element cannot be compared
+     *                              with elements currently in the priority
+     *                              queue according to the priority queue's ordering
+     * @throws NullPointerException if the specified element is null
+     */
     @Override
     public void put(E e) throws InterruptedException {
-
+        offer(e); // never need to block
     }
 
+    /**
+     * Inserts the specified element into this priority queue.
+     * As the queue is unbounded, this method will never block or
+     * return {@code false}
+     *
+     * @param e the element to add
+     * @param timeout   This parameter is ignored as method never blocks
+     * @param unit      This parameter is ignored as the method never blocks
+     * @return          {@code true} (as specified by {@link BlockingQueue#offer(Object)})
+     *
+     * @throws ClassCastException if the specified element cannot be comparaed
+     *                              with elements currently in the priority queue according to the
+     *                              priority qeueu's ordering
+     * @throws NullPointerException if the specified element is null
+     */
     @Override
     public boolean offer(E e, long timeout, TimeUnit unit) throws InterruptedException {
-        return false;
+        return offer(e); // never need to block
     }
 
     @Override
     public E take() throws InterruptedException {
-        return null;
+        final ReentrantLock lock = this.lock;
+        lock.lockInterruptibly();
+        E result;
+        try{
+            while((result = dequeue()) == null){
+                notEmpty.await();
+            }
+        }finally {
+            lock.unlock();
+        }
+        return result;
     }
 
     @Override
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
-        return null;
+        long nanos = unit.toNanos(timeout);
+        final ReentrantLock lock = this.lock;
+        lock.lockInterruptibly();
+        E result;
+        try{
+            while((result = dequeue()) == null && nanos > 0){
+                nanos = notEmpty.awaitNanos(nanos);
+            }
+        }finally {
+            lock.unlock();
+        }
+        return result;
     }
 
+    /**
+     * Always returns {@code Integer.Max_VALUE} because
+     * a {@code PriorityBlockingQueue} is not capacity constrained
+     *
+     * @return {@code Integer.MAX_VALUE} always
+     */
     @Override
     public int remainingCapacity() {
-        return 0;
+        return Integer.MAX_VALUE;
+    }
+
+    private int indexOf(Object o){
+        if(o != null){
+            Object[] array = queue;
+            int n = size;
+            for(int i = 0; i < n; i++){
+                if(o.equals(array[i])){
+                    return i;
+                }
+            }
+        }
+        return  -1;
+    }
+
+    /**
+     * Remove a single instance of the specified element from this queue,
+     * if it is present. More formally, removes an element {@code e} such
+     * that {@code o.equal(e)}, if this queue contains one or more such
+     * elements. Returns {@code true} if and onlu if this queue contained
+     * the specified element (or equivalently, if this queue changed as
+     * a result of the call)
+     *
+     * @param o element to removed from this queue, if present
+     * @return {@code true} if this queue changed as a result of the call
+     */
+    public boolean remove(Object o){
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            int i = indexOf(o);
+            if(i == -1){
+                return false;
+            }
+            removeAt(i);
+            return true;
+        }finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns {@code true} if this queue contains this specified element
+     * More formally, returns {@code true} if and only if this queue contains
+     * at least one element {@code e} such that {@code o.equal(e)}
+     *
+     * @param o object to be checked for containment in this queue
+     * @return {@code true} if this queue contains the specified element
+     */
+    public boolean contains(Object o){
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            return indexOf(o) != -1;
+        }finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns an array containing all of the elements in this queue
+     * The returned array elements are in no particular order.
+     *
+     * <p>
+     *     The returned array will be "safe" in that no references to is are
+     *     maintained by this queue. (In other words, this method must allocate
+     *     a new array). The caller is thus free to modify the returned array
+     * </p>
+     *
+     * <p>
+     *     This method acts as bridge between array-based and collection-based
+     * </p>
+     *
+     * @return an array containing all of the elements in this queue
+     */
+    public Object[] toArray(){
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            return Arrays.copyOf(queue, size);
+        }finally {
+            lock.unlock();
+        }
+    }
+
+    public String toString() {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            int n = size;
+            if (n == 0)
+                return "[]";
+            StringBuilder sb = new StringBuilder();
+            sb.append('[');
+            for (int i = 0; i < n; ++i) {
+                Object e = queue[i];
+                sb.append(e == this ? "(this Collection)" : e);
+                if (i != n - 1)
+                    sb.append(',').append(' ');
+            }
+            return sb.append(']').toString();
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
     public int drainTo(Collection<? super E> c) {
-        return 0;
+        return drainTo(c, Integer.MAX_VALUE);
     }
 
     @Override
     public int drainTo(Collection<? super E> c, int maxElements) {
-        return 0;
+        if(c == null){
+            throw new NullPointerException();
+        }
+        if(c == this){
+            throw new IllegalArgumentException();
+        }
+        if(maxElements <= 0){
+            return 0;
+        }
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            int n = Math.min(size, maxElements);
+            for(int i = 0; i < n; i++){
+                c.add((E)queue[0]); // In this order, in case add() throws
+                dequeue();
+            }
+            return n;
+        }finally {
+            lock.unlock();
+        }
     }
 
+    /**
+     * Atomically removes all of the elements from this queue
+     * The queue will be empty after this call returns
+     */
+    public void clear(){
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            Object[] array = queue;
+            int n = size;
+            size = 0;
+            for(int i = 0; i < n; i++){
+                array[i] = null;
+            }
+        }finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Inserts the specified element into this priority queue
+     * As the queue is unbounded, his method will never return {@code false}
+     *
+     * @param e the lement to add
+     * @return {@code true} (as specified element cannot be compared
+     *          with elements currently in the priority queue according to the
+     *          priority queue's ordering)
+     * @throws NullPointerException if the specified element is null
+     */
     @Override
     public boolean offer(E e) {
-        return false;
+        if(e != null){
+            throw new NullPointerException();
+        }
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        int n, cap;
+        Object[] array;
+        while((n = size) >= (cap = (array = queue).length)){
+            tryGrow(array, cap);
+        }
+
+        try{
+            Comparator<? super E> cmp = comparator;
+            if(cmp == null){
+                siftUpComparable(n, e, array);
+            }else{
+                siftUpUsingComparator(n, e, array, cmp);
+            }
+            size = n + 1;
+            notEmpty.signal();
+        }finally {
+            lock.unlock();
+        }
+        return true;
     }
 
     @Override
     public E poll() {
-        return null;
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            return dequeue();
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
     public E peek() {
-        return null;
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            return (size == 0) ? null : (E)queue[0];
+        }finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns the comparator used to order the elements in this queue
+     * or {@code null} if this queue uses the {@linkplain Comparable
+     * natural ordering} of its elements
+     *
+     * @return the comparator used to order the elements in this queue
+     * or {@code null} if this queue uses the natural ordering of its elements
+     */
+    public Comparator<? super E> comparator(){
+        return comparator;
+    }
+
+    /**
+     * Identity-based version for use in Itr.remove
+     */
+    void removeEQ(Object o){
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            Object[] array = queue;
+            for(int i = 0, n = size(); i < n; i++){
+                if(o == array[i]){
+                    removeAt(i);
+                    break;
+                }
+            }
+        }finally {
+            lock.unlock();
+        }
     }
 
 
@@ -335,6 +612,78 @@ public class KPriorityBlockingQueue<E> extends AbstractQueue<E> implements Block
         }
     }
 
+    /**
+     * Tries to grow array to accommodate at least one more lement
+     * (but normally expend by about 50%), giving up (allowing retry)
+     * on contention (which we expect to be race). Call only this while
+     * holding lock
+     *
+     * @param array the heap array
+     * @param oldCap    the length of the array
+     */
+    private void tryGrow(Object[] array, int oldCap){
+        lock.unlock(); // must release and then re-acquire main lock
+        Object[] newArray = null;
+        if(allocationSpinLock == 0 &&
+                unsafe.compareAndSwapInt(this, allocationSpinLockOffset, 0, 1)){
+            try{
+                int newCap = oldCap + ((oldCap < 64)?
+                        (oldCap + 2): // grow faster if small
+                        (oldCap >> 1)
+                                        );
+                if(newCap - MAX_ARRAY_SIZE > 0){ // possible overflow
+                    int minCap = oldCap + 1;
+                    if(minCap < 0 || minCap > MAX_ARRAY_SIZE){
+                        throw new OutOfMemoryError();
+                    }
+                    newCap = MAX_ARRAY_SIZE;
+                }
+                if(newCap > oldCap && queue == array){
+                    newArray = new Object[newCap];
+                }
+            }finally {
+                allocationSpinLock = 0;
+            }
+        }
+
+        if(newArray == null){ // back off if another thread is allocating
+            Thread.yield();
+        }
+        lock.lock();
+        if(newArray != null && queue == array){
+            queue = newArray;
+            System.arraycopy(array, 0, newArray, 0, oldCap);
+        }
+    }
+
+    /**
+     * Removes the ith element from queue
+     * @param i
+     */
+    private void removeAt(int i){
+        Object[] array = queue;
+        int n = size - 1;
+        if(n == i){ // remove last lement
+            array[i] = null;
+        }else{
+            E moved = (E)array[n];
+            array[n] = null;
+            Comparator<? super E> cmp = comparator;
+            if(cmp == null){
+                siftDownComparable(i, moved, array, n);
+            }else{
+                siftDownUsingComparator(i, moved, array, n, cmp);
+            }
+            if(array[i] == moved){
+                if(cmp == null){
+                    siftUpComparable(i, moved, array);
+                }else{
+                    siftUpUsingComparator(i, moved, array, cmp);
+                }
+            }
+        }
+        size = n;
+    }
 
     /**
      * Establishes the heap invariant (described above) in the entire tree
@@ -346,8 +695,78 @@ public class KPriorityBlockingQueue<E> extends AbstractQueue<E> implements Block
         int half = (n >>> 1) -1;
         Comparator<? super E> cmp = comparator;
         if(cmp == null){
-
+            for(int i = half; i >= 0; i--){
+                siftDownComparable(i, (E)array[i], array, n);
+            }
+        }else{
+            for(int i = half; i >= 0; i--){
+                siftDownUsingComparator(i, (E)array[i], array, n, cmp);
+            }
         }
+    }
+
+    private E dequeue(){
+        int n = size - 1;
+        if(n < 0){
+            return null;
+        }
+        else{
+            Object[] array = queue;
+            E result = (E)array[0];
+            E x = (E)array[n];
+            array[n] = null;
+            Comparator<? super E> cmp = comparator;
+            if(cmp == null){
+                siftDownComparable(0, x, array, n);
+            }else{
+                siftDownUsingComparator(0, x, array, n, cmp);
+            }
+            size = n;
+            return result;
+        }
+    }
+
+    /**
+     * Insert item x at position k, maintaining heap invariant by
+     * promoting x up the tree until it is greater than or equal to
+     * its parent, or is the root
+     *
+     * To simplify and speed up coercions and comparisons. the
+     * Comparable and Comparator versions are separated into different
+     * method that are otherwise identical. (Similarly for siftDown)
+     * These methods are statics, with heap state as arguments, to
+     * simplify use in light og possible comparator exceptions
+     *
+     * @param k the position to fill
+     * @param x the item to insert
+     * @param array the heap array
+     * @param <T>
+     */
+    private static <T> void siftUpComparable(int k, T x, Object[] array){
+        Comparable<? super T> key = (Comparable<? super T>)x;
+        while(k > 0){
+            int parent = (k - 1) >>> 1;
+            Object e = array[parent];
+            if(key.compareTo((T)e) >= 0){
+                break;
+            }
+            array[k] = e;
+            k = parent;
+        }
+        array[k] = key;
+    }
+
+    private static <T> void siftUpUsingComparator(int k, T x, Object[] array, Comparator<? super T> cmp){
+        while(k > 0){
+            int parent = (k - 1) >>> 1;
+            Object e = array[parent];
+            if(cmp.compare(x, (T)e) >= 0){
+                break;
+            }
+            array[k] = e;
+            k = parent;
+        }
+        array[k] = x;
     }
 
     /**
@@ -397,6 +816,40 @@ public class KPriorityBlockingQueue<E> extends AbstractQueue<E> implements Block
         }
     }
 
+
+    final class Itr implements Iterator<E>{
+        final Object[] array; // Array of all elements
+        int cursor;           // index of next element to return
+        int lastRet;          // index of last element, or -1 if no such
+
+        public Itr(Object[] array) {
+            lastRet = -1;
+            this.array = array;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return cursor < array.length;
+        }
+
+        @Override
+        public E next() {
+            if(cursor >= array.length){
+                throw new NoSuchElementException();
+            }
+            lastRet = cursor;
+            return (E)array[cursor++];
+        }
+
+        @Override
+        public void remove() {
+            if(lastRet < 0){
+                throw new IllegalStateException();
+            }
+            removeEQ(array[lastRet]);
+            lastRet = -1;
+        }
+    }
 
     // Unsafe mechanics
     private static final Unsafe unsafe;
