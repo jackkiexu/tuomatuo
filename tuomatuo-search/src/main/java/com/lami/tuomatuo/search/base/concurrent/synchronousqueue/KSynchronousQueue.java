@@ -801,6 +801,17 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
                         continue;                   // inconsistent read
                     }
 
+                    /** producer 和 consumer 匹配操作
+                     *  1. 获取 m的 item (注意这里的m是head的next节点, 而m.item的值有可能是它自己, 有可能是null, 有可能已经获取其他线程给它的值)
+                     *  2. 判断 isData 与x的模式是否匹配, 只有produce与consumer才能配成一对
+                     *  3. x == m 判断是否 节点m 是否已经进行取消了, 具体看(QNOde#tryCancel)
+                     *  4. m.casItem 将producer与consumer的数据进行交换 (这里存在并发时可能cas操作失败的情况)
+                     *  5. 若 cas操作成功则将h节点dequeue
+                     *
+                     *  疑惑: 为什么将h进行 dequeue, 而不是 m节点
+                     *  答案: 因为每次进行配对时, 都是将 h.next 节点进行配对, 而对应的TransferStack中头节点就是配对中的节点,
+                     *       QNode 对应的队列中头节点其实是一个 dummy node, 而 SNode对应的头节点一开始是空的
+                     */
                     Object x = m.item;
                     if(isData == (x != null) ||     // m already fulfilled
                             x == m ||               // m cancelled
