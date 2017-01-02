@@ -3,6 +3,11 @@ package com.lami.tuomatuo.search.base.concurrent.tree.rbtree;
 import org.apache.regexp.RE;
 
 /**
+ * http://blog.csdn.net/yxc135/article/details/7939671
+ * http://www.cnblogs.com/skywang12345/p/3603935.html
+ * http://www.cnblogs.com/skywang12345/p/3624343.html
+ * http://www.cnblogs.com/skywang12345/p/3245399.html#aa2
+ *
  * Java 版本的 红黑树
  *
  * Created by xjk on 1/2/17.
