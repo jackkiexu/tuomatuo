@@ -80,7 +80,7 @@ public class MaxHeap extends Heap{
     }
 
     /**
-     * 将新插入的节点与其父节点进行比价, 直到最上一层, 保证 叶数上的最上个节点永远是最大的一个
+     * 将新插入的节点与其父节点进行比价, 直到最上一层, 保证 叶数上的最上个节点永远是最大的一个 赞~\(≧▽≦)/~
      * {@inheritDoc}
      */
     public void adjustUpHeap(int node) {

@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.search.base.concurrent.heapsort;
+package com.lami.tuomatuo.search.base.concurrent.sort.heap.heapsort;
 
 import org.apache.log4j.Logger;
 
@@ -15,6 +15,13 @@ public class HeapSort {
     private static final Logger logger = Logger.getLogger(HeapSort.class);
 
     private static int[] sort = new int[]{1,0,10,20,3,5,6,4,9,8,12,17,34,11}; // 14
+
+    /**
+     * 1. 将整个数组构建成一个堆得形式(最大堆, 每个树的root必定大于 leaf)
+     * 2. 将整棵树的最大值与最小值进行互换
+     * 3. 将上次末尾的节点放置到堆得最合适的节点位置
+     * @param args
+     */
     public static void main(String[] args) {
         buildMaxHeapify(sort);
         log(sort);
@@ -22,15 +29,22 @@ public class HeapSort {
         log(sort);
     }
 
+    /**
+     * 1. 获取数组最后一个节点的 parent 的index
+     * 2. 逐级向上, 将下面子节点中最大的值赋值给 parent
+     * 3. 经过遍历后, index为0的节点的值最大
+     * 4.
+     * @param data
+     */
     private static void buildMaxHeapify(int[] data){
         // 没有子节点的才需要创建最大堆, 从最后一个的父节点开始
         int startIndex = getParentIndex(data.length - 1);
         // 从尾端开始创建最大堆, 每次都是正确的堆
         for(int i = startIndex; i >= 0; i--){
             System.out.println();
-            System.out.println("begin maxHeapify  data.length : "+data.length + ", i : " + i + ", Arrays.toString(data):" + Arrays.toString(data));
+            logger.info("begin maxHeapify  data.length : " + data.length + ", i : " + i + ", Arrays.toString(data):" + Arrays.toString(data));
             maxHeapify(data, data.length, i);
-            System.out.println("over maxHeapify  data.length : "+data.length + ", i : " + i + ", Arrays.toString(data):" + Arrays.toString(data));
+            logger.info("over maxHeapify  data.length : " + data.length + ", i : " + i + ", Arrays.toString(data):" + Arrays.toString(data));
             System.out.println();
         }
     }
@@ -48,19 +62,19 @@ public class HeapSort {
         int left = getChildLeftIndex(index);
         int right = getChildRightIndex(index);
 
-        System.out.println("maxHeapify init heapSize : " + heapSize + ", index : " + index + ", left:" + left + ", right:" + right + ", Arrays.toString(data):" + Arrays.toString(data));
+        logger.info("maxHeapify init heapSize : " + heapSize + ", index : " + index + ", left:" + left + ", right:" + right + ", Arrays.toString(data):" + Arrays.toString(data));
 
         int largest = index;
-        if(left < heapSize && data[index] < data[left]){
+        if(left < heapSize && data[index] < data[left]){ // 注意这里是小于, 不存在等于
             largest = left;
         }
 
-        if(right < heapSize && data[largest] < data[right]){
+        if(right < heapSize && data[largest] < data[right]){  // 注意这里是小于, 不存在等于
             largest = right;
         }
 
         // 得到最大值后可能需要交换, 如果交换了, 其子节点可能就不是最大堆了, 需要重新调整
-        System.out.println("maxHeapify result largest:" + largest + ", index : " + index + ", Arrays.toString(data):" + Arrays.toString(data));
+        logger.info("maxHeapify result largest:" + largest + ", index : " + index + ", Arrays.toString(data):" + Arrays.toString(data));
         if(largest != index){
             int temp = data[index];
             data[index] = data[largest];
@@ -70,11 +84,16 @@ public class HeapSort {
     }
 
     /**
+     *
      * 排序, 最大值放在末尾, 在排序后就成了递增的
      * @param data
      */
     private static void heapSort(int[] data){
         // 末尾与头交换, 交换后调整最大堆
+        /**
+         * 因为 buildMaxHeapify, 所以保证现在整个堆是一个最大堆(每颗树的root都大于其leaf)
+         * 每次的for循环都会将下面节点中的最大的值放在root位置
+         */
         for(int i = data.length - 1; i > 0; i--){
             int temp = data[0];
             data[0] = data[i];
@@ -82,6 +101,7 @@ public class HeapSort {
             logger.info("maxHeapify begin , Arrays.toString(data):" + Arrays.toString(data) + ", i : " + i);
             maxHeapify(data, i, 0);
             logger.info("maxHeapify over , Arrays.toString(data):" + Arrays.toString(data) + ", i : " + i);
+            logger.info("");
         }
     }
 

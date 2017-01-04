@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.search.base.concurrent.heapsort;
+package com.lami.tuomatuo.search.base.concurrent.sort.heap.heapsort;
 
 import java.util.Arrays;
 import java.util.Random;
