@@ -1,6 +1,4 @@
-package com.lami.tuomatuo.search.base.concurrent.Executors;
-
-import sun.nio.ch.ThreadPool;
+package com.lami.tuomatuo.search.base.concurrent.executors;
 
 import java.util.List;
 import java.util.concurrent.*;

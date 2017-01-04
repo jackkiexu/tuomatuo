@@ -1,8 +1,7 @@
-package com.lami.tuomatuo.search.base.concurrent.ThreadPoolExecutors;
+package com.lami.tuomatuo.search.base.concurrent.threadpoolexecutors;
 
 import org.apache.log4j.Logger;
 
-import java.util.Date;
 import java.util.concurrent.*;
 
 /**

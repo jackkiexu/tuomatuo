@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.search.base.concurrent.ThreadPoolExecutors;
+package com.lami.tuomatuo.search.base.concurrent.threadpoolexecutors;
 
 import java.util.ArrayList;
 import java.util.HashSet;

@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.search.base.concurrent.Executors.schedule;
+package com.lami.tuomatuo.search.base.concurrent.executors.schedule;
 
 import java.util.concurrent.Delayed;
 import java.util.concurrent.Future;
