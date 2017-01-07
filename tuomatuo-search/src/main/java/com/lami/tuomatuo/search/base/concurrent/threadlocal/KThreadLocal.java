@@ -40,5 +40,19 @@ public class KThreadLocal<T> {
     /** The next hash code to be given out, Updated atomically, Starts at zero */
     private static AtomicInteger nextHashCode = new AtomicInteger();
 
+    /**
+     * ThreadLocalMap is a customed hash map suitable only for maintaining
+     * thread local values. No operations are exported
+     * outside of the ThreadLocal class. The class is package private to
+     * allow declaration of fields in class Thread. To help deal with
+     * vary large and long-lived usages. the hash table entries use
+     * WeakReferences for keys. However, since reference queues are not
+     * used, stale entries are guaranteed to be removed only when
+     * the table starts running out of space
+     */
+    static class ThreadLocalMap{
+
+    }
+
 
 }
