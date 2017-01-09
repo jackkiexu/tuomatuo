@@ -178,9 +178,9 @@ public class BSTree<T extends Comparable<T>> {
         if (x.right != null)
             return minimum(x.right);
 
-        // 如果x没有右孩子。则x有以下两种可能：
+        // 如果x没有右孩子。则x分以下两种情况进行讨论：
         // (01) x是"一个左孩子"，则"x的后继结点"为 "它的父结点"。
-        // (02) x是"一个右孩子"，则查找"x的最低的父结点，并且该父结点要具有左孩子"，找到的这个"最低的父结点"就是"x的后继结点"。
+        // (02) x是"一个右孩子"，则查找"x的最低的父结点，并且x是该父结点左子树上的孩子节点或直接是左子节点"，找到的这个"最低的父结点"就是"x的后继结点"。
         BSTNode<T> y = x.parent;
         while ((y!=null) && (x==y.right)) {
             x = y;
@@ -191,16 +191,16 @@ public class BSTree<T extends Comparable<T>> {
     }
 
     /*
-     * 找结点(x)的前驱结点。即，查找"二叉树中数据值小于该结点"的"最大结点"。
+     * 找结点(x)的前继结点。即，查找"二叉树中数据值小于该结点"的"最大结点"。
      */
     public BSTNode<T> predecessor(BSTNode<T> x) {
-        // 如果x存在左孩子，则"x的前驱结点"为 "以其左孩子为根的子树的最大结点"。
+        // 如果x存在左孩子，则"x的前继结点"为 "以其左孩子为根的子树的最大结点"。
         if (x.left != null)
             return maximum(x.left);
 
-        // 如果x没有左孩子。则x有以下两种可能：
+        // 如果x没有左孩子。则x由分以下两种情况讨论：
         // (01) x是"一个右孩子"，则"x的前驱结点"为 "它的父结点"。
-        // (01) x是"一个左孩子"，则查找"x的最低的父结点，并且该父结点要具有右孩子"，找到的这个"最低的父结点"就是"x的前驱结点"。
+        // (01) x是"一个左孩子"，则查找"x的最低的父结点，并且x在该父结点右子树上孩子或是其又子节点"，找到的这个"最低的父结点"就是"x的前继结点"。
         BSTNode<T> y = x.parent;
         while ((y!=null) && (x==y.left)) {
             x = y;
@@ -222,7 +222,7 @@ public class BSTree<T extends Comparable<T>> {
         BSTNode<T> y = null;
         BSTNode<T> x = bst.mRoot;
 
-        // 查找z的插入位置
+        // 1. 查找z的插入位置
         while (x != null) {
             y = x;
             cmp = z.key.compareTo(x.key);
@@ -232,8 +232,9 @@ public class BSTree<T extends Comparable<T>> {
                 x = x.right;
         }
 
+        //2. 根据位置决定放在root节点, y的左/右边
         z.parent = y;
-        if (y==null)
+        if (y==null) // y是null
             bst.mRoot = z;
         else {
             cmp = z.key.compareTo(y.key);
@@ -269,16 +270,22 @@ public class BSTree<T extends Comparable<T>> {
     private BSTNode<T> remove(BSTree<T> bst, BSTNode<T> z) {
         BSTNode<T> x=null;
         BSTNode<T> y=null;
+        /** 1. 待删除节点情况
+         * 1) 节点z没有任何一个子节点
+         * 2) 节点至少有一个子节点(此时待删除的节点有可能有右子节点, 也有可能没有, 只要调用 successor)
+         */
 
         if ((z.left == null) || (z.right == null) )
             y = z;
         else
             y = successor(z);
 
+        // 2. 将待删除节点的子节点赋值给x
         if (y.left != null)
             x = y.left;
         else
             x = y.right;
+
 
         if (x != null)
             x.parent = y.parent;
