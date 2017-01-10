@@ -271,25 +271,31 @@ public class BSTree<T extends Comparable<T>> {
         BSTNode<T> x=null;
         BSTNode<T> y=null;
         /** 1. 待删除节点情况
-         * 1) 节点z没有任何一个子节点
-         * 2) 节点至少有一个子节点(此时待删除的节点有可能有右子节点, 也有可能没有, 只要调用 successor)
+         * 1) 节点z最多一个子节点, 则删除z后将对应子节点代替原来的位置
+         * 2) 节点有两个子节点, 调用 successor方法获取其后继节点, 后继节点代替原来的那个节点
          */
-
         if ((z.left == null) || (z.right == null) )
-            y = z;
-        else
-            y = successor(z);
+            y = z; // 节点z最多有一个子节点
+        else{
+            // 这里有个知识点, 既然y是后继节点, 则 y 必定没有两个子节点
+            y = successor(z); // 节点z有两个子节点, 则调用 successor 查询z对应的子节点
+        }
 
         // 2. 将待删除节点的子节点赋值给x
         if (y.left != null)
             x = y.left;
         else
             x = y.right;
-
-
-        if (x != null)
+        /**
+         * x 情况
+         * 1. x是被删除节点的子节点
+         * 2. x是被删除节点的后继节点的子节点
+         */
+        if (x != null) {
             x.parent = y.parent;
+        }
 
+        // y.parent == null, 则说明y是mRoot节点
         if (y.parent == null)
             bst.mRoot = x;
         else if (y == y.parent.left)
@@ -297,8 +303,10 @@ public class BSTree<T extends Comparable<T>> {
         else
             y.parent.right = x;
 
-        if (y != z)
+        // 若y是z的后继节点
+        if (y != z) {
             z.key = y.key;
+        }
 
         return y;
     }
