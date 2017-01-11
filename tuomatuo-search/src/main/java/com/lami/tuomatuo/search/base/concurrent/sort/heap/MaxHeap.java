@@ -96,6 +96,7 @@ public class MaxHeap extends Heap{
         for (int i = 0; i < data.length; i++) {
             data[i] = (int) (Math.random() * 100);
         }
+        data = new int[]{46, 12, 36, 27, 88, 59, 23, 40, 47, 61};
         logger.info("Arrays.toString(data):"+Arrays.toString(data));
         Heap heap = new MaxHeap(data);
         heap.buildHeap();

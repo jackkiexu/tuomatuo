@@ -536,7 +536,7 @@ public class KPriorityQueue<E> extends AbstractQueue<E> implements java.io.Seria
             queue[k] = e; // 将父节点下沉
             k = parent; // 将这次比较的父节点赋值给k, 为下次 k 与其父节点作比较而准备
         }
-        // 这里的k 有可能是最初节点 x的父节点, 也有可能就是x节点最初的下标s
+        // 这里的k 有可能是最初节点 x的父节点, 也有可能就是x节点父节点的下标
         queue[k] = key;
     }
 
