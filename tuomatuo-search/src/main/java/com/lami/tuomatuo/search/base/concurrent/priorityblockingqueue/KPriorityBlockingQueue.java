@@ -12,6 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Concurrent 包中对象的序列化和反序列化方法, SynchronousQueue
+ *
  * An unbounded {@linkplain BlockingQueue blocking queue} that uses
  * the same ordering rules as class {@link java.util.PriorityQueue} and supplies
  * blocking retrieval operation. While this queue is logically
