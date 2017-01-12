@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.concurrent.*;
 
 /**
- * An {@link Executor} that provides methods to manage termination and
+ * An {@link KExecutor} that provides methods to manage termination and
  * methods that can produce a {@link Future} for tracking progress of
  * one or more asynchronous tasks
  *
@@ -23,7 +23,7 @@ import java.util.concurrent.*;
  * </p>
  *
  * <p>
- *     Method {@code submit} extends base method {@link Executor#execute(Runnable)}
+ *     Method {@code submit} extends base method {@link KExecutor#execute(Runnable)}
  *     by creating and returning a {@link Future} that can be used to cancel execution and/or wait for completion.
  *     Methods {@code invokeAny} and {@code invokeAll} perform the most
  *     commonly useful forms of bulk execution, executing a collection of
@@ -104,7 +104,7 @@ import java.util.concurrent.*;
  *
  * Created by xujiankang on 2017/1/11.
  */
-public interface ExecutorService extends Executor{
+public interface KExecutorService extends KExecutor {
 
     /**
      * Initiates an orderly shutdown in which previously submitted
@@ -275,8 +275,49 @@ public interface ExecutorService extends Executor{
      * @throws InterruptedException
      */
     <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException;
-    
+
+    /**
+     * Executes the given tasks,returning the result
+     * of one that has completed successfully (i.e without throwing
+     * an exception), if any do. Upon normal or exceptional rtturn,
+     * tasks that have not completed are cancelled.
+     * The result of this method are undefined if the given
+     * collection is modified while this operation is in process
+     *
+     * @param tasks the collection of tasks
+     * @param <T> the type of the values returned from the tasks
+     * @return the result returned by one og the tasks
+     * @throws InterruptedException if interrupted while waiting
+     * @throws NullPointerException if tasks or any element task
+     *          subject to execution is {@code null}
+     * @throws ExecutionException if no task successfully completes
+     * @throws RejectedExecutionException if tasks cannot be scheduled
+     *      for execution
+     */
     <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException;
 
+    /**
+     * Executes the given tasks, returning the result
+     * of one that has completed successfully (i e, without throwing
+     * an exception), if any do before the given timeout elapse
+     * Upon normal or exceptional return, tasks that have not
+     * completed are cancelled
+     * The result of this method are undefined if the given
+     * collection is modified wihle this operation is in progress
+     *
+     * @param tasks the collection of tasks
+     * @param timeout the maximum time to wait
+     * @param unit the time unit of the timeout argument
+     * @param <T> the type of the values returned from the tasks
+     * @return the result returned by one of the tasks
+     * @throws InterruptedException if interrupted while waiting
+     * @throws ExecutionException if tasks, or unit, or any element
+     *                  task subject to execution is {@code null}
+     * @throws TimeoutException if the given timeout elapse before
+     *          any task successfully completes
+     * @throws ExecutionException if no task successfully completes
+     * @throws RejectedExecutionException if task successfully completes
+     *                  for execution
+     */
     <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException;
 }

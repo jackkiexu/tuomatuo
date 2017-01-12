@@ -10,5 +10,5 @@ import java.util.concurrent.Future;
  *
  * Created by xujiankang on 2017/1/11.
  */
-public interface ScheduledFuture<V> extends Delayed, Future<V> {
+public interface KScheduledFuture<V> extends Delayed, Future<V> {
 }

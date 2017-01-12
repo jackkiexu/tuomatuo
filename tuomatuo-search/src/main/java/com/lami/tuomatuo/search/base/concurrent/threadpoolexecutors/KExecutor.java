@@ -90,7 +90,7 @@ package com.lami.tuomatuo.search.base.concurrent.threadpoolexecutors;
  *
  * Created by xujiankang on 2017/1/11.
  */
-public interface Executor {
+public interface KExecutor {
 
     /**
      * Executes the given command at some time in the future. The command

@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Created by xjk on 11/12/16.
  */
-public class MyThreadPoolExecutor extends AbstractExecutorService {
+public class KThreadPoolExecutor extends AbstractExecutorService {
 
     private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
     private static final int COUNT_BITS = Integer.SIZE - 3;
