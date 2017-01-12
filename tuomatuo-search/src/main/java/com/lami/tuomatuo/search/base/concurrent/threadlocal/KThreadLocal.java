@@ -122,7 +122,8 @@ public class KThreadLocal<T> {
      * @return
      */
     ThreadLocalMap getMap(Thread t){
-        return t.threadLocals;
+        return null;
+//        return t.threadLocals;
     }
 
     /**
@@ -132,7 +133,7 @@ public class KThreadLocal<T> {
      * @param firstValue
      */
     void createMap(Thread t, T firstValue){
-        t.threadLocals = new ThreadLocalMap(this, firstValue);
+//        t.threadLocals = new ThreadLocalMap(this, firstValue);
     }
 
     /**
@@ -253,7 +254,7 @@ public class KThreadLocal<T> {
                 if(e != null){
                     KThreadLocal<Object> key = (KThreadLocal<Object>)e.get();
                     if(key != null){
-                        Object value = key.chil
+//                        Object value = key.chil
                     }
                 }
             }
