@@ -1,8 +1,12 @@
 package com.lami.tuomatuo.search.base.concurrent.threadlocal;
 
+import com.lami.tuomatuo.search.base.concurrent.thread.KThread;
+
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 /**
  * This class provides thread-local variables. These variables differ from
@@ -93,10 +97,45 @@ public class KThreadLocal<T> {
         return null;
     }
 
+
+    public static <S> KThreadLocal<S> withInitial(Supplier<? extends S> supplier){
+        return new SuppliedThreadLocal<>(supplier);
+    }
+
     /**
      * Creates a thread local variable
      */
     public KThreadLocal() {
+    }
+
+    /**
+     * Returns the value in the current thread's copy of this
+     * thread-local variable. if the variable has no value for the
+     * current thread, it is first initialized to the value returned
+     * by an invocation of the {@link #initialValue()} method
+     *
+     * @return the return thread's value of this thread-local
+     */
+    public  T get(){
+       return setInitialValue();
+    }
+
+    /**
+     * Variant of set() t oestablish initialValue. Used instead
+     * of set() in case has overridden the set() method
+     *
+     * @return the initial value
+     */
+    private T setInitialValue(){
+        T value = initialValue();
+        Thread t = Thread.currentThread();
+        ThreadLocalMap map = getMap(t);
+        if(map != null){
+            map.set(this, value);
+        }else{
+            createMap(t, value);
+        }
+        return value;
     }
 
     /**
@@ -160,6 +199,24 @@ public class KThreadLocal<T> {
      */
     T childValue(T parentValue){
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * An extension of KThreadLocal that obtains its initial value from
+     * the specified {@code Supplier}
+     */
+    static final class SuppliedThreadLocal<T> extends KThreadLocal<T>{
+
+        private final Supplier<? extends T> supplier;
+
+        public SuppliedThreadLocal(Supplier<? extends T> supplier) {
+            this.supplier = Objects.requireNonNull(supplier);
+        }
+
+        @Override
+        protected T initialValue() {
+            return supplier.get();
+        }
     }
 
     /**
@@ -261,6 +318,74 @@ public class KThreadLocal<T> {
         }
 
         /**
+         * Version of getEntry method for use when key is not found in
+         * its firect hash slot
+         *
+         * @param key the thread local object
+         * @param i the table index for key's hash code
+         * @param e the entry at table[i]
+         * @return the entry associated with key, or null if no such
+         */
+        private Entry getEntryAfterMiss(KThreadLocal<?> key, int i, Entry e){
+            Entry[] tab = table;
+            int len = tab.length;
+
+            while(e != null){
+                KThreadLocal<?> k = e.get();
+                if(k == key){
+                    return e;
+                }
+                if(k == null){
+                    expungeStaleEntry(i);
+                }
+                else{
+                    i = nextIndex(i, len);
+                }
+                e = tab[i];
+            }
+            return null;
+        }
+
+        /**
+         * Set the value associated with key
+         *
+         * @param key the thread local object
+         * @param value the value to be set
+         */
+        private void set(KThreadLocal<?> key, Object value){
+            /**
+             * We don't use a fast path as with get() because it is at
+             * least as common to use set() to create new entries as
+             * it is to replace existing ones, in which case, as fast
+             * path would fail more often more often than not
+             */
+            Entry[] tab = table;
+            int len = tab.length;
+            int i = key.threadLocalHashCode & (len - 1);
+            for(Entry e = tab[i];
+                    e != null;
+                e = tab[i = nextIndex(i, len)]){
+                KThreadLocal<?> k = e.get();
+
+                if(k == key){
+                    e.value = value;
+                    return;
+                }
+
+                if(k == null){
+                    replaceStaleEntry(key, value, i);
+                    return;
+                }
+            }
+
+            tab[i] = new Entry(key, value);
+            int sz = ++size;
+            if(!cleanSomeSlots(i, sz) && sz >= threshold){
+                rehash();
+            }
+        }
+
+        /**
          * Remove the entry for key
          */
         private void remove(KThreadLocal<?> key){
@@ -284,13 +409,50 @@ public class KThreadLocal<T> {
          * the value parameter is tored in the entry, whether or not
          * an entry already exist for the specified key
          *
-         * As a side effect, this method expun
+         * As a side effect, this method expunges all stale entries in the
+         * "run" containing the stale entry (A run is a sequence of entries between two null slots)
          *
-         * @param key
-         * @param value
-         * @param staleSlot
+         * @param key the key
+         * @param value the value to be associated with key
+         * @param staleSlot index of the first stale entry encountered while
+         *                  searching for key
          */
         private void replaceStaleEntry(KThreadLocal<?> key, Object value, int staleSlot){
+            Entry[] tab = table;
+            int len = tab.length;
+            Entry e;
+
+            /**
+             * Back up check for prior stale entry in current run
+             * We clean out whole runs at a time avoid continual
+             * incremental rehashing due to garbage collector freeing
+             * up refs in bunches (i. e whenever the collector runs)
+             */
+            int slotToExpunge = staleSlot;
+            for(int i = preIndex(staleSlot, len);
+                (e = tab[i]) != null;
+                    i = preIndex(i, len)){
+                if(e.get() == null){
+                    slotToExpunge = i;
+                }
+            }
+
+            /**
+             * Find either the key or trailing null slot of run, whichever
+             * occurs first
+             */
+            for(int i = nextIndex(staleSlot, len);
+                (e = tab[i]) != null;
+                    i = nextIndex(i, len)){
+                KThreadLocal<?> k = e.get();
+
+                /**
+                 * If we find key, then we need to swap it
+                 * with the stale entry to maintain hash table order.
+                 * The newly stale, or any other stale
+                 */
+            }
+
 
         }
 
