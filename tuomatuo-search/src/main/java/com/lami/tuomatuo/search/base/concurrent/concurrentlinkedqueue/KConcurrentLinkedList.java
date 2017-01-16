@@ -52,12 +52,15 @@ public class KConcurrentLinkedList<E> extends AbstractQueue<E> implements Queue<
 
     private static final long serialVersionUID = -980957881043363309L;
 
-
+    /** head 节点 */
     private transient volatile Node<E> head;
-
+    /** tail 节点 */
     private transient volatile Node<E> tail;
 
     public KConcurrentLinkedList() {
+        /** 默认会构造一个 dummy 节点
+         * dummy 的存在是防止一些特殊复杂代码的出现
+         */
         head = tail = new Node<E>(null);
     }
 
@@ -153,18 +156,13 @@ public class KConcurrentLinkedList<E> extends AbstractQueue<E> implements Queue<
                     // Successful CAS is the linearization point
                     // for e to become an element of the queue,
                     // and for newNode to become "live"
-                    if(p != t){ // hop two nodes at a time , 5. 每每经过一次 p = q 操作(向后遍历节点), 则 p != t 成立, 这个也是 tail 滞后于 head 的体现
+                    if(p != t){ // 5. 每每经过一次 p = q 操作(向后遍历节点), 则 p != t 成立, 这个也说明 tail 滞后于 head 的体现
                         casTail(t, newNode); // Failure is OK
                     }
                     return true;
                 }
-                // Lost CAS race to another thread; re-read next
             }
-            else if(p == q){  // 5. (p == q) 成立, 则说明p是pool()时调用 "updateHead" 导致的(删除头节点); 此时说明 tail 指针已经 fallen off queue， 所以进行 jump 操作， 若在t没变化, 则 jump 到 head, 若 t 已经改变(jump操作在另外的线程中执行), 则jump到 head 节点, 直到找到 node.next = null 的节点
-                // We have fallen off list. If tail is unchanged, it
-                // will also be off-list, in which case we need to
-                // jump to head, from which all live nodes are always
-                // reachable. Else the new tail is a better bet
+            else if(p == q){  // 6. (p == q) 成立, 则说明p是pool()时调用 "updateHead" 导致的(删除头节点); 此时说明 tail 指针已经 fallen off queue， 所以进行 jump 操作， 若在t没变化, 则 jump 到 head, 若 t 已经改变(jump操作在另外的线程中执行), 则jump到 head 节点, 直到找到 node.next = null 的节点
                 /** 1. 大前提 p 是已经被删除的节点
                  *  2. 判断 tail 是否已经改变
                  *      1) tail 已经变化, 则说明 tail 已经重新定位
@@ -183,7 +181,6 @@ public class KConcurrentLinkedList<E> extends AbstractQueue<E> implements Queue<
                  */
                 p = (t != (t = tail))? t : head;
             }else{
-                // Check for tail update after two hops
                 // 7. (p != t) -> 说明执行过 p = q 操作(向后遍历操作), "(t != (t = tail)))" -> 说明尾节点在其他的线程发生变化
                 // 为什么 "(t != (t = tail)))" 一定要满足呢, 因为 tail变更, 节省了 (p = q) 后 loop 中的无畏操作, tail 更新说明 q节点肯定也是无效的
                 p = (p != t && (t != (t = tail))) ? t : q;
@@ -204,7 +201,7 @@ public class KConcurrentLinkedList<E> extends AbstractQueue<E> implements Queue<
                 if(item != null && p.casItem(item, null)){  // 2. 若 node.item != null, 则进行cas操作, cas成功则返回值
                     // Successful CAS is the linearization point
                     // for item to be removed from this queue
-                    if(p != h){ // hop two nodes at a time  // 3. 若此时的 p != h, 则更新 head(那啥时 p != h, 额, 这个绝对坑啊)
+                    if(p != h){ // hop two nodes at a time  // 3. 若此时的 p != h, 则更新 head(那啥时 p != h, 额, 这个绝对坑啊 -> 执行第8步后)
                         updateHead(h, ((q = p.next) != null)? q : p); // 4. 进行 cas 更新 head ; "(q = p.next) != null" 怕出现p此时是尾节点了; 在 ConcurrentLinkedQueue 中正真的尾节点只有1个(必须满足node.next = null)
                     }
                     return item;
@@ -687,23 +684,75 @@ public class KConcurrentLinkedList<E> extends AbstractQueue<E> implements Queue<
         }
     }
 
-    /**
-     * This is a modification of Michael & Scott algorithm,
+    /*
+     * This is a modification of the Michael & Scott algorithm,
      * adapted for a garbage-collected environment, with support for
-     * interior(内部/中间) node deletion (to support remove(Object)), For
+     * interior node deletion (to support remove(Object)).  For
      * explanation, read the paper.
      *
      * Note that like most non-blocking algorithms in this package,
      * this implementation relies on the fact that in garbage
-     * collected system, there is no possibility of ABA problems due
+     * collected systems, there is no possibility of ABA problems due
      * to recycled nodes, so there is no need to use "counted
-     * pointer" or related teachniques seen in versions used in
-     * "non-GC" ed setting
+     * pointers" or related techniques seen in versions used in
+     * non-GC'ed settings.
      *
-     * The fundamental invariants(基础的不变性) are:
-     * - There is exa
+     * The fundamental invariants are:
+     * - There is exactly one (last) Node with a null next reference,
+     *   which is CASed when enqueueing.  This last Node can be
+     *   reached in O(1) time from tail, but tail is merely an
+     *   optimization - it can always be reached in O(N) time from
+     *   head as well.
+     * - The elements contained in the queue are the non-null items in
+     *   Nodes that are reachable from head.  CASing the item
+     *   reference of a Node to null atomically removes it from the
+     *   queue.  Reachability of all elements from head must remain
+     *   true even in the case of concurrent modifications that cause
+     *   head to advance.  A dequeued Node may remain in use
+     *   indefinitely due to creation of an Iterator or simply a
+     *   poll() that has lost its time slice.
      *
-     * @param <E>
+     * The above might appear to imply that all Nodes are GC-reachable
+     * from a predecessor dequeued Node.  That would cause two problems:
+     * - allow a rogue Iterator to cause unbounded memory retention
+     * - cause cross-generational linking of old Nodes to new Nodes if
+     *   a Node was tenured while live, which generational GCs have a
+     *   hard time dealing with, causing repeated major collections.
+     * However, only non-deleted Nodes need to be reachable from
+     * dequeued Nodes, and reachability does not necessarily have to
+     * be of the kind understood by the GC.  We use the trick of
+     * linking a Node that has just been dequeued to itself.  Such a
+     * self-link implicitly means to advance to head.
+     *
+     * Both head and tail are permitted to lag.  In fact, failing to
+     * update them every time one could is a significant optimization
+     * (fewer CASes). As with LinkedTransferQueue (see the internal
+     * documentation for that class), we use a slack threshold of two;
+     * that is, we update head/tail when the current pointer appears
+     * to be two or more steps away from the first/last node.
+     *
+     * Since head and tail are updated concurrently and independently,
+     * it is possible for tail to lag behind head (why not)?
+     *
+     * CASing a Node's item reference to null atomically removes the
+     * element from the queue.  Iterators skip over Nodes with null
+     * items.  Prior implementations of this class had a race between
+     * poll() and remove(Object) where the same element would appear
+     * to be successfully removed by two concurrent operations.  The
+     * method remove(Object) also lazily unlinks deleted Nodes, but
+     * this is merely an optimization.
+     *
+     * When constructing a Node (before enqueuing it) we avoid paying
+     * for a volatile write to item by using Unsafe.putObject instead
+     * of a normal write.  This allows the cost of enqueue to be
+     * "one-and-a-half" CASes.
+     *
+     * Both head and tail may or may not point to a Node with a
+     * non-null item.  If the queue is empty, all items must of course
+     * be null.  Upon creation, both head and tail refer to a dummy
+     * Node with null item.  Both head and tail are only updated using
+     * CAS, so they never regress, although again this is merely an
+     * optimization.
      */
     private static class Node<E> {
         volatile E item;
