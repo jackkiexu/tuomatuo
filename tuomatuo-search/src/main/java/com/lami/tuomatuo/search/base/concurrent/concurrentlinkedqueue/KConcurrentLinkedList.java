@@ -104,6 +104,10 @@ public class KConcurrentLinkedList<E> extends AbstractQueue<E> implements Queue<
     /**
      * Tries to CAS head to p, If successfully, repoint old head to itself
      * as sentinel for succ(), blew
+     *
+     * 将节点 p设置为新的节点(这是原子操作),
+     * 之后将原节点的next指向自己, 直接变成一个哨兵节点(为queue节点删除及garbage做准备)
+     *
      * @param h
      * @param p
      */
