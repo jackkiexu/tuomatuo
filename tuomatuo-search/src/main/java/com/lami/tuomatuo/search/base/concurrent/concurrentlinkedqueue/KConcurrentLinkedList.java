@@ -120,6 +120,9 @@ public class KConcurrentLinkedList<E> extends AbstractQueue<E> implements Queue<
      * @param p
      * @return
      */
+    /**
+     * 获取 p 的后继节点, 若 p.next = p (updateHead 操作导致的), 则说明 p 已经 fall off queue, 需要 jump 到 head
+     */
     final Node<E> succ(Node<E> p){
         Node<E> next = p.next;
         return (p == next)? head : next;
@@ -136,25 +139,24 @@ public class KConcurrentLinkedList<E> extends AbstractQueue<E> implements Queue<
      */
     public boolean offer(E e){
         checkNotNull(e);
-        final Node<E> newNode = new Node<E>(e);
+        final Node<E> newNode = new Node<E>(e); // 1. 构建一个 node
 
-        for(Node<E> t = tail, p = t;;){
-            Node<E> q = p.next;
-            if(q == null){
+        for(Node<E> t = tail, p = t;;){ // 2. 初始化变量 p = t = tail
+            Node<E> q = p.next;  // 3. 获取 p 的next
+            if(q == null){      // q == null, 说明 p 是 last Node
                 // p is last node
-                if(p.casNext(null, newNode)){
+                if(p.casNext(null, newNode)){   // 4. 对 p 进行 cas 操作, newNode -> p.next
                     // Successful CAS is the linearization point
                     // for e to become an element of the queue,
                     // and for newNode to become "live"
-                    if(p != t){ // hop two nodes at a time
+                    if(p != t){ // hop two nodes at a time , 5. 每每经过一次 p = q 操作(向后遍历节点), 则 p != t 成立, 这个也是 tail 滞后于 head 的体现
                         casTail(t, newNode); // Failure is OK
                     }
                     return true;
                 }
                 // Lost CAS race to another thread; re-read next
             }
-            // 调用 poll 时, 调用 updateHead 导致的
-            else if(p == q){
+            else if(p == q){  // 5. (p == q) 成立, 则说明p是pool()时调用 "updateHead" 导致的(删除头节点); 此时说明 tail 指针已经 fallen off queue， 所以进行 jump 操作， 若在t没变化, 则 jump 到 head, 若 t 已经改变(jump操作在另外的线程中执行), 则jump到 head 节点, 直到找到 node.next = null 的节点
                 // We have fallen off list. If tail is unchanged, it
                 // will also be off-list, in which case we need to
                 // jump to head, from which all live nodes are always
@@ -178,6 +180,8 @@ public class KConcurrentLinkedList<E> extends AbstractQueue<E> implements Queue<
                 p = (t != (t = tail))? t : head;
             }else{
                 // Check for tail update after two hops
+                // 7. (p != t) -> 说明执行过 p = q 操作(向后遍历操作), "(t != (t = tail)))" -> 说明尾节点在其他的线程发生变化
+                // 为什么 "(t != (t = tail)))" 一定要满足呢, 因为 tail变更, 节省了 (p = q) 后 loop 中的无畏操作, tail 更新说明 q节点肯定也是无效的
                 p = (p != t && (t != (t = tail))) ? t : q;
             }
         }
@@ -201,14 +205,14 @@ public class KConcurrentLinkedList<E> extends AbstractQueue<E> implements Queue<
                     }
                     return item;
                 }
-                else if((q = p.next) == null){  // queue是空的, p是尾节点
-                    updateHead(h, p); // 5. 这一步除了更新head 外, 还是helpDelete删除队列操作, 删除 p 之前的节点(和 ConcurrentSkipListMap.Node 中的 helpDelete 有异曲同工之妙)
+                else if((q = p.next) == null){  // 5. queue是空的, p是尾节点
+                    updateHead(h, p); // 6. 这一步除了更新head 外, 还是helpDelete删除队列操作, 删除 p 之前的节点(和 ConcurrentSkipListMap.Node 中的 helpDelete 有异曲同工之妙)
                     return null;
                 }
-                else if(p == q){ // 6. p == q -> 说明 p节点已经是删除了的head节点, 为啥呢?(见updateHead方法)
+                else if(p == q){ // 7. p == q -> 说明 p节点已经是删除了的head节点, 为啥呢?(见updateHead方法)
                     continue restartFromHead;
                 }else
-                    p = q; // 7. 将 q -> p, 进行下个节点的 poll 操作(初始化一个 dummy 节点, 在单线程情况下, 这个 if 判断是第一个执行的)
+                    p = q; // 8. 将 q -> p, 进行下个节点的 poll 操作(初始化一个 dummy 节点, 在单线程情况下, 这个 if 判断是第一个执行的)
             }
         }
     }
@@ -381,26 +385,29 @@ public class KConcurrentLinkedList<E> extends AbstractQueue<E> implements Queue<
      * @param o element to be removed from this queue, if present
      * @return {@code} if this queue changed as a result of the call
      */
+    /**
+     * 删除 item = o 的节点
+     */
     public boolean remove(Object o){
        if(o != null){
            Node<E> next, pred = null;
-           for(Node<E> p = first(); p != null; pred = p, p = next){
+           for(Node<E> p = first(); p != null; pred = p, p = next){  // 1. 进行数据的初始化, first()比较简单, 不说了
                boolean removed = false;
                E item = p.item;
-               if(item != null){
-                   if(!o.equals(item)){
-                       next = succ(p);
+               if(item != null){ // item != null 说明 p 只是有效节点
+                   if(!o.equals(item)){ // 2. 对应的 节点p 不满足需求
+                       next = succ(p); // 3. 获取 p 的后继节点进行 pred = p, p = next操作
                        continue;
                    }
-                   removed = p.casItem(item, null);
+                   removed = p.casItem(item, null); // 4. 直接 cas item -> null 进行删除, 这步操作可能失败
                }
 
-               next = succ(p);
-               if(pred != null && next != null){
+               next = succ(p);  // 3. 获取 p 的后继节点进行 pred = p, p = next操作
+               if(pred != null && next != null){ // 只有 loop 过一次之后,
                    pred.casNext(p, next);
                }
 
-               if(removed){
+               if(removed){ // 删除成功 return
                    return true;
                }
            }
