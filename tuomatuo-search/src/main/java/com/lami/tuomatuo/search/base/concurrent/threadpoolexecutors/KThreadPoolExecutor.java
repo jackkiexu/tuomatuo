@@ -426,30 +426,106 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
      */
     private BlockingQueue<Runnable> workQueue;
 
+    /**
+     * Lock held on access to workers set and related bookkeeping
+     * While we could use a concurrent set of some sort, it turns out
+     * to be generally preferable to use a lock. Among the reasons is
+     * that this serializes interruptIdleWorkers, which avoid
+     * unnecessary interrupt storms, especially during shutdown.
+     * Otherwise exiting threads would concurrently interrupt those
+     * that have not yet interrupted. It also simplifies some of the
+     * associated statistics bookkeeping of largestPoolSize etc.We
+     * also hold mainLock on shutdown and shutdownNow, for the sake of
+     * ensuring workers set is stable while separately checking
+     * permission to interrupt and actually interrupting
+     */
     private final ReentrantLock mainLock = new ReentrantLock();
 
+    /**
+     * Set containing all worker threads in pool, Accessed only when
+     * holding mainLock
+     */
     private final HashSet<Worker> workers = new HashSet<Worker>();
 
+    /**
+     * Wait condition to support awaitTermination
+     */
     private final Condition termination = mainLock.newCondition();
 
+    /**
+     * Tracks largest attained pool size, Accessed only under
+     * mainLock
+     */
     private int largestPoolSize;
 
+    /**
+     * Counter for completed tasks. Updated only on termination of
+     * worker threads, Accessed only under mainLock
+     */
     private long completedTaskCount;
 
+    /**
+     * All user control parameters are declared as volatiles so that
+     * ongoing actions are based on freshest values, but without need
+     * for locking, since no internal invariants depend on them
+     * changing synchronously with respect to other actions
+     */
+    /**
+     * Factory for new theads. All threads are created using this factory
+     * (via method addWorker). All callers must be prepared
+     * for addWorker to fail, which may refect a system or user's
+     * policy limiting the number of threads. Even though it is not
+     * treated as an Error, failure to create threads may result in
+     * new tasks being rejected or existing ones remaining stuck in the queue
+     *
+     * we go further and preserve pool invariants even in the face of
+     * errors such as OutOgMemoryError. that might be thrown while
+     * trying to create threads, Such errors are rather common due to
+     * the need to allocate a native stack in Thread start. and users
+     * will want to perform clean pool shutdown to clean up. There
+     * will likely be enough memory available for the cleanup code to
+     * complete without encountering yet another OutMemoryError
+     */
     private volatile ThreadFactory threadFactory;
 
+    /** Handler called when saturated or shutdown in execute */
     private volatile RejectedExecutionHandler handler;
 
+    /**
+     * Timeout in nanoseconds for idle threads waiting for work
+     * Threads use this timeout when there are more than corePoolSize present or if allowCoreThreadTimeOut. Otherwise they wait
+     * forever for new work
+     */
     private volatile long keepAliveTime;
 
+    /**
+     * If false (default), core threads stay alive even when idle.
+     * If true, core threads use keepAliveTime to time out waiting
+     * for work
+     */
     private volatile boolean allowCoreThreadTimeOut;
 
+    /**
+     * Core pool size is the minimum number of workers to keep alive
+     * (and not allow to time out etc) unless allowCoreThreadTimeOut
+     * is set, in which case the minimum is zero
+     */
     private volatile int corePoolSize;
 
+    /**
+     * Maximum pool size. Note that the actual maximum is internally
+     * bounded by CAPACITY
+     */
     private volatile int maximumPoolSize;
 
+    /**
+     * The default rejected execution handler
+     */
     private static final RejectedExecutionHandler defaultHandler = new AbortPolicy();
 
+    /**
+     * 
+     */
     private static final RuntimePermission shutdownPerm = new RuntimePermission("modifyThread");
 
     public interface RejectedExecutionHandler {
