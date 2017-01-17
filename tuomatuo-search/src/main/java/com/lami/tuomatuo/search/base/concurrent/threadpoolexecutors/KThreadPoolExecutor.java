@@ -524,7 +524,24 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
     private static final RejectedExecutionHandler defaultHandler = new AbortPolicy();
 
     /**
-     * 
+     * Permission required for callers of shutdown and shutdownNow
+     * We additionally require (checkShutdownAccess) that callers
+     * have permission to actually interrupt threads in the woker set
+     * (as governed by Thread.interrupt, which relies on
+     * ThreadGroup.checkAccess, which in turn relies on
+     * SecurityManager,checkAccess). Shutdowns are attempted only if
+     * these checks pass
+     *
+     * All actual invocations of Thread.interrupt (see
+     * interruptIdleWorkers and interruptWorkers) ignore
+     * SecurityExceptions, meaning that the attempted interrupts
+     * silently fail. In the case of shutdown, they should not fail
+     * unless the SecurityManager has inconsistent policies, sometimes
+     * allowing access to a thread and sometimes not. In such cases,
+     * failure to actually interrupt threads may disable or delay full
+     * termination. Other uses of interruptIdleWorkers are advisory,
+     * and failure to actually interrupt will merely delay response to
+     * configuration changes so is not handled exceptionaly
      */
     private static final RuntimePermission shutdownPerm = new RuntimePermission("modifyThread");
 
@@ -532,7 +549,17 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         void rejectedExecution(Runnable r, AbstractExecutorService executor);
     }
 
-
+    /**
+     * Class Worker mainly maintains interrupt control state for
+     * threads running tasks, along with other minor bookkeeping.
+     * This class opportunistically extends AbstractQueueSynchronizer
+     * to simplify acquiring and releasing a lock surrounding each
+     * task execution. This protects against interrupts that are
+     * intended to wake up a worker thread waiting for a task from
+     * instead interrupting a task being run. We implement a simple
+     * non-reentrant mutual exclusion lock rather than use
+     * 
+     */
     private final class Worker extends AbstractQueuedSynchronizer implements Runnable{
 
         private static final long serialVersionUID = 6138294804551838833L;
