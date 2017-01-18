@@ -386,7 +386,6 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
     private static int workerCountOf(int c)  { return c & CAPACITY; }
     private static int ctlOf(int rs, int wc) { return rs | wc; }
 
-    private static final boolean ONLY_ONE = true;
 
     /**
      * Bit field accessors that don't require unpacking ctl.
@@ -561,25 +560,40 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
      * 
      */
     private final class Worker extends AbstractQueuedSynchronizer implements Runnable{
-
+        /**
+         * This class will never be serialized, but we provide a
+         * serialVersionUID to suppress a javac warning
+         */
         private static final long serialVersionUID = 6138294804551838833L;
 
+        /** Thread this worker is running in. Null if factory fails */
         Thread thread;
-
+        /** Initial task to run. Possibly null. */
         Runnable firstTask;
-
+        /** Per-thread task counter */
         volatile long completedTasks;
 
+        /**
+         * Creates with given first task and thread from ThreadFactory
+         * @param firstTask the first task (null if none)
+         */
         public Worker(Runnable firstTask) {
             setState(-1); // inhibit interrupts until runWorker
             this.firstTask = firstTask;
             this.thread = getThreadFactory().newThread(this);
         }
 
+        /** Delegates main run loop to outer runWorker */
         public void run() {
             runWorker(this);
         }
 
+        /**
+         * Lock methods
+         *
+         * The value 0 represents the unlocked state
+         * The value 1 represents the locked state
+         */
         protected boolean isHeldExclusively(){
             return getState() != 0;
         }
@@ -619,6 +633,17 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         return threadFactory;
     }
 
+    /**
+     * Methods for setting control state
+     */
+
+    /**
+     * Transitions runState to given target. or leaves it alone if
+     * already at least the given target
+     *
+     * @param targetState the desired state, either SHUTDOWN or STOP
+     *                    (but not TIDYING or TERMINATED -- use tryTerminate for that)
+     */
     private void advanceRunState(int targetState){
         for(;;){
             int c = ctl.get();
@@ -628,6 +653,16 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
+    /**
+     * Transitions to TERMINATED state if either (SHUTDOWN and pool
+     * and queue empty) or (STOP and pool empty). IF otherwise
+     * eligible to terminate but workerCount is nonzero, interrupts an
+     * idle worker to ensure that shutdown signals propagate. This
+     * method must be called following any action that might make
+     * termination possible -- reducing worker count or removing tasks
+     * from the queue during shutdown. The method is non-private to
+     * allow access from ScheduledThreadPoolExecutor
+     */
     final void tryTerminate(){
         for(;;){
             int c = ctl.get();
@@ -655,10 +690,22 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
             }finally {
                 mainLock.unlock();
             }
-
+            // else retry on failed CAS
         }
     }
 
+    /**
+     * Methods for controlling interrupts to worker threads
+     */
+
+    /**
+     * If there is a security manager, makes sure caller has
+     * permission to shut down threads in general (see shutdownPerm).
+     * If this passes, additionally makes sure the caller is allowed
+     * to interrupted each worker thread. This might not be true even if
+     * first check passed. if the SecurityManager treats some threads
+     * specially
+     */
     private void checkShutdownAccess(){
         SecurityManager security = System.getSecurityManager();
         if(security != null){
@@ -675,6 +722,10 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
+    /**
+     * Interrupts all threads, even if active. Ignores SecurityExceptions
+     * (in which case some threads may remain uninterrupted)
+     */
     private void interruptWorker(){
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
@@ -687,6 +738,26 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
+    /**
+     * Interrupts threads that might be waiting for tasks (as
+     * indicated by not being locked) so they can check for
+     * termination or configuration changes. Ignores
+     * SecurityException (in which case some threads may remain
+     * uninterrupted)
+     *
+     * @param onlyOne If true, interrupt at most one worker. This is
+     *                called only from tryTerminate when termination is otherwise
+     *                enabled but there are still other workers. In this case, at
+     *                most one waiting worker is interrupted to propagate shutdown
+     *                signals in case all threads are currently waiting.
+     *                Interrupting any arbitrary threadensures that newly arriving
+     *                workers since shutdown began will also eventually exit
+     *                To guarantee eventual termination. it suffices to always
+     *                interrupt only one idle worker, but shutdown() interrupts all
+     *                idle workers so that redundant workers exit promptly, not
+     *                waiting for a straggler task to finish
+     *
+     */
     private void interruptIdleWorkers(boolean onlyOne){
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
@@ -710,19 +781,57 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
+    /**
+     * Common form of interruptIdleWorkers, to avoid having to
+     * remember what the boolean argument means
+     */
     private void interruptIdleWorkers(){
         interruptIdleWorkers(false);
     }
 
+    private static final boolean ONLY_ONE = true;
+
+    /**
+     * Misc utilities, most of which are also exported to
+     * ScheduledThreadPoolExecutor
+     */
+
+    /**
+     * Invoke the rejected execution handler for the given command
+     * Package-protected for use by ScheduledThreadPoolExecutor
+     */
     void reject(Runnable command){
         handler.rejectedExecution(command, this);
     }
 
+    /**
+     * Performs any further cleanup following run state transition on
+     * invocation of shutdown. A no-op here, but used by
+     * ScheduledThreadPoolExecutor to cancel delayed tasks
+     */
+    void onShutdown(){
+
+    }
+
+    /**
+     * State check needed by ScheduledThreadPoolExecutor to
+     * enable runnng tasks during shutdown
+     * @param shutdownOK
+     * @return
+     */
     boolean isRunnableOrShutdown(boolean shutdownOK){
         int rs = runStateOf(ctl.get());
         return rs == RUNNING || (rs == SHUTDOWN && shutdownOK);
     }
 
+    /**
+     * Drains the task queue into a new list, normally using
+     * drainTo. But if the queue is a DelayQueue or any other kind of
+     * queue for which poll or drainTo may fail to rmove some
+     * elements. it deletes them one by one
+     *
+     * @return
+     */
     private List<Runnable> drainQueue(){
         BlockingQueue<Runnable> q = workQueue;
         ArrayList<Runnable> taskList = new ArrayList<Runnable>();
@@ -737,12 +846,42 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         return taskList;
     }
 
+    /**
+     * Methods for creating, running and cleaning up after workers
+     */
+
+    /**
+     * Checks if a new worker can be added with respect to current
+     * pol state and the given bound (either core or maximum). if so,
+     * the worker count is adjusted accordingly, and, if possible, a
+     * new worker is created and started, running firstTask as its
+     * first task. This method returns false if the poll is stopped or
+     * eligible to shutdown. It also returns false if the thread
+     * creation fails, either due to the thread factory returning
+     * null, or due to an exception (typically OutOfMemoryError in
+     * Thread.start())., we roll back cleanly
+     *
+     * @param firstTask the task the new thread should run first(or
+     *                  null if none). Workers are created with an initial first task
+     *                  (in method execute()) to bypass queuing when there are fewer
+     *                  than corePoolSize threads (in which case we always start one),
+     *                  or when the queue is full (in which case we must bypass queue).
+     *                  Initially idle threads are usually created via
+     *                  prestartCoreThread or to replace other dying workers
+     *
+     * @param core if true use corePoolSize as bound, else
+     *             maximumPoolSize. (A boolean indicator is used here rather than a
+     *             value to ensure reads of fresh values after checking other pool
+     *             state)
+     * @return true if successful
+     */
     private boolean addWorker(Runnable firstTask, boolean core){
         retry:
         for(;;){
             int c = ctl.get();
             int rs = runStateOf(c);
 
+            // Check if queue empty if necessary
             if(rs >= SHUTDOWN && !(rs == SHUTDOWN && firstTask == null && !workQueue.isEmpty())){
                 return false;
             }
@@ -758,7 +897,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
                 c= ctl.get();
                 if(runStateOf(c) != rs){
                     continue  retry;
-                }
+                } // else CAS failed due to workerCount change; retry inner loop
             }
         }
 
@@ -774,6 +913,10 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
                 final ReentrantLock mainLock = this.mainLock;
                 mainLock.lock();
                 try {
+                    /** Recheck while holding lock
+                     *  Back out on ThreadFactory failure or if
+                     *  shut down before lock acquired
+                     */
                     int rs = runStateOf(ctl.get());
                     if(rs < SHUTDOWN || (rs == SHUTDOWN && firstTask == null)){
                         if(t.isAlive()){
@@ -805,6 +948,13 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
     }
 
 
+    /**
+     * Rolls back worker thread creation
+     * - removes worker from workers, if present
+     * - decrement worker count
+     * - rechecks for termination, in case the existence of this
+     * worker was holding up termination
+     */
     private void addWorkerFailed(Worker w){
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
@@ -817,6 +967,10 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         }finally {
             mainLock.unlock();
         }
+    }
+
+    private void processWorkerExit(Worker w, boolean completedAbruptly){
+
     }
 
     protected void terminated() {}
