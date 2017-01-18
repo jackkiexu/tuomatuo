@@ -969,15 +969,275 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
+    /**
+     * Performs cleanup and bookkeeping for a dying worker. Called
+     * only from worker threads. Unless completeAbruptly is set
+     * assumes that workerCount has already been adjusted to account
+     * for exit. This method removes thread from worker set, and
+     * possibly terminates the pool or replaces the worker if either
+     * it exited dur to user task exception or if fewer than
+     * corePoolSize workers are running or queue is non-empty but
+     * there no workers
+     *
+     * @param w the worker
+     * @param completedAbruptly if the worker died due to user exception
+     */
     private void processWorkerExit(Worker w, boolean completedAbruptly){
+        if(completedAbruptly){ // if abrupt, then workerCount wan't adjusted
+            decrementWorkerCount();
+        }
 
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try{
+            completedTaskCount += w.completedTasks;
+        }finally {
+            mainLock.unlock();
+        }
+
+        tryTerminate();
+
+        int c = ctl.get();
+        if(runStateLessThan(c, STOP)){
+            if(!completedAbruptly){
+                int min = allowCoreThreadTimeOut ? 0 : corePoolSize;
+                if(min == 0 && !workQueue.isEmpty()){
+                    min = 1;
+                }
+                if(workerCountOf(c) >= min){
+                    return; // replacement not needed
+                }
+            }
+            addWorker(null, false);
+        }
     }
+
+    /**
+     * Perform blocking or timed wait for a task, depending on
+     * current configuration settings, or returns null if this worker
+     * must exit because of any of:
+     * 1. There are more than maximumPoolSize workers (due to a call to
+     * setMaximumPoolSize).
+     * 2. The pool is stoped
+     * 3. The pool is shutdown and the queue is empty.
+     * 4. This worker timed out waiting for a task, and time-out
+     * workers are subject to termination (that is,
+     * {@code allowCoreThreadTimeOut || workerCount > corePoolSize})
+     * both before and after the timed wait, and if the queue is
+     * non-empty, this worker is not the last thread in the pool.
+     *
+     * @return task, or null if the worker must exit, in which case
+     *          workerCount is decremented
+     */
+    private Runnable getTask(){
+        boolean timeOut = false; // Did the last poll() time out?
+
+        for(;;){
+            int c = ctl.get();
+            int rs = runStateOf(c);
+
+            // check if queue empty only if necessary
+            if(rs >= SHUTDOWN && (rs >= STOP || workQueue.isEmpty())){
+                decrementWorkerCount();
+                return null;
+            }
+
+            int wc = workerCountOf(c);
+
+            // Are workers subject to culling?
+            boolean timed = allowCoreThreadTimeOut || wc > corePoolSize;
+
+            if((wc > maximumPoolSize || (timed && timeOut))
+                    && (wc > 1 || workQueue.isEmpty())){
+                if(compareAndDecrementWorkerCount(c)){
+                    return null;
+                }
+                continue;
+            }
+
+            try{
+                Runnable r = timed ?
+                        workQueue.poll(keepAliveTime, TimeUnit.NANOSECONDS) :
+                        workQueue.take();
+                if(r != null){
+                    return r;
+                }
+                timeOut = true;
+            }catch (InterruptedException retry){
+
+            }
+        }
+    }
+
+    /**
+     * Main worker run loop. Repeatedly gets tasks from queue and
+     * executes them, while coping with a number of issue:
+     *
+     * 1. We may start out with an initial task, in which case we
+     * don't need to get the first one. Otherwise, as long as pool is
+     * running, we get tasks from getTask. If it returns null then the
+     * worker exits due to changged pool state or configuration
+     * parameters. Other exits result from exception throws in
+     * external code, in which case completeAbruptly holds, in which
+     * usually leads processWorkerExit to replace this thread.
+     *
+     * 2. Before running any task, the lock is acquired to prevent
+     * other pool interrupts while task is executing, and then we
+     * ensure that unless pool is stopping, this thread does not have
+     * its interrupt set.
+     *
+     * 3. Each task run is preceded by a call to beforeExecute, which
+     * might throw an exception, in which case we cause thread to die
+     * (break loop with completeAbruptly true) without precessing
+     * the task.
+     *
+     * 4. Assuming beforeExecute completes normally, we run the task,
+     * gathering any of its thrown exceptions send to afterExecute.
+     * We separately handle RuntimeException, Error (both of which the
+     * specs guarantee that we trap) and arbitrary Throwables.
+     * Because we cannot rethrow Throwables within Runnable.run, we
+     * wrap them within Errors on the way out (to the hthread's
+     * UncaughtExceptionHandler). Any thrown exception also
+     * conservatively causes thread to die
+     *
+     * 5. After task.run completes, we call afterExecute, which may
+     * also throw an exception, which will also cause thread to
+     * die. According to JLS Sec 14.20, this exception is the one that
+     * will be in effect even if task.run throws
+     *
+     * The net effect of the exception mechanics is that afterExecute
+     * and the thread's UncaughtExceptionHandler have as accurate
+     * information as we can provide about any problems encountered by
+     * user code.
+     *
+     * @param w the worker
+     */
+    final void runWorker(Worker w){
+        Thread wt = Thread.currentThread();
+        Runnable task = w.firstTask;
+        w.firstTask = null;
+        w.unlock(); // allow interrupts
+        boolean completedAbruptly = true;
+        try{
+            while(task != null || (task = getTask()) != null){
+                w.lock();;
+                /**
+                 * If pool is stopping, ensure thread is interrupted;
+                 * if not, ensure thread is not interrupted. This
+                 * requires a recheck in second case to deal with
+                 * shutdownNow race while clearing interrupt
+                 */
+                if((runStateAtLeast(ctl.get(), STOP )||
+                                (Thread.interrupted() &&
+                                        runStateAtLeast(ctl.get(), STOP))) &&
+                        !wt.isInterrupted()
+                        ){
+                    wt.interrupt();
+                }
+
+                try{
+                    beforeExecute(wt, task);
+                    Throwable thrown = null;
+                    try{
+                        task.run();
+                    } catch (RuntimeException x) {
+                        thrown = x; throw x;
+                    } catch (Error x) {
+                        thrown = x; throw x;
+                    } catch (Throwable x) {
+                        thrown = x; throw new Error(x);
+                    }finally {
+                        afterExecute(task, thrown);
+                    }
+
+                }finally {
+                    task = null;
+                    w.completedTasks++;
+                    w.unlock();
+                }
+            }
+            completedAbruptly = false;
+        }finally {
+            processWorkerExit(w, completedAbruptly);
+        }
+    }
+
+    /**
+     * Creates a new {@code KThreadPoolExecutor} with the given initial
+     * parameters and default thread factory and rejected execution handler.
+     * It may be be more convenient to use one of the {@link Executors} factory
+     * method instead of this general purpose constructor
+     *
+     * @param corePoolSize the number of threads to keep in the pool, even
+     *                     if they are idle, unless {@code allowCoreThreadTimeOut} is set
+     * @param maximumPoolSize the maximum number of threads to allow in the
+     *                        pool
+     * @param keepAliveTime when the number of threads is greater than
+     *                      the core. this is the maximum time that excess idle threads
+     *                      will wait for new tasks before terminating
+     * @param unit the time unit for the {@code keepAliveTime} argument
+     * @param workQueue the queue to use for use for holding tasks before they are
+     *                  executed. This queue will hold only the {@code Runnable}
+     *                  tasks submitted by the {@code execute} method
+     */
+    public KThreadPoolExecutor(int corePoolSize,
+                               int maximumPoolSize,
+                               long keepAliveTime,
+                               TimeUnit unit,
+                               BlockingQueue<Runnable> workQueue
+    ){
+        this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
+                Executors.defaultThreadFactory(), defaultHandler);
+    }
+
+    /**
+     * Creates a new {@code KThreadPoolExecutor} with the given initial
+     * parameters
+     *
+     * @param corePoolSize the number of threads to keep in the pool, even
+     *                     if they are idle, unless {@code allowCoreThreadTimeOut} is set
+     * @param maximumPoolSize the maximum number of the threads to allow in the
+     *                        pool
+     * @param keepAliveTime when the number of the threads is greater than
+     *                      the core. this is the maximum time that excess idle threads
+     *                      will wait for new tasks before terminating
+     * @param unit  the time unit for the {@code keepAliveTime} argument
+     * @param workQueue the queue to use for holding tasks before they are
+     *                  executed. This queue will hold nly the {@code Runnable}
+     *                  tasks submitted by the {@code execute} method
+     * @param threadFactory the factory to use when the executor
+     *                      creates a new thread
+     * @param handler the handler to use when execution is blocked
+     *                because the thread bounds and queue capacities are reached
+     */
+    public KThreadPoolExecutor(int corePoolSize,
+                               int maximumPoolSize,
+                               long keepAliveTime,
+                               TimeUnit unit,
+                               BlockingQueue<Runnable> workQueue,
+                               ThreadFactory threadFactory,
+                               RejectedExecutionHandler handler
+                               ){
+        if(corePoolSize < 0 ||
+                maximumPoolSize <= 0 ||
+                maximumPoolSize < corePoolSize ||
+                keepAliveTime < 0){
+            throw new IllegalArgumentException();
+        }
+        if(workQueue == null || threadFactory == null || handler == null){
+            throw new NullPointerException();
+        }
+        this.corePoolSize = corePoolSize;
+        this.maximumPoolSize = maximumPoolSize;
+        this.workQueue = workQueue;
+        this.keepAliveTime = unit.toNanos(keepAliveTime);
+        this.threadFactory = threadFactory;
+        this.handler = handler;
+    }
+
+
 
     protected void terminated() {}
-
-    final void runWorker(Worker w){
-
-    }
 
     public void shutdown() {
 
@@ -1012,5 +1272,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
+    protected void beforeExecute(Thread t, Runnable r) {}
 
+    protected void afterExecute(Runnable r, Throwable t) {}
 }
