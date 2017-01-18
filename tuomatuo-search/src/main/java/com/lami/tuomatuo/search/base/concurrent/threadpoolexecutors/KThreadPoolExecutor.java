@@ -558,7 +558,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
      * intended to wake up a worker thread waiting for a task from
      * instead interrupting a task being run. We implement a simple
      * non-reentrant mutual exclusion lock rather than use
-     * 
+     *
      */
     private final class Worker extends AbstractQueuedSynchronizer implements Runnable{
 
