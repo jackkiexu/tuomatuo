@@ -2,6 +2,7 @@ package com.lami.tuomatuo.search.base.concurrent.scheduledthreadpoolexecutor;
 
 import com.lami.tuomatuo.search.base.concurrent.threadpoolexecutors.KThreadPoolExecutor;
 
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -9,6 +10,10 @@ import java.util.concurrent.TimeUnit;
  * Created by xujiankang on 2017/1/12.
  */
 public class KScheduledThreadPoolExecutor extends KThreadPoolExecutor implements KScheduledExecutorService {
+
+    public KScheduledThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
+        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
+    }
 
     @Override
     public KScheduledFuture<?> submit(Runnable command, long delay, TimeUnit unit) {

@@ -9,10 +9,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * A scalable concurrent {@link ConcurrentNavigableMap} implementation
@@ -394,30 +391,30 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
         if(key == null)
             throw new NullPointerException(); // don't postpone errors
         for(;;){
-            for(Index<K, V> q = head, r = q.right, d;;){
-                if(r != null){
+            for(Index<K, V> q = head, r = q.right, d;;){ // 1. 初始化数据 q 是head， r 是 最顶层 h 的右Index节点
+                if(r != null){ // 2. 对应的 r =  null, 则进行向下查找
                     Node<K, V> n = r.node;
                     K k = n.key;
-                    if(n.value == null){
-                        if(!q.unlink(r)){
+                    if(n.value == null){ // 3. n.value = null 说明 节点n 正在删除的过程中
+                        if(!q.unlink(r)){ // 4. 在 index 层直接删除 r 节点, 若条件竞争发生直接进行break 到步骤1 , 重新从 head 节点开始查找
                             break; // restart
                         }
-                        r = q.right; //reread r
+                        r = q.right; //reread r // 5. 删除 节点r 成功, 获取新的 r 节点, 回到步骤 2 (还是从这层索引开始向右遍历, 直到 r == null)
                         continue;
                     }
 
-                    if(cpr(cmp, key, k) > 0){
+                    if(cpr(cmp, key, k) > 0){ // 6. 若 r.node.key < 参数key, 则继续向右遍历, continue 到 步骤 2处, 若 r.node.key >  参数key 直接跳到 步骤 7
                         q = r;
                         r = r.right;
                         continue;
                     }
                 }
 
-                if((d = q.down) == null){
+                if((d = q.down) == null){ // 7. 到这边时, 已经到跳表的数据层, q.node < key < r的 或q.node < key 且 r == null; 所以直接返回 q.node
                     return q.node;
                 }
 
-                q = d;
+                q = d; // 8 未到数据层, 进行重新赋值向下走 (为什么向下走呢? 回过头看看 跳表, 原来 上层的index 一般都是比下层的 index 个数少的)
                 r = d.right;
             }
         }
@@ -509,6 +506,7 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
      * Gets value for key. Almost the same as findNode, but returns
      * the found value (to avoid retires during ret-reads)
      *
+     *  这个 doGet 方法比较简单
      * @param key the key
      * @return the value, or null if absent
      */
@@ -519,29 +517,30 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
         Comparator<? super K> cmp = comparator;
         outer:
         for(;;){
-            for(Node<K, V> b = findPredecessor(key, cmp), n = b.next;;){
+            for(Node<K, V> b = findPredecessor(key, cmp), n = b.next;;){ // 1. 获取 key 的前继节点 b, 其实这时 n.key >= key
                 Object v; int c;
-                if(n == null){
+                if(n == null){ // 2. n == null 说明 key 对应的 node 不存在 所以直接 return null
                     break outer;
                 }
                 Node<K, V> f = n.next;
-                if(n != b.next){ // inconsistent read
+                if(n != b.next){ // 3. 有另外的线程修改数据, 重新来
                     break ;
                 }
-                if((v = n.value) == null){ // n is deleted
+                if((v = n.value) == null){ // 4. n 是被删除了的节点, 进行helpDelete 后重新再来
                     n.helpDelete(b, f);
                     break ;
                 }
-                if(b.value == null || v == n){ // b is deleted
+                if(b.value == null || v == n){ // 5. b已经是删除了的节点, 则 break 后再来
                     break ;
                 }
-                if((c = cpr(cmp, key, n.key)) == 0){
+                if((c = cpr(cmp, key, n.key)) == 0){ // 6. 若 n.key = key 直接返回结果, 这里返回的结果有可能是 null
                     V vv = (V) v;
                     return vv;
                 }
-                if(c < 0){
+                if(c < 0){ // 7. c < 0说明不存在 key 的node 节点
                     break outer;
                 }
+                // 8. 运行到这一步时, 其实是 在调用 findPredecessor 后又有节点添加到 节点b的后面所致
                 b = n;
                 n = f;
             }
@@ -569,78 +568,79 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
         Comparator<? super K> cmp = comparator;
         outer:
         for(;;){
-            for(Node<K, V> b = findPredecessor(key, cmp), n = b.next;;){
-                if(n != null){
+            // 0.
+            for(Node<K, V> b = findPredecessor(key, cmp), n = b.next;;){ // 1. 将 key 对应的前继节点找到, b 为前继节点, n是前继节点的next, 若没发生 条件竞争, 最终 key在 b 与 n 之间 (找到的b在 base_level 上)
+                if(n != null){ // 2. n = null时 b 是链表的最后一个节点, key 直接插到 b 之后 (调用 b.casNext(n, z))
                     Object v; int c;
-                    Node<K, V> f = n.next;
-                    if(n != b.next){ // inconsistent read
+                    Node<K, V> f = n.next; // 3 获取 n 的右节点
+                    if(n != b.next){ // 4. 条件竞争(另外一个线程在b之后插入节点, 或直接删除节点n), 则 break 到位置 0, 重新
                         break ;
                     }
-                    if((v = n.value) == null){
+                    if((v = n.value) == null){ // 4. 若 节点n已经删除, 则 调用 helpDelete 进行帮助删除 (详情见 helpDelete), 则 break 到位置 0, 重新
                         n.helpDelete(b, f);
                         break ;
                     }
 
-                    if(b.value == null || v == n){ // b is deleted
+                    if(b.value == null || v == n){ // 5. 节点b被删除中 ,则 break 到位置 0, 调用 findPredecessor 帮助删除 index 层的数据, 至于 node 层的数据 会通过 helpDelete 方法进行删除
                         break ;
                     }
-                    if((c = cpr(cmp, key, n.key)) > 0){
+                    if((c = cpr(cmp, key, n.key)) > 0){ // 6. 若 key 真的 > n.key (在调用 findPredecessor 时是成立的), 则进行 向后走
                         b = n;
                         n = f;
                         continue ;
                     }
-                    if(c == 0){
+                    if(c == 0){ // 7. 直接进行赋值
                         if(onlyIfAbstsent || n.casValue(v, value)){
                             V vv = (V) v;
                             return vv;
                         }
-                        break ; // restart if lost race to replace value
+                        break ; // 8. cas 竞争条件失败 重来
                     }
                     // else c < 0; fall through
                 }
-
+                // 9. 到这边时 n.key > key > b.key
                 z = new Node<K, V> (key, value, n);
                 if(!b.casNext(n, z)){
-                    break ; // restart if lost race to append to b
+                    break ; // 10. cas竞争条件失败 重来
                 }
-                break outer;
+                break outer; // 11. 注意 这里 break outer 后, 上面的 for循环不会再执行, 而后执行下面的代码, 这里是break 不是 continue outer, 这两者的效果是不一样的
             }
         }
 
-        int rnd = ThreadLocalRandom.nextSecondarySeed();
-        if((rnd & 0x80000001) == 0){ // test hightest and lowest bits
+        int rnd = KThreadLocalRandom.nextSecondarySeed();
+        if((rnd & 0x80000001) == 0){ // 12. 判断是否需要添加level
             int level = 1, max;
             while(((rnd >>>= 1) & 1) != 0){
                 ++level;
             }
+            // 13. 上面这段代码是获取 level 的, 我们这里只需要知道获取 level 就可以
             Index<K, V> idx = null;
             HeadIndex<K, V> h = head;
-            if(level <= (max = h.level)){
-                for(int i = 1; i < level; ++i){
-                    idx = new Index<K, V>(z, idx, null);
+            if(level <= (max = h.level)){ // 14. 初始化 max 的值, 若 level 小于 max , 则进入这段代码 (level 是 1-31 之间的随机数)
+                for(int i = 1; i <= level; ++i){
+                    idx = new Index<K, V>(z, idx, null); // 15 添加 z 对应的 index 数据, 并将它们组成一个上下的链表(index层是上下左右都是链表)
                 }
             }
-            else{ // try to grow by one level
-                level = max + 1; // hold in array and later pick the one to use
-                Index<K, V>[] idxs =
-                        (Index<K, V>[])new Index<?, ?>[level + 1];
+            else{ // 16. 若 level > max 则只增加一层 index 索引层
+                level = max + 1; // 17. 跳表新的 level 产生
+                Index<K, V>[] idxs = (Index<K, V>[])new Index<?, ?>[level + 1];
                 for(int i = 1; i <= level; ++i){
                     idxs[i] = idx = new Index<K, V>(z, idx, null);
                 }
                 for(;;){
                     h = head;
-                    int oldLevel = h.level;
-                    if(level <= oldLevel){ // lost race to add level
+                    int oldLevel = h.level; // 18. 获取老的 level 层
+                    if(level <= oldLevel){ // 19. 另外的线程进行了index 层增加操作, 所以 不需要增加 HeadIndex 层数
                         break;
                     }
                     HeadIndex<K, V> newh = h;
-                    Node<K, V> oldbase = h.node;
-                    for(int j = oldLevel+1; j <= level; ++j){
-                        newh = new HeadIndex<K, V>(oldbase, newh, idxs[j], j);
+                    Node<K, V> oldbase = h.node; // 20. 这里的 oldbase 就是BASE_HEADER
+                    for(int j = oldLevel+1; j <= level; ++j){ // 21. 这里其实就是增加一层的 HeadIndex (level = max + 1)
+                        newh = new HeadIndex<K, V>(oldbase, newh, idxs[j], j); // 22. idxs[j] 就是上面的 idxs中的最高层的索引
                     }
-                    if(casHead(h, newh)){
-                        h = newh;
-                        idx = idxs[level = oldLevel];
+                    if(casHead(h, newh)){ // 23. 这只新的 headIndex
+                        h = newh;  // 24. 这里的 h 变成了 new HeadIndex
+                        idx = idxs[level = oldLevel];  // 25. 这里的 idx 上从上往下第二层的 index 节点 level 也变成的 第二
                         break;
                     }
                 }
@@ -648,85 +648,65 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
 
             // find insertion points and splice in
             splice:
-            for(int insertionLevel = level;;){
+            for(int insertionLevel = level;;){ // 26. 这时的 level 已经是 第二高的 level(若上面 步骤19 条件竞争失败, 则多出的 index 层其实是无用的, 因为 那是 调用 Index.right 是找不到它的)
                 int j = h.level;
-                for(Index<K, V> q = h, r = q.right, t = idx;;){
-                    if(q == null || t == null){
+                for(Index<K, V> q = h, r = q.right, t = idx;;){ // 27. 初始化对应的数据
+                    if(q == null || t == null){ // 28. 节点都被删除 直接 break出去
                         break splice;
                     }
                     if(r != null){
                         Node<K, V> n = r.node;
                         // compare before deletion check avoids needing recheck
                         int c = cpr(cmp, key, n.key);
-                        if(n.value == null){
+                        if(n.value == null){ // 老步骤, 帮助index 的删除
                             if(!q.unlink(r)){
                                 break ;
                             }
-                            r = q.right;
+                            r = q.right; // 向右进行遍历
                             continue ;
                         }
 
-                        if(c > 0){
+                        if(c > 0){ // 向右进行遍历
                             q = r;
                             r = r.right;
                             continue ;
                         }
                     }
 
+                    // 代码运行到这里, 说明 key < n.key
+                    // 第一次运行到这边时, j 是最新的 HeadIndex 的level j > insertionLevel 非常用可能, 而下面又有 --j, 所以终会到 j == insertionLevel
                     if(j == insertionLevel){
-                        if(!q.link(r, t)){
+                        if(!q.link(r, t)){ // 将 index t 加到 q 与 r 中间, 若条件竞争失败的话就重试
                             break ; // restrt
                         }
-                        if(t.node.value == null){
+                        if(t.node.value == null){ // 若这时 node 被删除, 则开始通过 findPredecessor 清理 index 层, findNode 清理 node 层, 之后直接 break 出去, doPut调用结束
                             findNode(key);
                             break splice;
                         }
-                        if(--insertionLevel == 0){
+                        if(--insertionLevel == 0){ // index 层添加OK， --1 为下层插入 index 做准备
                             break splice;
                         }
                     }
 
                     /**
-                     * 1. --j 为什么要 减1
-
-                     2. --j >= insertionLevel 为什么要做这个比较
-
-                     3. --j >= insertionLevel 何时出现
-
-                     4. --j < insertionLevel 何时出现
-
-                     5. j < indexLevel 为什么要加这个条件
-
-                     6. j < indexLevel 何时出现
-
-                     7. j > indexLevel 何时出现
-
-                     答案:
-                     j: for loop 中当前的链表的level值, 每次for循环, j减1
-                     insertionLevel: 进行 Index 插入的起始Level, 当for循环从最高层的level循环到 j== insertionLevel 后 每次都会减1, 已表示这一层的 Index 已经处理好了
-                     indexLevel: 起始处理Index的Level值
-
-                     1: 每次for循环--j,来表示这层Level中的Index已经处理好了, --j是为下次for循环时处理Index做准备
-                     2:
-
-
-                     addIndex方法中的
-                     if (--j >= insertionLevel && j < indexLevel)
-                     在这个 If 判断中, 我怎么觉得 --j>= insertionLevel 是很成立的
-                     有没有 --j < insertionLevel 的场景出现过
+                     * 下面这行代码其实是最重要的, 理解这行代码, 那 doPut 就差不多了
+                     * 1). --j 要知道 j 是 newhead 的level， 一开始一定 > insertionLevel的, 通过 --1 来为下层操作做准备 (j 是 headIndex 的level)
+                     * 2). 通过 19. 21, 22 步骤, 个人认为 --j >= insertionLevel 是横成立, 而 --j 是必须要做的
+                     * 3) j 经过几次--1， 当出现 j < level 时说明 (j+1) 层的 index已经添加成功, 所以处理下层的 index
                      */
                     if(--j >= insertionLevel && j < level){
                         t = t.down;
                     }
-                    q = q.down;
+                    /** 到这里时, 其实有两种情况
+                     *  1) 还没有一次index 层的数据插入
+                     *  2) 已经进行 index 层的数据插入, 现在为下一层的插入做准备
+                     */
+                    q = q.down; // 从 index 层向下进行查找
                     r = q.right;
 
                 }
             }
-
         }
-
-
         return null;
     }
 
@@ -855,14 +835,37 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
         return null;
     }
 
-    @Override
+    /**
+     * Associate the specified value with the specified key in this map
+     * If the map previously contained a mapping for the key, the old
+     * value is replaced
+     *
+     * @param key key with which the specified value is to be associated
+     * @param value value to be associated with the specified key
+     * @return the previous value associated with specified key, or
+     *          {@code null} if there was no mapping for the key
+     * @throws ClassCastException if the specified key cannot be compared
+     *          with the keys currently in the map
+     * @throws NullPointerException if the specified key or value is null
+     */
     public V put(K key, V value) {
-        return null;
+        if(value == null)
+            throw new NullPointerException();
+        return doPut(key, value, false);
     }
 
-    @Override
+    /**
+     * Removes the mapping for the specified key from this map if prevent
+     *
+     * @param key key for which mapping should be removed
+     * @return the previous value associated with the specified key, or
+     *          {@code null} if there was no mapping for the key
+     * @throws ClassCastException if the specified key cannot be compared
+     *          with the keys currently in the map
+     * @throws NullPointerException if the specified key is null
+     */
     public V remove(Object key) {
-        return null;
+        return doRemove(key, null);
     }
 
     @Override
@@ -955,46 +958,46 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
         Comparator<? super K> cmp = comparator;
         outer:
         for(;;){
-            for(Node<K, V> b = findPredecessor(key, cmp), n = b.next;;){
+            for(Node<K, V> b = findPredecessor(key, cmp), n = b.next;;){ // 1. 获取对应的前继节点 b
                 Object v; int c;
-                if(n == null){
+                if(n == null){ // 2. 节点 n 被删除 直接 return null 返回 , 因为理论上 b.key < key < n.key
                     break outer;
                 }
                 Node<K, V> f = n.next;
-                if(n != b.next){ // inconsistent read
+                if(n != b.next){ // 3. 有其他线程在 节点b 后增加数据, 重来
                     break ;
                 }
-                if((v = n.value) == null){ // n is deleted
+                if((v = n.value) == null){ // 4. 节点 n 被删除, 调用 helpDelete 后重来
                     n.helpDelete(b, f);
                     break ;
                 }
 
-                if(b.value == null || v == n){ // b is deleted
+                if(b.value == null || v == n){ // 5. 节点 b 删除, 重来 调用findPredecessor时会对 b节点对应的index进行清除, 而b借点吧本身会通过 helpDelete 来删除
                     break ;
                 }
-                if((c = cpr(cmp, key, n.key)) < 0){
+                if((c = cpr(cmp, key, n.key)) < 0){ // 6. 若n.key < key 则说明 key 对应的节点就不存在, 所以直接 return
                     break outer;
                 }
 
-                if(c > 0){
+                if(c > 0){ // 7. c>0 出现在 有其他线程在本方法调用findPredecessor后又在b 后增加节点, 所以向后遍历
                     b = n;
                     n = f;
                     continue ;
                 }
 
-                if(value != null && !value.equals(v)){
+                if(value != null && !value.equals(v)){ // 8. 若 前面的条件为真, 则不进行删除 (调用 doRemove 时指定一定要满足 key value 都相同, 具体看 remove 方法)
                     break outer;
                 }
-                if(!n.casValue(v, null)){
+                if(!n.casValue(v, null)){ // 9. 进行数据的删除
                     break ;
                 }
-                if(!n.appendMarker(f) || !b.casNext(n, f)){
-                    findNode(key); // retry via findNode
+                if(!n.appendMarker(f) || !b.casNext(n, f)){ // 10. 进行 marker 节点的追加, 这里的第二个 cas 不一定会成功, 但没关系的 (第二个 cas 是删除 n节点, 不成功会有  helpDelete 进行删除)
+                    findNode(key);  // 11. 对 key 对应的index 进行删除
                 }
                 else{
-                    findPredecessor(key, cmp); // clean index
+                    findPredecessor(key, cmp); //12. 对 key 对应的index 进行删除 10进行操作失败后通过 findPredecessor 进行index 的删除
                     if(head.right == null){
-                        tryReduceLevel();
+                        tryReduceLevel(); // 13. 进行headIndex 对应的index 层的删除
                     }
                 }
 
@@ -2549,10 +2552,10 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
              * interference among helping threads
              */
             if(f == next && this == b.next){
-                if(f == null || f.value != f){ // not already marked
+                if(f == null || f.value != f){ // 还没有对删除的节点进行节点 marker
                     casNext(f, new Node<K, V>(f));
                 }else{
-                    b.casNext(this, f.next);
+                    b.casNext(this, f.next); // 删除 节点 b 与 f.next 之间的节点
                 }
             }
         }
