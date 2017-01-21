@@ -576,7 +576,7 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
                     if(n != b.next){ // 4. 条件竞争(另外一个线程在b之后插入节点, 或直接删除节点n), 则 break 到位置 0, 重新
                         break ;
                     }
-                    if((v = n.value) == null){ // 4. 若 节点n已经删除, 则 调用 helpDelete 进行帮助删除 (详情见 helpDelete), 则 break 到位置 0, 重新
+                    if((v = n.value) == null){ // 4. 若 节点n已经删除, 则 调用 helpDelete 进行帮助删除 (详情见 helpDelete), 则 break 到位置 0, 重新来
                         n.helpDelete(b, f);
                         break ;
                     }
@@ -613,7 +613,7 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
             while(((rnd >>>= 1) & 1) != 0){
                 ++level;
             }
-            // 13. 上面这段代码是获取 level 的, 我们这里只需要知道获取 level 就可以
+            // 13. 上面这段代码是获取 level 的, 我们这里只需要知道获取 level 就可以 (50%的几率返回0，25%的几率返回1，12.5%的几率返回2...最大返回31。)
             Index<K, V> idx = null;
             HeadIndex<K, V> h = head;
             if(level <= (max = h.level)){ // 14. 初始化 max 的值, 若 level 小于 max , 则进入这段代码 (level 是 1-31 之间的随机数)
@@ -658,32 +658,33 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
                         Node<K, V> n = r.node;
                         // compare before deletion check avoids needing recheck
                         int c = cpr(cmp, key, n.key);
-                        if(n.value == null){ // 老步骤, 帮助index 的删除
+                        if(n.value == null){ // 29. 老步骤, 帮助index 的删除
                             if(!q.unlink(r)){
                                 break ;
                             }
-                            r = q.right; // 向右进行遍历
+                            r = q.right; // 30. 向右进行遍历
                             continue ;
                         }
 
-                        if(c > 0){ // 向右进行遍历
+                        if(c > 0){ // 31. 向右进行遍历
                             q = r;
                             r = r.right;
                             continue ;
                         }
                     }
 
+                    // 32.
                     // 代码运行到这里, 说明 key < n.key
                     // 第一次运行到这边时, j 是最新的 HeadIndex 的level j > insertionLevel 非常用可能, 而下面又有 --j, 所以终会到 j == insertionLevel
                     if(j == insertionLevel){
-                        if(!q.link(r, t)){ // 将 index t 加到 q 与 r 中间, 若条件竞争失败的话就重试
+                        if(!q.link(r, t)){ // 33. 将 index t 加到 q 与 r 中间, 若条件竞争失败的话就重试
                             break ; // restrt
                         }
-                        if(t.node.value == null){ // 若这时 node 被删除, 则开始通过 findPredecessor 清理 index 层, findNode 清理 node 层, 之后直接 break 出去, doPut调用结束
+                        if(t.node.value == null){ // 34. 若这时 node 被删除, 则开始通过 findPredecessor 清理 index 层, findNode 清理 node 层, 之后直接 break 出去, doPut调用结束
                             findNode(key);
                             break splice;
                         }
-                        if(--insertionLevel == 0){ // index 层添加OK， --1 为下层插入 index 做准备
+                        if(--insertionLevel == 0){ // 35. index 层添加OK， --1 为下层插入 index 做准备
                             break splice;
                         }
                     }
@@ -2363,9 +2364,9 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
 
     static class Index<K, V>{
 
-        final Node<K, V> node;
-        final Index<K, V> down;
-        volatile Index<K, V> right;
+        final Node<K, V> node; // 索引指向的节点, 纵向上所有索引指向链表最下面的节点
+        final Index<K, V> down; // 下边level层的 Index
+        volatile Index<K, V> right; // 右边的  Index
 
         /**
          * Creates index node with given values
@@ -2450,16 +2451,11 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
     }
 
     static final class Node<K, V>{
-        final K key;
-        volatile Object value;
-        volatile Node<K, V> next;
+        final K key;  // key 是 final 的, 说明节点一旦定下来, 除了删除, 不然不会改动 key 了
+        volatile Object value; // 对应的 value
+        volatile Node<K, V> next; // 下一个节点
 
-        /**
-         * Creates a new regular node
-         * @param key
-         * @param value
-         * @param next
-         */
+        // 构造函数
         public Node(K key, Object value, Node<K, V> next) {
             this.key = key;
             this.value = value;
@@ -2467,13 +2463,9 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
         }
 
         /**
-         * Creates a new marker node. A marker is distinguished by
-         * having its value field point to itself. Marker nodes also
-         * have null keys, a fact that is exploited in a few places,
-         * but this doesn't distinguish markers from the base-level
-         * header node (head.node), which also has a null key
-         *
-         * @param next
+         * 创建一个标记节点(通过 this.value = this 来标记)
+         * 这个标记节点非常重要: 有了它, 就能对链表中间节点进行同时删除了插入
+         * ps: ConcurrentLinkedQueue 只能在头上, 尾端进行插入, 中间进行删除
          */
         public Node(Node<K, V> next) {
             this.key = null;
@@ -2482,51 +2474,35 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
         }
 
         /**
-         * compareAndSet value field
-         * @param cmp
-         * @param val
-         * @return
+         * CAS 操作设置 Value
          */
         boolean casValue(Object cmp, Object val){
             return unsafe.compareAndSwapObject(this, valueOffset, cmp, val);
         }
 
         /**
-         * compareAndSet next field
-         * @param cmp
-         * @param val
-         * @return
+         * CAS 操作设置 next
          */
         boolean casNext(Node<K, V> cmp, Node<K, V> val){
             return unsafe.compareAndSwapObject(this, nextOffset, cmp, val);
         }
 
         /**
-         * Returns true if this node is a marker. This method isn't
-         * actually called in any current code checking for markers
-         * because callers will have already read value field and need
-         * to use that read ( not another done here) and so directly
-         * test f value point to node
-         *
-         * @return true if this node is a marker node
+         * 检测是否为标记节点
          */
         boolean isMarker(){
             return value == this;
         }
 
         /**
-         * Returns true if this node is the header of the base-level list
-         * @return
+         * 检测是否为 链表最左下角的 BASE_HEADER 节点
          */
         boolean isBaseHeader(){
             return value == BASE_HEADER;
         }
 
         /**
-         * Tries to append a deletion marker to this node.
-         *
-         * @param f the assumed current successor of this node
-         * @return true if successful
+         * 对节点追加一个标记节点, 为最终的删除做准备
          */
         boolean appendMarker(Node<K, V> f){
             return casNext(f, new Node<K, V>(f));
@@ -2537,8 +2513,7 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
          * predecessor. This called during traversals when value
          * field seen to be null
          *
-         * @param b
-         * @param f
+         * helpDelete 方法, 这个方法要么追加一个标记节点, 要么进行删除操作
          */
         void helpDelete(Node<K, V> b, Node<K, V> f){
             /**
@@ -2556,11 +2531,7 @@ public class KConcurrentSkipListMap<K, V> implements ConcurrentNavigableMap<K, V
         }
 
         /**
-         * Returns value if this node contains a valid key-value pair,
-         * else null.
-         *
-         * @return this node's value if it isn't a marker or header or
-         * is deleted, else null
+         * 校验数据
          */
         V getValidValue(){
             Object v = value;
