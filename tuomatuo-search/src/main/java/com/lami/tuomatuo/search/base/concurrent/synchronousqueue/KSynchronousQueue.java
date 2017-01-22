@@ -1310,7 +1310,8 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
      * @throws IOException if the class of a serialized object could not be found
      * @throws ClassNotFoundException if an I/O error occurs
      */
-    private void readObject(java.io.ObjectInputStream s)throws IOException, ClassNotFoundException{
+    private void readObject(java.io.ObjectInputStream s)
+            throws IOException, ClassNotFoundException{
         s.defaultReadObject();
         if(waitingProducers instanceof FifoWaitQueue){
             transferer = new TransferQueue<E>();
@@ -1325,7 +1326,9 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
             return unsafe.objectFieldOffset(klazz.getDeclaredField(field));
         }catch (Exception e){
             // Convert Exception to corresponding Error
-            throw new Error(e);
+            NoSuchFieldError error = new NoSuchFieldError(field);
+            error.initCause(e);
+            throw error;
         }
     }
 

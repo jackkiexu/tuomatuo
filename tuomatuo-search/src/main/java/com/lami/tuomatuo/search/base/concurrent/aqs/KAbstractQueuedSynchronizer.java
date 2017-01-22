@@ -1,6 +1,10 @@
 package com.lami.tuomatuo.search.base.concurrent.aqs;
 
+import com.lami.tuomatuo.search.base.concurrent.unsafe.UnSafeClass;
+import sun.misc.Unsafe;
+
 import java.io.Serializable;
+import java.util.concurrent.locks.LockSupport;
 
 /**
  * Provides a framework for implementing blocking locks locks and related
@@ -299,6 +303,272 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
          *
          */
         volatile int waitStatus;
+
+        volatile Node prev;
+
+        volatile Node next;
+
+        volatile Thread thread;
+
+        Node nextWaiter;
+
+        final boolean isShared() {
+            return nextWaiter == SHARED;
+        }
+
+        final Node predecessor() throws NullPointerException{
+            Node p = prev;
+            if(p == null){
+                throw new NullPointerException();
+            }else{
+                return p;
+            }
+        }
+
+        Node(){
+            // Used to establish initial head or SHARED marker
+        }
+
+        Node(Thread thread, Node mode){     // Used by addWaiter
+            this.nextWaiter = mode;
+            this.thread = thread;
+        }
+
+        Node(Thread thread, int waitStatus){ // Used by Condition
+            this.waitStatus = waitStatus;
+            this.thread = thread;
+        }
     }
 
+    /**
+     * Head of the wait queue, lazily initialized, Except for
+     * initialization, it is modified only via method setHead. Note:
+     * If head exists, its waitStatus is guaranteed not to be
+     * CANCELLED.
+     */
+    private transient volatile Node head;
+
+    /**
+     * Tail of the wait queue, lazily initialized. Modified only via
+     * method enq to add new wait node.
+     */
+    private transient volatile Node tail;
+
+    /**
+     * The synchronization state.
+     */
+    private volatile int state;
+
+    /**
+     * Returns the current value of synchronization state.
+     * This operation has memory semantics of a {@code volatile} read
+     * @return current state value
+     */
+    protected final int getState(){
+        return state;
+    }
+
+    /**
+     * Sets the value of synchronization state.
+     * This operation has memory semantics of a {@code volatile} write.
+     * @param newState the new state value
+     */
+    protected final void setState(int newState){
+        state = newState;
+    }
+
+    /**
+     * Atomically sets synchronization state to the given updated.
+     * value if the current state value equals the expected value.
+     * This operation has memory semantics of a {@code volatile} read
+     * and write
+     *
+     * @param expect the expect value
+     * @param update the new value
+     * @return {@code true} if successful. False return indicates that the actual
+     *                  value was not equal to the expected value.
+     */
+    protected final boolean compareAndSetState(int expect, int update){
+        // See below for intrinsics(本质) setup to support this
+        return unsafe.compareAndSwapObject(this, stateOffset, expect, update);
+    }
+
+
+    /********************** Queuing utilties ****************/
+
+    /**
+     * The number of nanoseconds for which it is faster to spin
+     * rather than to use timed park. A rough estimate suffices
+     * to improve responsiveness with short timeouts
+     */
+    static final long spinForTimeoutThreshold = 1000L;
+
+    /**
+     * 这个插入会检测head tail 的初始化, 必要的话会初始化一个 dummy 节点, 这个和 ConcurrentLinkedQueue 一样的
+     * Insert node into queue, initializing if necessary. See picture above.
+     * @param node the node to insert
+     * @return node's predecessor 返回的是前继节点
+     */
+    private Node enq(final Node node){
+        for(;;){
+            Node t = tail;
+            if(t == null){ // Must initialize 初始化一个 dummy 节点 其实和 ConcurrentLinkedQueue 一样
+                if(compareAndSetHead(new Node())){
+                    tail = head;
+                }
+            }else{
+                node.prev = t;
+                if(compareAndSetTail(t, node)){
+                    t.next = node;
+                    return t;
+                }
+            }
+        }
+    }
+
+    /**
+     * Creates and enqueues node for current thread and given mode.
+     *
+     * @param mode Node.EXCLUSIVE for exclusive, Node.SHARED for shared
+     * @return the new node
+     */
+    private Node addWaiter(Node mode){
+        Node node = new Node(Thread.currentThread(), mode);
+        // Try the fast path of enq; backup to full enq on failure
+        Node pred = tail;
+        if(pred != null){
+            node.prev = pred;
+            if(compareAndSetTail(pred, node)){
+                pred.next = node;
+                return node;
+            }
+        }
+        enq(node);
+        return node;
+    }
+
+    /**
+     * Sets head of queue to be node, thus dequeuing. Called only by
+     * acquire methods. Also nulls out unused fields for sake of GC
+     * and to suppress unnecessary signals and traversals
+     *
+     * @param node the node
+     */
+    private void setHead(Node node){
+        head = node;
+        node.thread = null;
+        node.prev = null;
+    }
+
+    /**
+     * 唤醒节点 node 的后继节点,
+     * Wakes up node's successor, if one exists
+     *
+     * @param node the node
+     */
+    private void unparkSuccessor(Node node){
+        /**
+         * If status is negative (i.e., possibly needing signal) try
+         * to clear in anticipation of signalling. It is OK if this
+         * fails or if status is changed by waiting thread.
+         */
+        int ws = node.waitStatus;
+        if(ws < 0){
+            compareAndSetWaitStatus(node, ws, 0);
+        }
+
+        /**
+         * Thread to unpark is held in successor, which is normally
+         * just the next node. But if cancelled or apparently null,
+         * traverse backwards from tail to find the actual
+         * non-cancelled successor
+         */
+        Node s = node.next;
+        if(s == null || s.waitStatus > 0){
+            s = null;
+            for(Node t = tail; t != null && t != node; t = t.prev){
+                if(t.waitStatus <= 0){
+                    s = t;
+                }
+            }
+        }
+
+        if(s != null){
+            LockSupport.unpark(s.thread);
+        }
+    }
+
+    /**
+     * Release action for shared mode -- signals successor and ensures
+     * propagation. (Note: For exclusive mode, release just amounts
+     * to calling unparkSuccessor of head if it needs signal)
+     */
+    private void doReleasedShared(){
+        /**
+         * 
+         */
+        for(;;){
+
+        }
+    }
+
+    /**
+     * CAS head field. Used only by enq
+     */
+    private final boolean compareAndSetHead(Node update){
+        return unsafe.compareAndSwapObject(this, headOffset, null, update);
+    }
+
+    /**
+     * CAS tail field. Used only by enq
+     */
+    private final boolean compareAndSetTail(Node expect, Node update){
+        return unsafe.compareAndSwapObject(this, tailOffset, expect, update);
+    }
+
+    /**
+     * CAS waitStatus field of a node
+     */
+    private static final boolean compareAndSetWaitStatus(Node node,
+                                                         int expect,
+                                                         int update){
+        return unsafe.compareAndSwapObject(node, waitStatusOffset, expect, update);
+    }
+
+    /** CAS next field of a node */
+    private static final boolean compareAndSetNext(Node node,
+                                                   Node expect,
+                                                   Node update){
+        return unsafe.compareAndSwapObject(node, nextOffset, expect, update);
+    }
+
+    /**
+     * Setup to support copareAndSet. We need to natively implement
+     * this here: For the sake of permitting future enhancements, we
+     * cannot explicitly subclass AtomicInteger, which would be
+     * effecient and useful otherwise. So, as the lesser of evils, we
+     * natively implement using hotpot intrinsics API. And while we
+     * are at it, we do the same for other CASable fields (which could
+     * otherwise be done with atomic field updaters)
+     */
+    private static final Unsafe unsafe;
+    private static final long stateOffset;
+    private static final long headOffset;
+    private static final long tailOffset;
+    private static final long waitStatusOffset;
+    private static final long nextOffset;
+
+    static {
+        unsafe = UnSafeClass.getInstance();
+        Class<?> k = KAbstractQueuedSynchronizer.class;
+        try {
+            stateOffset = unsafe.objectFieldOffset(k.getDeclaredField("state"));
+            headOffset = unsafe.objectFieldOffset(k.getDeclaredField("head"));
+            tailOffset = unsafe.objectFieldOffset(k.getDeclaredField("tail"));
+            waitStatusOffset = unsafe.objectFieldOffset(k.getDeclaredField("waitStatus"));
+            nextOffset = unsafe.objectFieldOffset(k.getDeclaredField("next"));
+        } catch (NoSuchFieldException e) {
+            throw new Error(e);
+        }
+    }
 }
