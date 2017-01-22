@@ -42,13 +42,13 @@ import java.util.concurrent.locks.LockSupport;
  *     waiting thread (if n=one exists) must also determine modes share
  *     the same FIFO queue. Usually, implementation subclass support only
  *     one of these modes, but both can come into play for example in a
- *     {@link ReadWriteLock}, Subclass that support only exclusive or
+ *     {@link "ReadWriteLock}, Subclass that support only exclusive or
  *     only shared modes need not define the methods supporting the unused mode
  * </p>
  *
  * <p>
  *     This class defines a nested {@link com.lami.tuomatuo.search.base.concurrent.spinlock.MyAbstractQueuedSynchronizer.ConditionObject} class that
- *     can be use as a {@link Condition} implementation by subclasses
+ *     can be use as a {@link "Condition} implementation by subclasses
  *     supporting exclusive mode for which method {@link #isHeldExclusively}
  *     reports whether synchronization is exclusively
  *     held with respect to the current thread, method {@link #release}
@@ -57,7 +57,7 @@ import java.util.concurrent.locks.LockSupport;
  *     ebentually restores this object to its previous acquired state. No
  *     {@code KAbstractQueueSynchronizer} method otherwise creates such a
  *     condition, so if this constraint cannot be met, do not use it. The
- *     behavior of {@link ConditionObject} depends of course on the
+ *     behavior of {@link "ConditionObject} depends of course on the
  *     semantics if its synchronizer implementation
  * </p>
  *
@@ -130,7 +130,7 @@ import java.util.concurrent.locks.LockSupport;
  *      disable barging by internally invoking one or more of the inspection
  *      methods, thereby providing a <em>fair</em> FIFO acquisition order.
  *      In particular, most fair synchronizers can define {@code tryAcquire}
- *      to return {@code false} if {@link #hasQueuedPredecessors} (a method
+ *      to return {@code false} if {@link #"hasQueuedPredecessors"} (a method
  *      specifically designed to be used by fair synchronizers) returns
  *      {@code true}. Other variations are possible
  *  </p>
@@ -149,8 +149,8 @@ import java.util.concurrent.locks.LockSupport;
  *     spins when exclusive sunchronization is ony briefly held, without
  *     most of the liabilities when it isn't If so desired, you can
  *     argument this by preceding calls to acquire methods with
- *     "fast-path" checks, possibly prechecking {@link #hasContended}
- *     and/or {@link #hasQueuedThreads} to only do so if the synchronizer
+ *     "fast-path" checks, possibly prechecking {@link #"hasContended"}
+ *     and/or {@link #"hasQueuedThreads"} to only do so if the synchronizer
  *     is likely not to be contended
  * </p>
  *
@@ -505,12 +505,491 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      */
     private void doReleasedShared(){
         /**
-         * 
+         * Ensure that a release propagates, even if there are other
+         * in-progress acquires/releases. This proceed in the usual
+         * way of trying to unparkSuccessor of the head if it needs
+         * signal. But if it does not, status is set to PROPAGATE to
+         * ensure that upon release, propagation continues.
+         * Additionally, we must loop in case a new node is added
+         * while we are doing this. Also, unlike other uses of
+         * unparkSuccessor, we need to know if CAS to reset status
+         * fails, if so rechecking.
          */
         for(;;){
+            Node h = head;
+            if(h != null && h != tail){
+                int ws = h.waitStatus;
+                if(ws == Node.SIGNAL){
+                    if(!compareAndSetWaitStatus(h, Node.SIGNAL, 0)){
+                        continue; // loop to recheck cases
+                    }
+                    unparkSuccessor(h);
+                }
+                else if(ws == 0 &&
+                        !compareAndSetWaitStatus(h, 0, Node.PROPAGATE)){
+                    continue; // loop on failed CAS
+                }
+            }
+
+            if(h == head){
+                break;
+            }
 
         }
     }
+
+    /**
+     * Set head of queue, and checks if successor may be waiting
+     * in shared mode, if so propagating if either propagate > 0 or
+     * PROPAGATE status was set
+     *
+     * @param node the node
+     * @param propagate the return value from a tryAcquireShared
+     */
+    private void setHeadAndPropagate(Node node, int propagate){
+        Node h = head; // Record old head for check below
+        setHead(node);
+        /**
+         * Try to signal next queued node if:
+         *  Propagation was indicated by caller,
+         *      or was recorded (as h.waitStatus either before
+         *      or after setHead) by a previous operation
+         *      (note: this uses sign-check of waitStatus because
+         *      PROPAGATE status may transition to SIGNAL)
+         *  and
+         *      The next node is waiting in shared mode,
+         *      or we don't know, because it appears null
+         *
+         *  The conservation in both of these checks may cause
+         *  unnecessary wake-up, but only when there are multiple
+         *  racing acquires/releases, so most need signals now or soon
+         *  anyway
+         */
+        if(propagate > 0 || h == null || h.waitStatus < 0 ||
+                (h = head) == null || h.waitStatus < 0){
+            Node s = node.next;
+            if(s == null || s.isShared()){
+                doReleasedShared();
+            }
+        }
+    }
+
+
+    /********************** Utilities for various versions of acquire **************************/
+
+
+    /**
+     * Cancels an ongoing attempt to acquire
+     *
+     * @param node the node
+     */
+    private void cancelAcquire(Node node){
+        // Ignore if node doesn't exist
+        if(node == null){
+            return;
+        }
+
+        node.thread = null;
+
+        // Skip cancelled predecessors
+        Node pred = node.prev;
+        while(pred.waitStatus > 0){
+            node.prev = pred = pred.prev;
+        }
+
+        /**
+         * predNext is the apparent node to unsplice. CASes below will
+         * fail if not, in which case, we lost race vs another cancel
+         * or signal, so no further action is necessary
+         */
+        Node predNext = pred.next;
+
+        /**
+         * Can use unconditional write instead of CAS here.
+         * After this atomic step, other Nodes can skip past us,
+         * Before, we are free of interference from other threads
+         */
+        node.waitStatus = Node.CANCELLED;
+
+        // If we are the tail, remove ourselves
+        if(node == tail && compareAndSetTail(node, pred)){
+            compareAndSetNext(pred, predNext, null);
+        }else{
+            /**
+             * If successor needs signal, try to set pred's next-link
+             * so it will get one. Otherwise wake it up to propagate
+             */
+            int ws;
+            if(pred != head &&
+                    ((ws = pred.waitStatus) == Node.SIGNAL ||
+                            (ws <= 0 && compareAndSetWaitStatus(pred, ws, Node.SIGNAL))) &&
+                    pred.thread != null){
+                Node next = node.next;
+                if(next != null && next.waitStatus <= 0){
+                    compareAndSetNext(pred, predNext, next);
+                }
+            }else{
+                unparkSuccessor(node);
+            }
+
+            node.next = node; // help GC
+        }
+    }
+
+
+    /**
+     * Checks and update status for a node that failed to acquire.
+     * Returns true if thread should block. This is the main signal
+     * control in all acquire loops. Requires that pred == node.prev.
+     *
+     * @param pred node's predecessor holding status
+     * @param node the node
+     * @return {@code true} if thread should block
+     */
+    private static boolean shouldParkAfterFailedAcquire(Node pred, Node node){
+        int ws = pred.waitStatus;
+        if(ws == Node.SIGNAL){
+            /**
+             * This node has already set status asking a release
+             * to signal it, so it can safely park
+             */
+            return true;
+        }
+
+        if(ws > 0){
+            /**
+             * Predecessor was cancelled. Skip over predecessors and
+             * indicate retry
+             */
+            do{
+                node.prev = pred = pred.prev;
+            }while(pred.waitStatus > 0);
+            pred.next = node;
+        }
+        else{
+            /**
+             * waitStatus must be 0 or PROPAGATE. Indicate that we
+             * need a signal, but don't park yet. Caller will need to
+             * retry to make sure it cannot acquire before parking
+             */
+            compareAndSetWaitStatus(pred, ws, Node.SIGNAL);
+        }
+
+        return false;
+    }
+
+    /** Convenience method to interrupt current thread */
+    static void selfInterrupt(){
+        Thread.currentThread().interrupt();
+    }
+
+    /**
+     * Convenience method to park and then check if interrupted
+     *
+     * @return {@code true} if interrupt
+     */
+    private final boolean parkAndCheckInterrupt(){
+        LockSupport.park(this);
+        return Thread.interrupted();
+    }
+
+
+    /**
+     * Various flavors of acquire, varying in exclusive/shared and
+     * control modes. Each is mostly the same, but annoyingly
+     * different. Only a little bit of factoring is possible due to
+     * interaction of exception mechanics (including ensuring that we
+     * cancel if tryAcquire throws exception) and other control, at
+     * least not without hurting performance too much
+     */
+
+    /**
+     * Acquires in exclusive uninterruptible mode for thread already in
+     * queue. Used by condition wait methods as well as acquire
+     *
+     * @param node  the node
+     * @param arg the acquire argument
+     * @return {@code} if interrupted while waiting
+     */
+    final boolean acquireQueued(final Node node, int arg){
+        boolean failed = true;
+        try {
+            boolean interrupted = false;
+            for(;;){
+                final Node p = node.predecessor();
+                if(p == head && tryAcquire(arg)){
+                    setHead(node);
+                    p.next = null; // help GC
+                    failed = false;
+                    return interrupted;
+                }
+                if(shouldParkAfterFailedAcquire(p, node) &&
+                        parkAndCheckInterrupt()){
+                    interrupted = true;
+                }
+            }
+        }finally {
+            if(failed){
+                cancelAcquire(node);
+            }
+        }
+    }
+
+    /**
+     * Acquire in exclusive interruptible mode.
+     * @param arg the acquire argument
+     */
+    private void doAcquireInterruptibly(int arg) throws InterruptedException{
+        final Node node = addWaiter(Node.EXCLUSIVE);
+        boolean failed = true;
+        try {
+            for(;;){
+                final Node p = node.predecessor();
+                if(p == head && tryAcquire(arg)){
+                    setHead(node);
+                    p.next = null; // help GC
+                    failed = false;
+                    return;
+                }
+
+                if(shouldParkAfterFailedAcquire(p, node) &&
+                        parkAndCheckInterrupt()){
+                    throw new InterruptedException();
+                }
+            }
+        }finally {
+            if(failed){
+                cancelAcquire(node);
+            }
+        }
+    }
+
+    /**
+     * Acquire in exclusive timed mode
+     *
+     * @param arg the acquire argument
+     * @param nanosTimeout max wait time
+     * @return {@code true} if acquired
+     */
+    private boolean doAcquireNanos(int arg, long nanosTimeout) throws InterruptedException{
+        if(nanosTimeout <= 0L){
+            return false;
+        }
+
+        final long deadline = System.nanoTime() + nanosTimeout;
+        final Node node = addWaiter(Node.EXCLUSIVE);
+        boolean failed = true;
+
+        try {
+            for(;;){
+                final Node p = node.predecessor();
+                if(p == head && tryAcquire(arg)){
+                    setHead(node);
+                    p.next = null; // help GC
+                    failed = false;
+                    return true;
+                }
+
+                nanosTimeout = deadline - System.nanoTime();
+                if(nanosTimeout <= 0L){
+                    return false;
+                }
+                if(shouldParkAfterFailedAcquire(p, node) &&
+                        nanosTimeout > spinForTimeoutThreshold){
+                    LockSupport.parkNanos(this, nanosTimeout);
+                }
+                if(Thread.interrupted()){
+                    throw new InterruptedException();
+                }
+            }
+        }finally {
+            if(failed){
+                cancelAcquire(node);
+            }
+        }
+    }
+
+    /**
+     * Acquire in shared uninterruptible mode
+     * @param arg the acquire argument
+     */
+    private void doAcquireShared(int arg){
+        final Node node = addWaiter(Node.SHARED);
+        boolean failed = true;
+
+        try {
+            boolean interrupted = false;
+            for(;;){
+                final Node p = node.predecessor();
+                if(p == head){
+                    int r = tryAcquireShared(arg);
+                    if(r >= 0){
+                        setHeadAndPropagate(node, r);
+                        p.next = null; // help GC
+                        if(interrupted){
+                            selfInterrupt();
+                        }
+                        failed = false;
+                        return;
+                    }
+                }
+
+                if(shouldParkAfterFailedAcquire(p, node) &&
+                        parkAndCheckInterrupt()){
+                    interrupted = true;
+                }
+            }
+        }finally {
+            if(failed){
+                cancelAcquire(node);
+            }
+        }
+    }
+
+    /**
+     * Acquire in shared interruptible mode
+     * @param arg the acquire argument
+     */
+    private void doAcquireSharedInterruptibly(int arg) throws InterruptedException{
+        final Node node = addWaiter(Node.SHARED);
+        boolean failed = true;
+
+        try {
+            for(;;){
+                final Node p = node.predecessor();
+                if(p == head){
+                    int r = tryAcquireShared(arg);
+                    if(r >= 0){
+                        setHeadAndPropagate(node, r);
+                        p.next = null; // help GC
+                        failed = false;
+                        return;
+                    }
+                }
+
+                if(shouldParkAfterFailedAcquire(p, node) &&
+                        parkAndCheckInterrupt()){
+                    throw new InterruptedException();
+                }
+            }
+        }finally {
+            if(failed){
+                cancelAcquire(node);
+            }
+        }
+    }
+
+    /**
+     * Acquire in shared timed mode
+     *
+     * @param arg the acquire argument
+     * @param nanosTimeout max wait time
+     * @return {@code true} if acquired
+     */
+    private boolean doAcquireSharedNanos(int arg, long nanosTimeout) throws InterruptedException{
+        if (nanosTimeout <= 0L){
+            return false;
+        }
+
+        final long deadline = System.nanoTime() + nanosTimeout;
+        final Node node = addWaiter(Node.SHARED);
+        boolean failed = true;
+
+        try {
+            for(;;){
+                final Node p = node.predecessor();
+                if(p == head){
+                    int r = tryAcquireShared(arg);
+                    if(r >= 0){
+                        setHeadAndPropagate(node, r);
+                        p.next = null; // help GC
+                        failed = false;
+                        return true;
+                    }
+                }
+
+                nanosTimeout = deadline - System.nanoTime();
+                if(nanosTimeout <= 0L){
+                    return false;
+                }
+                if(shouldParkAfterFailedAcquire(p, node) &&
+                        nanosTimeout > spinForTimeoutThreshold){
+                    LockSupport.parkNanos(this, nanosTimeout);
+                }
+                if(Thread.interrupted()){
+                    throw new InterruptedException();
+                }
+            }
+        }finally {
+            if (failed){
+                cancelAcquire(node);
+            }
+        }
+    }
+
+    /************************** Main exported methods *********************/
+
+
+    protected boolean tryAcquire(int arg){
+        throw new UnsupportedOperationException();
+    }
+
+    protected boolean tryRelease(int arg){
+        throw new UnsupportedOperationException();
+    }
+
+    protected int tryAcquireShared(int arg){
+        throw new UnsupportedOperationException();
+    }
+
+    protected boolean tryReleaseShared(int arg){
+        throw new UnsupportedOperationException();
+    }
+
+    protected boolean isHeldExclusively(){
+        throw new UnsupportedOperationException();
+    }
+
+    public final void acquire(int arg){
+        if(!tryAcquire(arg)&&
+            acquireQueued(addWaiter(Node.EXCLUSIVE), arg)){
+            selfInterrupt();
+        }
+    }
+
+    public final void acquireInterruptibly(int arg) throws InterruptedException {
+        if(Thread.interrupted()){
+            throw new InterruptedException();
+        }
+        if(!tryAcquire(arg)){
+            doAcquireInterruptibly(arg);
+        }
+    }
+
+    public final boolean tryAcquireNanos(int arg, long nanosTimeout) throws InterruptedException{
+        if(Thread.interrupted()){
+            throw new InterruptedException();
+        }
+        return tryAcquire(arg) || doAcquireNanos(arg, nanosTimeout);
+    }
+
+    public final boolean release(int arg){
+        if(tryRelease(arg)){
+            Node h = head;
+            if(h != null && h.waitStatus != 0){
+                unparkSuccessor(h);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public final void acquireShared(int arg){
+        if(tryAcquireShared(arg) < 0){
+            doAcquireShared(arg);
+        }
+    }
+
 
     /**
      * CAS head field. Used only by enq
