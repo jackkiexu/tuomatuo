@@ -663,6 +663,15 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
                     throw new Error(e);
                 }
             }
+
+            @Override
+            public String toString() {
+                return "QNode{" +
+//                        "item=" + item +
+                        ", waiter=" + waiter +
+                        ", isData=" + isData +
+                        '}';
+            }
         }
 
         /** Head of queue */
@@ -691,7 +700,7 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
         void advanceHead(QNode h, QNode nh){
             if(h == head &&
                     unsafe.compareAndSwapObject(this, headOffset, h, nh)){
-                h.next = h; // forget old next
+                h.next = h; // forget old next help gc
             }
         }
 
@@ -867,10 +876,66 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
                 }
                 else if(!timed){
                     LockSupport.park(this);
+                    logger.info("after LockSupport.park(this)");
                 }
                 else if(nanos > spinForTimeoutThreshold){
                     LockSupport.parkNanos(this, nanos);
                 }
+            }
+        }
+
+
+        /**
+         * Gets rid of cancelled node s with original predecessor pred.
+         */
+        void clean(QNode pred, QNode s) {
+            s.waiter = null; // forget thread
+            /*
+             * At any given time, exactly one node on list cannot be
+             * deleted -- the last inserted node. To accommodate this,
+             * if we cannot delete s, we save its predecessor as
+             * "cleanMe", deleting the previously saved version
+             * first. At least one of node s or the node previously
+             * saved can always be deleted, so this always terminates.
+             */
+            while (pred.next == s) { // Return early if already unlinked
+                QNode h = head;
+                QNode hn = h.next;   // Absorb cancelled first node as head
+                if (hn != null && hn.isCancelled()) {
+                    advanceHead(h, hn);
+                    continue;
+                }
+                QNode t = tail;      // Ensure consistent read for tail
+                if (t == h)
+                    return;
+                QNode tn = t.next;
+                if (t != tail)
+                    continue;
+                if (tn != null) {
+                    advanceTail(t, tn);
+                    continue;
+                }
+                if (s != t) {        // If not tail, try to unsplice
+                    QNode sn = s.next;
+                    if (sn == s || pred.casNext(s, sn))
+                        return;
+                }
+                QNode dp = cleanMe;
+                if (dp != null) {    // Try unlinking previous cancelled node
+                    QNode d = dp.next;
+                    QNode dn;
+                    if (d == null ||               // d is gone or
+                            d == dp ||                 // d is off list or
+                            !d.isCancelled() ||        // d not cancelled or
+                            (d != t &&                 // d not tail and
+                                    (dn = d.next) != null &&  //   has successor
+                                    dn != d &&                //   that is on list
+                                    dp.casNext(d, dn)))       // d unspliced
+                        casCleanMe(dp, null);
+                    if (dp == pred)
+                        return;      // s is already saved node
+                } else if (casCleanMe(null, pred))
+                    return;          // Postpone cleaning s
             }
         }
 
@@ -879,7 +944,8 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
          * @param pred
          * @param s
          */
-        void clean(QNode pred, QNode s){
+        void clean2(QNode pred, QNode s){
+            logger.info("pred:" + pred + ", s :" + s + ", pred.next == s:" + (pred.next == s) + ", Thread.getName:" + Thread.currentThread().getName());
             s.waiter = null; // forget thread
 
             /**
@@ -891,31 +957,42 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
              * saved can always be deleted, so this always terminates
              */
             while(pred.next == s){ // Return early if already unlinked
+                logger.info("pred.next == s:" + (pred.next == s) + ", Thread.getName:" + Thread.currentThread().getName());
                 QNode h = head;
                 QNode hn = h.next; // Absorb cancelled first node as head
+                logger.info("continue :" +", pred.next == s :" + (pred.next == s) + ", Thread.getName:" + Thread.currentThread().getName());
                 if(hn != null && hn.isCancelled()){
                     advanceHead(h, hn);
+                    logger.info("continue :" +", pred.next == s :" + (pred.next == s) + "(prev.next = prev) : " + (pred.next == pred) + " , Thread.getName:" + Thread.currentThread().getName());
                     continue;
                 }
                 QNode t = tail;         // Ensure consistent read for tail
+                logger.info("t == h :" + (t == h) + ", t:" + t + ", h:" + h+ ", Thread.getName:" + Thread.currentThread().getName());
                 if(t == h){
+                    logger.info("return :" + ", Thread.getName:" + Thread.currentThread().getName());
                     return;
                 }
                 QNode tn = t.next;
                 if(t != tail){
+                    logger.info("continue :" +", pred.next == s :" + (pred.next == s)  + ", Thread.getName:" + Thread.currentThread().getName());
                     continue;
                 }
                 if(tn != null){
                     advanceTail(t, tn);
+                    logger.info("continue :" +", pred.next == s :" + (pred.next == s)  + ", Thread.getName:" + Thread.currentThread().getName());
                     continue;
                 }
+                logger.info("s != t : " + (s != t) + ", s :" + s +", t : " + t + ", Thread.getName:" + Thread.currentThread().getName());
+
                 if(s != t){ // If not tail, try to unsplice
                     QNode sn = s.next;
                     if(sn == s || pred.casNext(s, sn)){
+                        logger.info("return :" + ", Thread.getName:" + Thread.currentThread().getName());
                         return;
                     }
                 }
 
+                logger.info("cleanMe :" + cleanMe+ ", Thread.getName:" + Thread.currentThread().getName());
                 QNode dp = cleanMe;
                 if(dp != null){ // Try unlinking previous cancelled node
                     QNode d = dp.next;
@@ -931,13 +1008,16 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
                             ){
                         casCleanMe(dp, null);
                     }
+                    logger.info("dp == pred:" + (dp == pred) +"continue :" + ", Thread.getName:" + Thread.currentThread().getName());
                     if(dp == pred){
                         return;     // s is already saved node
                     }
                 }
                 else if(casCleanMe(null, pred)){
+                    logger.info("continue :" + ", Thread.getName:" + Thread.currentThread().getName());
                     return;         // Postpone cleaning s
                 }
+                logger.info("loop another :" + ", Thread.getName:" + Thread.currentThread().getName());
             }
 
         }
@@ -991,8 +1071,10 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
      * @throws InterruptedException
      */
     public void put(E e) throws InterruptedException{
+        logger.info("put e" + e);
         if(e == null) throw new NullPointerException();
-        if(transferer.transfer(e, false, 0) == null){
+        Object result = transferer.transfer(e, false, 0);
+        if(result == null){
             Thread.interrupted();
             throw new InterruptedException();
         }
@@ -1040,6 +1122,7 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
      * @throws InterruptedException
      */
     public E take() throws InterruptedException{
+        logger.info("take happen");
         E e = transferer.transfer(null, false, 0);
         if(e != null){
             return e;

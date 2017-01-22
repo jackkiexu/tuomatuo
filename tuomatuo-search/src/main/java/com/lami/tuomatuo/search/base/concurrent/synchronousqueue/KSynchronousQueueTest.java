@@ -2,6 +2,8 @@ package com.lami.tuomatuo.search.base.concurrent.synchronousqueue;
 
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.SynchronousQueue;
 
 /**
@@ -15,14 +17,23 @@ public class KSynchronousQueueTest {
      * @param args
      */
     public static void main(String[] args) throws Exception{
-        KSynchronousQueue<Object> queue = new KSynchronousQueue<Object>();
-        for(int i=0;i<1;i++){
+        KSynchronousQueue<Object> queue = new KSynchronousQueue<Object>(true);
+        List<Thread> list = new ArrayList<>();
+        for(int i=0;i<3;i++){
             Thread t = new SQThread(queue, 1, "SynchronousQueueTest Thread :" + i);
             t.start();
+            list.add(t);
         }
-        Thread.sleep(2 * 1000);
+
+
+        Thread.sleep(10 * 1000);
+
+        for(Thread thread : list){
+//            Thread.sleep(3*1000);
+            thread.interrupt();
+        }
         for(int i=0;i<1;i++){
-            queue.put("" + i);
+//            queue.put("" + i);
            /* if(!){
                 logger.info("Failure");
             }else{
