@@ -18,56 +18,67 @@ public class KSynchronousQueueTest {
      */
     public static void main(String[] args) throws Exception{
         KSynchronousQueue<Object> queue = new KSynchronousQueue<Object>(true);
+
+        // 初始化 6 个 consumer
         List<Thread> list = new ArrayList<>();
-        for(int i=0;i<3;i++){
+        for(int i = 0; i < 6; i++){
             Thread t = new SQThread(queue, 1, "SynchronousQueueTest Thread :" + i);
             t.start();
             list.add(t);
         }
 
+        Thread.sleep(2 * 1000);
 
-        Thread.sleep(10 * 1000);
+        // 初始化 一个 producer
+        Thread t = new SQThread(queue, 0, "SynchronousQueueTest Thread producer", "A");
+        t.start();
 
-        for(Thread thread : list){
-//            Thread.sleep(3*1000);
-            thread.interrupt();
-        }
-        for(int i=0;i<1;i++){
-//            queue.put("" + i);
-           /* if(!){
-                logger.info("Failure");
-            }else{
-                logger.info("queue.offer success " + i);
-            }*/
-        }
+        // 第一个 concumer 配对成功, 将第三个中段
+        list.get(3).interrupt();
+
+
+        Thread.sleep(2 * 1000);
+        list.get(5).interrupt();
+
     }
+
     public static class SQThread extends Thread{
+
+        private int mode;
+        private Object value;
         private KSynchronousQueue<Object> queue;
-        int mode;
+
         SQThread(KSynchronousQueue<Object> queue,int mode, String name){
             super(name);
             this.queue = queue;
             this.mode = mode;
         }
+
+        SQThread(KSynchronousQueue<Object> queue,int mode, String name, Object value){
+            super(name);
+            this.queue = queue;
+            this.mode = mode;
+            this.value = value;
+        }
+
         @Override
         public void run(){
             Object item = null;
             try{
+                // mode == 1 consumer
                 if(mode == 1){
-                    logger.info("consumer begin to consumer, but he need sleep");
+                    item = queue.take();
+                    logger.info("getitem.toString():"+item.toString());
+                } // mode = other
+                else{
                     Thread.sleep(1 * 1000);
-                    logger.info("consumer begin to consumer, but he need sleep, and he is OK");
-                    while((item = queue.take()) != null){
-                        Thread.sleep(1000*1000);
-                        logger.info("getitem.toString():"+item.toString());
-                    }
-                }else{
-                    //
+                    queue.put(value);
+                    Thread.sleep(2 * 1000);
                 }
             }catch(Exception e){
                 //
             }
-            logger.info("end");
+            logger.info(Thread.currentThread().getName() + " execute over");
         }
     }
 

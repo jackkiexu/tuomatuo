@@ -773,12 +773,12 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
              * 这个 producer / consumer 的主方法, 主要分为两种情况
              *
              * 1. 若队列为空 / 队列中的尾节点和自己的 类型相同, 则添加 node
-             *      到队列中, 知道 timeout/interrupt/其他线程和这个线程匹配
+             *      到队列中, 直到 timeout/interrupt/其他线程和这个线程匹配
              *      timeout/interrupt awaitFulfill方法返回的是 node 本身
              *      匹配成功的话, 要么返回 null (producer返回的), 或正真的传递值 (consumer 返回的)
              *
              * 2. 队列不为空, 且队列的 head.next 节点是当前节点匹配的节点,
-             *      对应数据的传递匹配, 并且通过 advanceHead 方法帮助 先前 block 的节点 dequeue
+             *      进行数据的传递匹配, 并且通过 advanceHead 方法帮助 先前 block 的节点 dequeue
              */
             QNode s = null; // constrcuted/reused as needed
             boolean isData = (e != null); // 1.判断 e != null 用于区分 producer 与 consumer
@@ -832,17 +832,14 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
                     }
 
                     /** producer 和 consumer 匹配操作
-                     *  1. 获取 m的 item (注意这里的m是head的next节点, 而m.item的值有可能是它自己, 有可能是null, 有可能已经获取其他线程给它的值)
+                     *  1. 获取 m的 item (注意这里的m是head的next节点
                      *  2. 判断 isData 与x的模式是否匹配, 只有produce与consumer才能配成一对
                      *  3. x == m 判断是否 节点m 是否已经进行取消了, 具体看(QNOde#tryCancel)
                      *  4. m.casItem 将producer与consumer的数据进行交换 (这里存在并发时可能cas操作失败的情况)
                      *  5. 若 cas操作成功则将h节点dequeue
                      *
                      *  疑惑: 为什么将h进行 dequeue, 而不是 m节点
-                     *  答案: 因为每次进行配对时, 都是将 h.next 节点进行配对, 而对应的TransferStack中头节点就是配对中的节点,
-                     *       QNode 对应的队列中头节点其实是一个 dummy node, 而 SNode对应的头节点一开始是空的
-                     *
-                     *
+                     *  答案: 因为每次进行配对时, 都是将 h 是个 dummy node, 正真的数据节点 是 head.next
                      */
                     Object x = m.item;
                     if(isData == (x != null) ||    // 19. 两者的模式是否匹配 (因为并发环境下 有可能其他的线程强走了匹配的节点)
@@ -874,36 +871,35 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
          */
         Object awaitFulfill(QNode s, E e, boolean timed, long nanos){
 
-            final long deadline = timed ? System.nanoTime() + nanos : 0L;       // 1. 计算 deadline 时间 (只有 timed 为true 时才有用)
-            Thread w = Thread.currentThread();                                   // 2. 获取当前的线程
-            int spins = ((head.next == s) ?                                    // 3. 若当前节点是 head.next 时才进行 spin, 不然的话不是浪费 CPU 吗, 对挖
+            final long deadline = timed ? System.nanoTime() + nanos : 0L;// 1. 计算 deadline 时间 (只有 timed 为true 时才有用)
+            Thread w = Thread.currentThread();   // 2. 获取当前的线程
+            int spins = ((head.next == s) ?        // 3. 若当前节点是 head.next 时才进行 spin, 不然的话不是浪费 CPU 吗, 对挖
                     (timed ? maxTimeSpins : maxUntimedSpins) : 0);
-            for(;;){                                                            // loop 直到 成功
-                if(w.isInterrupted()){                                          // 4. 若线程中断, 直接将 item = this, 在 transfer 中会对返回值进行判断 (transfer中的 步骤 11)
+            for(;;){                                        // loop 直到 成功
+                if(w.isInterrupted()){                      // 4. 若线程中断, 直接将 item = this, 在 transfer 中会对返回值进行判断 (transfer中的 步骤 11)
                     s.tryCancel(e);
                 }
                 Object x = s.item;
-                if(x != e){                                                    // 5. 在进行线程阻塞->唤醒, 线程中断, 等待超时, 这时 x != e,直接return 回去
+                if(x != e){                                 // 5. 在进行线程阻塞->唤醒, 线程中断, 等待超时, 这时 x != e,直接return 回去
                     return x;
                 }
                 if(timed){
                     nanos = deadline - System.nanoTime();
-                    if(nanos <= 0L){                                           // 6. 等待超时, 改变 node 的item值, 进行 continue, 下一步就到  awaitFulfill的第 5 步 -> return
+                    if(nanos <= 0L){                        // 6. 等待超时, 改变 node 的item值, 进行 continue, 下一步就到  awaitFulfill的第 5 步 -> return
                         s.tryCancel(e);
                         continue;
                     }
                 }
-                if(spins > 0){                                                 // 7. spin 一次一次减少
+                if(spins > 0){                             // 7. spin 一次一次减少
                     --spins;
                 }
                 else if(s.waiter == null){
                     s.waiter = w;
                 }
-                else if(!timed){                                              // 8. 进行没有超时的 park
+                else if(!timed){                           // 8. 进行没有超时的 park
                     LockSupport.park(this);
-                    logger.info("after LockSupport.park(this)");
                 }
-                else if(nanos > spinForTimeoutThreshold){                // 9. 自旋次数过了, 直接 + timeout 方式 park
+                else if(nanos > spinForTimeoutThreshold){  // 9. 自旋次数过了, 直接 + timeout 方式 park
                     LockSupport.parkNanos(this, nanos);
                 }
             }
@@ -1090,6 +1086,7 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
      * @param fair
      */
     public KSynchronousQueue(boolean fair){
+        // 通过 fair 值来决定内部用 使用 queue 还是 stack 存储线程节点
         transferer = fair ? new TransferQueue<E>() : new TransferStack<E>();
     }
 
@@ -1101,7 +1098,7 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
      * @throws InterruptedException
      */
     public void put(E e) throws InterruptedException{
-        logger.info("put e" + e);
+//        logger.info("put e" + e);
         if(e == null) throw new NullPointerException();
         Object result = transferer.transfer(e, false, 0);
         if(result == null){
@@ -1152,7 +1149,6 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
      * @throws InterruptedException
      */
     public E take() throws InterruptedException{
-        logger.info("take happen");
         E e = transferer.transfer(null, false, 0);
         if(e != null){
             return e;
