@@ -4,6 +4,8 @@ import com.lami.tuomatuo.search.base.concurrent.unsafe.UnSafeClass;
 import sun.misc.Unsafe;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.locks.LockSupport;
 
 /**
@@ -989,6 +991,288 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
             doAcquireShared(arg);
         }
     }
+
+    public final void acquireSharedInterruptibly(int arg)throws InterruptedException{
+        if(Thread.interrupted()){
+            throw new InterruptedException();
+        }
+        if(tryAcquireShared(arg) < 0){
+            doAcquireSharedInterruptibly(arg);
+        }
+    }
+
+    public final boolean tryAcquireSharedNanos(int arg, long nanosTimeout) throws InterruptedException{
+        if(Thread.interrupted()){
+            throw new InterruptedException();
+        }
+        return tryAcquireSharedNanos(arg, nanosTimeout);
+    }
+
+    public final boolean releaseShared(int arg){
+        if(tryReleaseShared(arg)){
+            doReleasedShared();
+            return true;
+        }
+        return false;
+    }
+
+    /******************************************* Queue inspection methods ****************************/
+
+    /**
+     * Queries whether any threads are waiting to acquire. Note that
+     * because cancellation due to interrupts and timeouts may occur
+     * at any time, a {@code true} return does not guarantee that any
+     * other will ever acquire
+     *
+     * <p>
+     *     In this implementation, this operation returns in
+     *     constant time
+     * </p>
+     *
+     * @return
+     */
+    public final boolean hasQueuedThreads() {
+        return head != tail;
+    }
+
+    /**
+     * Queries whether any threads have ever contended to acquire this
+     * synchronizer; that is if an acquire method has ever blocked
+     *
+     * <p>
+     *     In this omplementation, this operation returns in
+     *     constant time
+     * </p>
+     *
+     * @return {@code true} if there has ever been contention
+     */
+    public final boolean hasContented(){
+        return head != null;
+    }
+
+    /**
+     * Returns the first (longest-waiting) thread in the queue, or
+     * {@code null} if no threads are currently queued
+     *
+     * <p>
+     *     In this implementation, this operation narmally returns in
+     *     constant time, but may iterate upon contention if other threads are
+     *     concurrently modifying the queue
+     * </p>
+     *
+     * @return the first (longest-waiting) thread in the queue, or
+     *          {@code null} if no threads are currently queued
+     */
+    public final Thread getFirstQueuedThread(){
+        return (head == tail) ? null : fullGetFirstQueuedThread();
+    }
+
+    private Thread fullGetFirstQueuedThread(){
+        /**
+         * The first node is normally head next. Try to get its
+         * thread field, ensuring consistent reads: If thread
+         * field is nulled out or s.prev is no longer head, then
+         * some other thread(s) concurrently performed sethead in
+         * between some of our reads. we try this twice before
+         * restorting to traversal
+         */
+
+        Node h, s;
+        Thread st;
+
+        if((
+                (h = head) != null && (s = h.next) != null &&
+                        s.prev == head && (st = s.thread) != null ||
+                        (
+                                (h = head) != null && (s = h.next) != null &&
+                                        s.prev == head && (st = s.thread) != null
+                                )
+                )){
+            return st;
+        }
+
+        /**
+         * Head's next field might not have been set yet, or may have
+         * been unset after setHead, So we must check to see if tail
+         * is actually first node. If not, we continue on, safely
+         * traversing from tail back to head to find first,
+         * guaranteeing termination
+         */
+        Node t = tail;
+        Thread firstThread = null;
+        while(t != null && t != head){
+            Thread tt = t.thread;
+            if(tt != null){
+                firstThread = tt;
+            }
+            t = t.prev;
+        }
+        return firstThread;
+    }
+
+    /**
+     * Returns true if the given thread is currently queued
+     *
+     * <p>
+     *     This implementation traverses the queue to determine
+     *     presence of the given thread
+     * </p>
+     *
+     * @param thread the thread
+     * @return {@code true} if the given thread is on the queue
+     * @throws NullPointerException if the thread is null
+     */
+    public final boolean isQueued(Thread thread){
+        if(thread == null){
+            throw new NullPointerException();
+        }
+        for(Node p = tail; p != null; p = p.prev){
+            if(p.thread == thread){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Return {@code true} if the apparent first queued thread, if one
+     * exists, is waiting in exclusive mode. If this method returns
+     * {@code true}, and the current thread is attempting to acquire in
+     * shared mode (that is, this method is invoked from {@link
+     * #tryAcquireShared(int)}) then it is guaranteed that the current thread
+     * is not the first queued thread. Used only as a heuristic in
+     * ReentrantReadWriteLock
+     */
+    final boolean apparentlyFirstQueuedIsExclusive(){
+        Node h, s;
+        return (h = head) != null &&
+                (s = h.next) != null &&
+                !s.isShared()       &&
+                s.thread != null;
+    }
+
+    /**
+     * Quires whether any threads have been waiting to acquire longer
+     * than the current thread
+     *
+     * <p>
+     *     An invocation of this method is equivalent to (but may be
+     *     more efficient than):
+     *     <pre>
+     *         {@code getFirstQueuedThread != Thread.currentThread() && hasQueuedThreads()}
+     *     </pre>
+     *
+     *     <p>
+     *         Note that because cancellations due to interrupts and
+     *         timeouts may occur at any time, a {@code true} return does not
+     *         guarantee that some other thread will acquire before the current
+     *         thread. Likewise, it is possible for another thread to win a
+     *         race to enqueue after this method has returned {@code false}
+     *         due to the queue being empty
+     *     </p>
+     * </p>
+     *
+     * <p>
+     *     This method is designed to be used by a fair synchronizer to
+     *     avoid <a href="KAbstractQueuedSynchronizer#barging">barging</a>
+     *     Such a synchronizers's {@link #tryAcquire(int)}} method should return
+     *     {@code false}, and its {@link #tryAcquireShared(int)} method should
+     *     return a negative value, if this method returns {@code true}
+     *     (unless this is a reentrant acquire). For example, the {@code
+     *     tryAcquire} method for a fair, reentrant, exclusive mode
+     *     synchronizer might look like this:
+     *
+     *     <pre>
+     *         {@code
+     *         protected boolean tryAcquire(int arg){
+     *             if(isHeldExclusively()){
+     *                 // A reentrant acquire: increment hold count
+     *                 return true;
+     *             }else if (hasQueuedPredecessors()){
+     *                 return false;
+     *             }else{
+     *                 // try to acquire normally
+     *             }
+     *         }
+     *         }
+     *     </pre>
+     * </p>
+     *
+     * @return {@code true} if there is a queued thread preceding the
+     *          current thread, and {@code false} if the current thread
+     *          is at the head of the queue or the queue is empty
+     */
+    public final boolean hasQueuedPredecessors(){
+        /**
+         * The correctness of this depends on head being initialized
+         * before tail and on head next being accurate if the current
+         * thread is first in queue
+         */
+        Node t = tail; // Read fields in reverse initialization order
+        Node h = head;
+        Node s;
+        return h != t &&
+                ((s = h.next) == null || s.thread != Thread.currentThread());
+    }
+
+
+    /********************************************* Instrumentation and monitoring methods **************************/
+
+    /**
+     * Returns an estimate of the number of threads waiting to
+     * acquire. The value is only an estimate because the number of
+     * threads may change dynamically while this method traverses
+     * internal data structures. This method is designed for use in
+     * monitoring system state, not for synchronization
+     * control
+     *
+     * @return the estimated number of threads waiting to acquire
+     */
+    public final int getQueueLength(){
+        int n = 0;
+        for(Node p = tail; p != null; p = p.prev){
+            if(p.thread != null){
+                ++n;
+            }
+        }
+        return n;
+    }
+
+    /**
+     * Returns a collection containing threads that may be waiting to
+     * acquire. Because the actual set of threads may change
+     * dynamically while constructing this result, the returned
+     * collection is only a best-effort estimate. The elements of the
+     * returned collection are in no particular order. This method is
+     * designed to facilitate construction of subclass that provide
+     * more extensive monitoring facilities
+     *
+     * @return the collection of threads
+     */
+    public final Collection<Thread> getQueuedThreads(){
+        ArrayList<Thread> list = new ArrayList<>();
+        for(Node p = tail; p != null; p = p.prev){
+            Thread t = p.thread;
+            if(t != null){
+                list.add(t);
+            }
+        }
+        return list;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     /**
