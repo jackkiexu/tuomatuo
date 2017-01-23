@@ -608,43 +608,46 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
 
         /** Node class for TransferQueue */
         static final class QNode{
-            volatile QNode next;        // next node in queue
-            volatile Object item;       // CAS'ed to or from null
-            volatile Thread waiter;     // to control park/unpark
-            final boolean isData;
+            volatile QNode next;        // 队列中的next节点
+            volatile Object item;       // 对应传递的数据 (produce 是 object, consumer 是 null) <- isDate 就是用这个来进行判别
+            volatile Thread waiter;     // producer / consumer 对应的调用线程
+            final boolean isData;      // boolean isData = (e != null); 用来判别 producer / consumer
 
+            /** 构造函数 */
             public QNode(Object item, boolean isData) {
                 this.item = item;
                 this.isData = isData;
             }
 
+            /** CAS 设置 next Node */
             boolean casNext(QNode cmp, QNode val){
-                return next == cmp &&
-                        unsafe.compareAndSwapObject(this, nextOffset, cmp, val);
+                return next == cmp && unsafe.compareAndSwapObject(this, nextOffset, cmp, val);
             }
 
+            /** CAS 设置 item 属性 */
             boolean casItem(Object cmp, Object val){
-                return item == cmp &&
-                        unsafe.compareAndSwapObject(this, itemOffset, cmp, val);
+                return item == cmp && unsafe.compareAndSwapObject(this, itemOffset, cmp, val);
             }
 
-            /**
-             * Tries to cancel by CAS'ing ref to this as item
-             * @param cmp
+            /** 当调用者 中断(interrupt) 或者等待超时时会调用此方法
+             *  将 item 指向自己
+             *  在调用  awaitFulfill 方法后会通过返回值和 s (s对应着当前线程) 比较, 若相等就说明 线程是中断的或超时, 则transfer 返回 null
              */
             void tryCancel(Object cmp){
                 unsafe.compareAndSwapObject(this, itemOffset, cmp, this);
             }
 
+            /**
+             * 判断节点是否是中断/超时结束的
+             * @return
+             */
             boolean isCancelled(){
                 return item == this;
             }
 
             /**
-             * Returns true if this node is known to be off the queue
-             * because its next pointer has been forgotten due to
-             * an advanceHead operation
-             *
+             * 判断 next == this <- 那什么导致的呢 ? 答案就在 advanceHead 中
+             * 通过 next = this 这种方式将node移除queue是nonblockingqueue设计中常用的, ConcurrentLinkedQueue 中也有这种设计
              */
             boolean isOffList(){ return next == this; }
 
@@ -667,68 +670,76 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
             @Override
             public String toString() {
                 return "QNode{" +
-//                        "item=" + item +
                         ", waiter=" + waiter +
                         ", isData=" + isData +
                         '}';
             }
         }
 
-        /** Head of queue */
+        /**
+         *  这是一个非常典型的 queue , 它有如下的特点
+         *  1. 整个队列有 head, tail 两个节点
+         *  2. 队列初始化时会有个 dummy 节点
+         *  3. 这个队列的头节点是个 dummy 节点/ 或 哨兵节点, 所以操作的总是队列中的第二个节点(AQS的设计中也是这也)
+         */
+
+        /** 头节点 */
         transient volatile QNode head;
-        /** Tail of queue */
+        /** 尾节点 */
         transient volatile QNode tail;
         /**
          * Reference to a cancelled node that might not yet have been
          * unlinked from queue because it was last inserted node
          * when it was cancelled
          */
+        /**
+         * 对应 中断或超时的 前继节点,这个节点存在的意义是标记, 它的下个节点要删除
+         * 何时使用:
+         *      当你要删除 节点 node, 若节点 node 是队列的末尾, 则开始用这个节点,
+         * 为什么呢？
+         *      大家知道 删除一个节点 直接 A.CASNext(B, B.next) 就可以,但是当  节点 B 是整个队列中的末尾元素时,
+         *      一个线程删除节点B, 一个线程在节点B之后插入节点 这样操作容易致使插入的节点丢失, 这个cleanMe很像
+         *      ConcurrentSkipListMap 中的 删除添加的 marker 节点, 他们都是起着相同的作用
+         */
         transient volatile QNode cleanMe;
 
         TransferQueue(){
-            QNode h = new QNode(null, false); // initialize to dummy node
+            /**
+             * 构造一个 dummy node, 而整个 queue 中永远会存在这样一个 dummy node
+             * dummy node 的存在使得 代码中不存在复杂的 if 条件判断
+             */
+            QNode h = new QNode(null, false);
             head = h;
             tail = h;
         }
 
         /**
-         * Tries to cas nh as new head; if successful, unlink
-         * old head's next node to avoid garbage retention
-         * @param h
-         * @param nh
+         * 推进 head 节点,将 老节点的 oldNode.next = this, help gc,
+         * 这种和 ConcurrentLinkedQueue 中一样
          */
         void advanceHead(QNode h, QNode nh){
-            if(h == head &&
-                    unsafe.compareAndSwapObject(this, headOffset, h, nh)){
+            if(h == head && unsafe.compareAndSwapObject(this, headOffset, h, nh)){
                 h.next = h; // forget old next help gc
             }
         }
 
-        /**
-         * Tries to cas nt as new tail
-         * @param t
-         * @param nt
-         */
+        /** 更新新的 tail 节点 */
         void advanceTail(QNode t, QNode nt){
             if(tail == t){
                 unsafe.compareAndSwapObject(this, tailOffset, t, nt);
             }
         }
 
-        /**
-         * Tries to CAS cleanMe slot
-         * @param cmp
-         * @param val
-         * @return
-         */
+        /** CAS 设置 cleamMe 节点 */
         boolean casCleanMe(QNode cmp, QNode val){
-            return cleanMe == cmp &&
-                    unsafe.compareAndSwapObject(this, cleanMeOffset, cmp, val);
+            return cleanMe == cmp && unsafe.compareAndSwapObject(this, cleanMeOffset, cmp, val);
         }
 
 
         /**
          * Puts or takes an item
+         * 主方法
+         *
          * @param e  if non-null, the item to be handed to a consumer;
          *           if null, requests that transfer return an item
          *           offered by producer.
@@ -758,56 +769,66 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
              * transferer. The check is here anyway because it places
              * null checks at top of loop, which is usually faster
              * than having them implicity interspersed
+             *
+             * 这个 producer / consumer 的主方法, 主要分为两种情况
+             *
+             * 1. 若队列为空 / 队列中的尾节点和自己的 类型相同, 则添加 node
+             *      到队列中, 知道 timeout/interrupt/其他线程和这个线程匹配
+             *      timeout/interrupt awaitFulfill方法返回的是 node 本身
+             *      匹配成功的话, 要么返回 null (producer返回的), 或正真的传递值 (consumer 返回的)
+             *
+             * 2. 队列不为空, 且队列的 head.next 节点是当前节点匹配的节点,
+             *      对应数据的传递匹配, 并且通过 advanceHead 方法帮助 先前 block 的节点 dequeue
              */
             QNode s = null; // constrcuted/reused as needed
-            boolean isData = (e != null);
+            boolean isData = (e != null); // 1.判断 e != null 用于区分 producer 与 consumer
 
             for(;;){
                 QNode t = tail;
                 QNode h = head;
-                if(t == null || h == null){         // saw unintialized value
+                if(t == null || h == null){         // 2. 数据未初始化, continue 重来
                     continue;                       // spin
                 }
-                if(h == t || t.isData == isData){   // empty or same-mode
+                if(h == t || t.isData == isData){   // 3. 队列为空, 或队列尾节点和自己相同 (注意这里是和尾节点比价, 下面进行匹配时是和 head.next 进行比较)
                     QNode tn = t.next;
-                    if(t != tail){                  // inconsistent read
+                    if(t != tail){                  // 4. tail 改变了, 重新再来
                         continue;
                     }
-                    if(tn != null){                 // lagging tail
+                    if(tn != null){                 // 5. 其他线程添加了 tail.next, 所以帮助推进 tail
                         advanceTail(t, tn);
                         continue;
                     }
-                    if(timed && nanos <= 0){        // can't wait
+                    if(timed && nanos <= 0){        // 6. 调用的方法的 wait 类型的, 并且 超时了, 直接返回 null, 直接见 SynchronousQueue.poll() 方法,说明此 poll 的调用只有当前队列中正好有一个与之匹配的线程在等待被【匹配才有返回值
                         return null;
                     }
                     if(s == null){
-                        s = new QNode(e, isData);
+                        s = new QNode(e, isData);  // 7. 构建节点 QNode
                     }
-                    if(!t.casNext(null, s)){        // failed to link in
+                    if(!t.casNext(null, s)){      // 8. 将 新建的节点加入到 队列中
                         continue;
                     }
 
-                    advanceTail(t, s);              // swing tail and wait
-                    Object x = awaitFulfill(s, e, timed, nanos);
-                    if(x == s){                     // wait was cancelled
-                        clean(t, s);
+                    advanceTail(t, s);             // 9. 帮助推进 tail 节点
+                    Object x = awaitFulfill(s, e, timed, nanos); // 10. 调用awaitFulfill, 若节点是 head.next, 则进行一些自旋, 若不是的话, 直接 block, 知道有其他线程 与之匹配, 或它自己进行线程的中断
+                    if(x == s){                   // 11. 若 (x == s)节点s 对应额线程 wait 超时 或线程中断, 不然的话 x == null (s 是 producer) 或 是正真的传递值(s 是 consumer)
+                        clean(t, s);              // 12. 对接点 s 进行清除, 若 s 不是链表的最后一个节点, 则直接 CAS 进行 节点的删除, 若 s 是链表的最后一个节点, 则 要么清除以前的 cleamMe 节点(cleamMe != null), 然后将 s.prev 设置为 cleanMe 节点, 下次进行删除 或直接将 s.prev 设置为cleanMe
                         return null;
                     }
 
-                    if(!s.isOffList()){             // not already unlinked
-                        advanceHead(t, s);          // unlink if head
-                        if(x != null){              // and forget fields
+                    if(!s.isOffList()){          // 13. 节点 s 没有 offlist
+                        advanceHead(t, s);       // 14. 推进head 节点, 下次就调用 s.next 节点进行匹配(这里调用的是 advanceHead, 因为代码能执行到这边说明s已经是 head.next 节点了)
+                        if(x != null){          // and forget fields
                             s.item = s;
                         }
-                        s.waiter = null;
+                        s.waiter = null;       // 15. 释放线程 ref
                     }
 
                     return (x != null) ? (E)x :e;
 
-                }else{                              // complementary-mde
-                    QNode m = h.next;               // node to fulfill
+                }else{                              // 16. 进行线程的匹配操作, 匹配操作是从 head.next 开始匹配 (注意 队列刚开始构建时 有个 dummy node, 而且 head 节点永远是个 dummy node 这个和 AQS 中一样的)
+                    QNode m = h.next;               // 17. 获取 head.next 准备开始匹配
                     if(t != tail || m == null || h != head){
-                        continue;                   // inconsistent read
+                        continue;                  // 18. 不一致读取, 有其他线程改变了队列的结构inconsistent read
                     }
 
                     /** producer 和 consumer 匹配操作
@@ -820,19 +841,21 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
                      *  疑惑: 为什么将h进行 dequeue, 而不是 m节点
                      *  答案: 因为每次进行配对时, 都是将 h.next 节点进行配对, 而对应的TransferStack中头节点就是配对中的节点,
                      *       QNode 对应的队列中头节点其实是一个 dummy node, 而 SNode对应的头节点一开始是空的
+                     *
+                     *
                      */
                     Object x = m.item;
-                    if(isData == (x != null) ||     // m already fulfilled
-                            x == m ||               // m cancelled
-                            !m.casItem(x, e)        // lost CAS
+                    if(isData == (x != null) ||    // 19. 两者的模式是否匹配 (因为并发环境下 有可能其他的线程强走了匹配的节点)
+                            x == m ||               // 20. m 节点 线程中断或者 wait 超时了
+                            !m.casItem(x, e)        // 21. 进行 CAS 操作 更改等待线程的 item 值(等待的有可能是 concumer / producer)
                             ){
-                        advanceHead(h, m);          // dequeue and retry
+                        advanceHead(h, m);          // 22.推进 head 节点 重试 (尤其 21 操作失败)
                         continue;
                     }
 
-                    advanceHead(h, m);              // successfully fulfilled
-                    LockSupport.unpark(m.waiter);
-                    return (x != null) ? (E)x : e;
+                    advanceHead(h, m);             // 23. producer consumer 交换数据成功, 推进 head 节点
+                    LockSupport.unpark(m.waiter); // 24. 换线等待中的 m 节点, 而在 awaitFulfill 方法中 因为 item 改变了,  所以 x != e 成立, 返回
+                    return (x != null) ? (E)x : e; // 25. 操作到这里若是 producer, 则 x != null, 返回 x, 若是consumer， 则 x == null,.返回 producer(其实就是 节点m) 的 e
                 }
             }
 
@@ -841,6 +864,8 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
         /**
          * Spins/blocks until node s is fulfilled
          *
+         * 主逻辑: 若节点是 head.next 则进行 spins 一会, 若不是, 则调用 LockSupport.park / parkNanos(), 直到其他的线程对其进行唤醒
+         *
          * @param s the waiting node
          * @param e the comparsion value for checking match
          * @param timed true if timed wait
@@ -848,37 +873,37 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
          * @return  matched item, or s of cancelled
          */
         Object awaitFulfill(QNode s, E e, boolean timed, long nanos){
-            /** Same idea as TransferStack.awaitFulfill */
-            final long deadline = timed ? System.nanoTime() + nanos : 0L;
-            Thread w = Thread.currentThread();
-            int spins = ((head.next == s) ?
+
+            final long deadline = timed ? System.nanoTime() + nanos : 0L;       // 1. 计算 deadline 时间 (只有 timed 为true 时才有用)
+            Thread w = Thread.currentThread();                                   // 2. 获取当前的线程
+            int spins = ((head.next == s) ?                                    // 3. 若当前节点是 head.next 时才进行 spin, 不然的话不是浪费 CPU 吗, 对挖
                     (timed ? maxTimeSpins : maxUntimedSpins) : 0);
-            for(;;){
-                if(w.isInterrupted()){
+            for(;;){                                                            // loop 直到 成功
+                if(w.isInterrupted()){                                          // 4. 若线程中断, 直接将 item = this, 在 transfer 中会对返回值进行判断 (transfer中的 步骤 11)
                     s.tryCancel(e);
                 }
                 Object x = s.item;
-                if(x != e){
+                if(x != e){                                                    // 5. 在进行线程阻塞->唤醒, 线程中断, 等待超时, 这时 x != e,直接return 回去
                     return x;
                 }
                 if(timed){
                     nanos = deadline - System.nanoTime();
-                    if(nanos <= 0L){
+                    if(nanos <= 0L){                                           // 6. 等待超时, 改变 node 的item值, 进行 continue, 下一步就到  awaitFulfill的第 5 步 -> return
                         s.tryCancel(e);
                         continue;
                     }
                 }
-                if(spins > 0){
+                if(spins > 0){                                                 // 7. spin 一次一次减少
                     --spins;
                 }
                 else if(s.waiter == null){
                     s.waiter = w;
                 }
-                else if(!timed){
+                else if(!timed){                                              // 8. 进行没有超时的 park
                     LockSupport.park(this);
                     logger.info("after LockSupport.park(this)");
                 }
-                else if(nanos > spinForTimeoutThreshold){
+                else if(nanos > spinForTimeoutThreshold){                // 9. 自旋次数过了, 直接 + timeout 方式 park
                     LockSupport.parkNanos(this, nanos);
                 }
             }
@@ -887,9 +912,10 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
 
         /**
          * Gets rid of cancelled node s with original predecessor pred.
+         * 对 中断的 或 等待超时的 节点进行清除操作
          */
         void clean(QNode pred, QNode s) {
-            s.waiter = null; // forget thread
+            s.waiter = null; // forget thread                                        // 1. 清除掉 thread 引用
             /*
              * At any given time, exactly one node on list cannot be
              * deleted -- the last inserted node. To accommodate this,
@@ -897,44 +923,48 @@ public class KSynchronousQueue<E> extends AbstractQueue<E> implements BlockingQu
              * "cleanMe", deleting the previously saved version
              * first. At least one of node s or the node previously
              * saved can always be deleted, so this always terminates.
+             *
+             * 在程序运行中的任何时刻, 最后插入的节点不能被删除(这里的删除指 通过 cas 直接删除, 因为这样直接删除会有多删除其他节点的风险)
+             * 当 节点 s 是最后一个节点时, 将 s.pred 保存为 cleamMe 节点, 下次再进行清除操作
              */
-            while (pred.next == s) { // Return early if already unlinked
+            while (pred.next == s) { // Return early if already unlinked           // 2. 判断 pred.next == s, 下面的 步骤2 可能导致 pred.next = next
                 QNode h = head;
                 QNode hn = h.next;   // Absorb cancelled first node as head
-                if (hn != null && hn.isCancelled()) {
+                if (hn != null && hn.isCancelled()) {                              // 3. hn  中断或者超时, 则推进 head 指针, 若这时 h 是 pred 则 loop 中的条件 "pred.next == s" 不满足, 退出 loop
                     advanceHead(h, hn);
                     continue;
                 }
                 QNode t = tail;      // Ensure consistent read for tail
-                if (t == h)
+                if (t == h)                                                        // 4. 队列为空, 说明其他的线程进行操作, 删除了 节点(注意这里永远会有个 dummy node)
                     return;
                 QNode tn = t.next;
-                if (t != tail)
+                if (t != tail)                                                    // 5. 其他的线程改变了 tail, continue 重新来
                     continue;
                 if (tn != null) {
-                    advanceTail(t, tn);
+                    advanceTail(t, tn);                                            // 6. 帮助推进 tail
                     continue;
                 }
-                if (s != t) {        // If not tail, try to unsplice
+                if (s != t) {        // If not tail, try to unsplice              // 7. 节点 s 不是尾节点, 则 直接 CAS 删除节点(在队列中间进行这种删除是没有风险的)
                     QNode sn = s.next;
                     if (sn == s || pred.casNext(s, sn))
                         return;
                 }
-                QNode dp = cleanMe;
+
+                QNode dp = cleanMe;                                             // 8. s 是队列的尾节点, 则 cleanMe 出场
                 if (dp != null) {    // Try unlinking previous cancelled node
-                    QNode d = dp.next;
+                    QNode d = dp.next;                                          // 9. cleanMe 不为 null, 进行删除删一次的 s节点, 也就是这里的节点d
                     QNode dn;
-                    if (d == null ||               // d is gone or
+                    if (d == null ||               // d is gone or              // 10. 这里有几个特殊情况 1. 原来的s节点()也就是这里的节点d已经删除; 2. 原来的节点 cleanMe 已经通过 advanceHead 进行删除; 3 原来的节点 s已经删除 (所以 !d.siCancelled), 存在这三种情况, 直接将 cleanMe 清除
                             d == dp ||                 // d is off list or
                             !d.isCancelled() ||        // d not cancelled or
-                            (d != t &&                 // d not tail and
+                            (d != t &&                 // d not tail and        // 11. d 不是tail节点, 且dn没有offlist, 直接通过 cas 删除 上次的节点 s (也就是这里的节点d); 其实就是根据 cleanMe 来清除队列中间的节点
                                     (dn = d.next) != null &&  //   has successor
                                     dn != d &&                //   that is on list
                                     dp.casNext(d, dn)))       // d unspliced
-                        casCleanMe(dp, null);
+                        casCleanMe(dp, null);                                  // 12. 清除 cleanMe 节点, 这里的 dp == pred 若成立, 说明清除节点s， 成功, 直接 return, 不然的话要再次 loop, 接着到 步骤 13, 设置这次的 cleanMe 然后再返回
                     if (dp == pred)
                         return;      // s is already saved node
-                } else if (casCleanMe(null, pred))
+                } else if (casCleanMe(null, pred))                          // 原来的 cleanMe 是 null, 则将 pred 标记为 cleamMe 为下次 清除 s 节点做标识
                     return;          // Postpone cleaning s
             }
         }
