@@ -1,11 +1,15 @@
 package com.lami.tuomatuo.search.base.concurrent.aqs;
 
+import com.lami.tuomatuo.search.base.concurrent.spinlock.MyAbstractQueuedSynchronizer;
 import com.lami.tuomatuo.search.base.concurrent.unsafe.UnSafeClass;
 import sun.misc.Unsafe;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.LockSupport;
 
 /**
@@ -1260,15 +1264,232 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
         return list;
     }
 
+    /**
+     * Returns a collection containing threads that may be waiting to
+     * acquire inexclusive mode. This has the same properties
+     * as {@link #getQueuedThreads()} except that it only returns
+     * those threads waiting due to an exclusive acquire
+     *
+     * @return the collection of threads
+     */
+    public final Collection<Thread> getExclusiveQueuedThreads(){
+        ArrayList<Thread> list = new ArrayList<>();
+        for(Node p = tail; p != null; p = p.prev){
+            if(!p.isShared()){
+                Thread t = p.thread;
+                if(t != null){
+                    list.add(t);
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Returns a collection containing threads that may be waiting to
+     * acquire in shared mode. This has the same properties
+     * as {@link #getQueuedThreads()} except that it only returns
+     * those threads waiting due to a shared acquire
+     *
+     * @return
+     */
+    public final Collection<Thread> getSharedQueuedThreads(){
+        ArrayList<Thread> list = new ArrayList<>();
+        for(Node p = tail; p != null; p = p.prev){
+            if(p.isShared()){
+                Thread t = p.thread;
+                if(t != null){
+                    list.add(t);
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Returns a string identifying this synchronizer, as well as its state
+     * The state, in brackets, includes the String {@code "State = "}
+     * followed by the current value of {@link #getState()}, and either
+     * {@code "nonempty"} or {@code "empty"} depending on whether the
+     * queue is empty
+     *
+     * @return a string identifying this synchronizer, as well as its state
+     */
+    public String toString(){
+        int s = getState();
+        String q = hasQueuedThreads() ? "non" : "";
+        return super.toString() + "[State = " + s + ", " + q + " empty queue]";
+    }
+
+
+    /*********************** Internal support methods for Conditions ***********************/
+
+    final boolean isOnSyncQueue(Node node){
+        if(node.waitStatus == Node.CONDITION || node.prev == null){
+            return false;
+        }
+        if(node.next != null){ // If has successor, it must be on queue
+            return true;
+        }
+
+        /**
+         * node.prev can be non-null, but not yet on queue because
+         * the CAS to place it on queue can fail. So we have to
+         * traverse from tail to make sure it actually make it. It
+         * will always be near the tail in calls to this method, and
+         * unless the CAS failed (which is unlikely), it will be
+         * there, so we hardly ever traverse much
+         */
+        return findNodeFromTail(node);
+    }
+
+    /**
+     * Returns true if node is on sync queue by searching backwards from tail
+     * Called only when needed by isOnSyncQueue
+     *
+     * @param node
+     * @return true if parent
+     */
+    private boolean findNodeFromTail(Node node){
+        Node t = tail;
+        for(;;){
+            if(t == node){
+                return true;
+            }
+            if(t == null){
+                return false;
+            }
+            t = t.prev;
+        }
+    }
+
+    /**
+     * Transfers a node from a condition queue onto sync queue.
+     * Returns true if successful
+     *
+     * @param node the node
+     * @return true if successfully transferred (else the node was
+     * cancelled before signal)
+     */
+    final boolean transferForSignal(Node node){
+        /**
+         * If cannot change waitStatus, the node has been cancelled
+         */
+        if(!compareAndSetWaitStatus(node, Node.CONDITION, 0)){
+            return false;
+        }
+
+        /**
+         * Splice onto queue and try to set waitStatus of predecessor to
+         * indicate that thread is (probably) waiting, If cancelled or
+         * attempt to set waitStatus fails, wake up to resync (in which
+         * case the waitStatus can be transiently and harmlessly wrong)
+         */
+        Node p = enq(node);
+        int ws = p.waitStatus;
+        if(ws > 0 || !compareAndSetWaitStatus(p, ws, Node.SIGNAL)){
+            LockSupport.unpark(node.thread);
+        }
+        return true;
+    }
+
+    /**
+     * Transfers node, if necessary, to sync queue after a cancelled wait.
+     * Returns true if thread was cancelled before being signalled
+     *
+     * @param node the node
+     * @return true if cancelled before the node was signalled
+     */
+    final boolean transferAfterCancelledWait(Node node){
+        if(compareAndSetWaitStatus(node, Node.CONDITION, 0)){
+            enq(node);
+            return true;
+        }
+
+        /**
+         * If we lost out to a signal(), then we can't proceed
+         * until it finishes its enq(). Cancelling during an
+         * incomplete transfer is both race and transient, so just
+         * spin
+         */
+        while(!isOnSyncQueue(node)){
+            Thread.yield();
+        }
+        return false;
+    }
+
+    final int fullyRelease(Node node){
+        boolean failed = true;
+        try{
+            int savedState = getState();
+            if(release(savedState)){
+                failed = false;
+                return savedState;
+            }else{
+                throw new IllegalMonitorStateException();
+            }
+        }finally {
+            if(failed){
+                node.waitStatus = Node.CANCELLED;
+            }
+        }
+    }
 
 
 
 
 
 
+    /******************************* ConditionObject ****************************************/
+    public class ConditionObject implements Condition, java.io.Serializable{
+        private static final long serialVersionUID = 1173984872572414699L;
+
+        /** First node of condition queue */
+        private transient Node firstWaiter;
+        /** Last node of condition queue */
+        private transient Node lastWaiter;
+
+        /** Creates a new {@code ConditionObject} instance */
+        public ConditionObject(){}
+
+        /************** Internal methods ************************/
 
 
+        @Override
+        public void await() throws InterruptedException {
 
+        }
+
+        @Override
+        public void awaitUninterruptibly() {
+
+        }
+
+        @Override
+        public long awaitNanos(long nanosTimeout) throws InterruptedException {
+            return 0;
+        }
+
+        @Override
+        public boolean await(long time, TimeUnit unit) throws InterruptedException {
+            return false;
+        }
+
+        @Override
+        public boolean awaitUntil(Date deadline) throws InterruptedException {
+            return false;
+        }
+
+        @Override
+        public void signal() {
+
+        }
+
+        @Override
+        public void signalAll() {
+
+        }
+    }
 
 
 

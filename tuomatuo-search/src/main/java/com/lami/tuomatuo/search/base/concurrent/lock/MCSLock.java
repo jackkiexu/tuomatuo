@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.search.base.concurrent.mcslock;
+package com.lami.tuomatuo.search.base.concurrent.lock;
 
 import java.util.concurrent.atomic.AtomicReference;
 
