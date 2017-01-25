@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.search.base.concurrent.ReadWriteLock;
+package com.lami.tuomatuo.search.base.concurrent.reentrantreadritelock;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

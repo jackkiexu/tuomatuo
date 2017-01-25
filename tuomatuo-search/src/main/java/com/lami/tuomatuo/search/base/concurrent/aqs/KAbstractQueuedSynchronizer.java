@@ -2,6 +2,7 @@ package com.lami.tuomatuo.search.base.concurrent.aqs;
 
 import com.lami.tuomatuo.search.base.concurrent.spinlock.MyAbstractQueuedSynchronizer;
 import com.lami.tuomatuo.search.base.concurrent.unsafe.UnSafeClass;
+import org.apache.log4j.Logger;
 import sun.misc.Unsafe;
 
 import java.io.Serializable;
@@ -13,7 +14,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.LockSupport;
 
 /**
- *
+ * http://blog.csdn.net/yuenkin/article/details/50867530#comments
  * http://gee.cs.oswego.edu/dl/papers/aqs.pdf
  * http://www.ibm.com/developerworks/cn/java/j-jtp04186/
  *
@@ -274,6 +275,8 @@ import java.util.concurrent.locks.LockSupport;
  */
 public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchronizer implements Serializable {
 
+    protected Logger logger = Logger.getLogger(getClass());
+
     private static final long serialVersionUID = 7373984972572414691L;
 
     /**
@@ -368,7 +371,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
     /**
      * The synchronization state.
      */
-    private volatile int state;
+    private volatile int state = 0;
 
     /**
      * Returns the current value of synchronization state.
@@ -401,6 +404,8 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      */
     protected final boolean compareAndSetState(int expect, int update){
         // See below for intrinsics(本质) setup to support this
+        int oldState = getState();
+        logger.info("oldState:"+oldState + ", stateOffset:"+stateOffset + ", expect:"+expect + ", update:"+update);
         return unsafe.compareAndSwapObject(this, stateOffset, expect, update);
     }
 
@@ -2003,11 +2008,11 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
         unsafe = UnSafeClass.getInstance();
         Class<?> k = KAbstractQueuedSynchronizer.class;
         try {
-            stateOffset = unsafe.objectFieldOffset(k.getDeclaredField("state"));
+            stateOffset = unsafe.objectFieldOffset(KAbstractQueuedSynchronizer.class.getDeclaredField("state"));
             headOffset = unsafe.objectFieldOffset(k.getDeclaredField("head"));
             tailOffset = unsafe.objectFieldOffset(k.getDeclaredField("tail"));
-            waitStatusOffset = unsafe.objectFieldOffset(k.getDeclaredField("waitStatus"));
-            nextOffset = unsafe.objectFieldOffset(k.getDeclaredField("next"));
+            waitStatusOffset = unsafe.objectFieldOffset(Node.class.getDeclaredField("waitStatus"));
+            nextOffset = unsafe.objectFieldOffset(Node.class.getDeclaredField("next"));
         } catch (NoSuchFieldException e) {
             throw new Error(e);
         }
