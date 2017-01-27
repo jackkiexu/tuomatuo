@@ -143,6 +143,7 @@ public class KCopyOnWriteArrayList<E> implements List<E>, RandomAccess, Cloneabl
      * @return index of element, or -1 if absent
      */
     private static int indexOf(Object o, Object[] elements, int index, int fence){
+        // 获取 o 在 数组 elements 中的位置
         if(o == null){
             for(int i = index; i < fence; i++){
                 if(elements[i] == null){
@@ -281,14 +282,35 @@ public class KCopyOnWriteArrayList<E> implements List<E>, RandomAccess, Cloneabl
         return null;
     }
 
+    /**
+     * Appends the specified element to the end of this list
+     *
+     * @param e element to be appeded to this list
+     * @return {@code true} (as specified by {@link Collection#add})
+     */
     @Override
     public boolean add(E e) {
-        return false;
-    }
+        /**
+         * 增加元素 e 到数组的末尾
+         * 操作步骤:
+         *  1. 获取全局的 reentrantLock
+         *  2. 将原来的 array1 copy 到一个 array.length + 1 的数组 array2 里面
+         *  3. 将 先添加的元素e添加到新数组 array2 的最后一个空间里面 (array2[array2.length - 1] = e)
+         *  4. 将 新数组 array2 赋值给 CopyOnWriteArrayList 中的 array
+         */
+        final ReentrantLock lock = this.lock;
+        lock.lock();                                                    // 1. 获取 全局 lock
+        try{
+            Object[] elements = getArray();                             // 2. 获取原来的数组
+            int len = elements.length;
+            Object[] newElements = Arrays.copyOf(elements, len + 1);    // 3. 新建一个 array2 将原来的数据赋值到这个新建的数组里面
+            newElements[len] = e;                                       // 4. 将 e 赋值给 array2的最后一个空间里面
+            setArray(newElements);                                      // 5. 将新数组 array2 赋值给 CopyOnWriteArrayList 中的 array
+            return true;
+        }finally {
+            lock.unlock();                                              // 6. 释放锁
+        }
 
-    @Override
-    public boolean remove(Object o) {
-        return false;
     }
 
     @Override
@@ -323,22 +345,189 @@ public class KCopyOnWriteArrayList<E> implements List<E>, RandomAccess, Cloneabl
 
     @Override
     public E get(int index) {
-        return null;
+        return get(getArray(), index); // 获取指定位置 index 上的元素, 其实就是取数组 index 下标上的元素
     }
 
+    /**
+     * Replaces the element at the specified position in this list with the
+     * specified element
+     */
     @Override
     public E set(int index, E element) {
+        /**
+         * 将数组 array 指定位置 index 用元素 element 进行替代
+         * 操作步骤:
+         *      0. 获取全局的 ReentrantLock
+         *      1. 获取数组指定下标 index 上的元素
+         *      2. 判断 element 是否与来源数组中的元素一致
+         *          1) 不一致, 则获取原数组的 一个 snapshot, 并且将对应位置 index 进行替换
+         *          2) 一致, setArray(elements) <- 这个其实是说明都没做
+         *      3. 在 finally 中释放 锁
+         *
+         */
+        final ReentrantLock lock = this.lock;
+        lock.lock();                                                    // 0. 获取锁
+        try {
+            Object[] elements = getArray();
+            E oldValue = get(elements, index);                          // 1. 获取原数组中对应index位置的元素
+
+            if(oldValue != element){
+                int len = elements.length;
+                Object[] newElements = Arrays.copyOf(elements, len);    // 2. 获取原数组的一个 snapshot 版本
+                newElements[index] = element;                           // 3. 在 index 位置进行 set 新的值
+                setArray(newElements);                                  // 4. 将 snapshot 版本的数组覆盖原来的数组
+            }else{
+                // Not quite a no-op; ensures volatile write semantics
+                setArray(elements);
+            }
+        }finally {
+            lock.unlock();                                              // 5. 释放锁
+        }
         return null;
     }
 
+    /**
+     * Inserts the specified element at the specified position in this
+     * list. Shifts the lement currently at that position (if any) and
+     * any subsequent elements to the right (adds one to their indices)
+     */
     @Override
     public void add(int index, E element) {
+        /**
+         * 将元素 e 插入到数组 指定的索引下标 index 下
+         * 操作步骤:
+         *      1. 获取全局的锁
+         *      2. 获取 CopyOnWriteArrayList 的 array, 及 array.length
+         *      3. 进行参数校验 (index > len || index < 0) 则直接抛异常 -> 说明元素的插入只能在 0 - array.length 之间(包含两个端点)
+         *      4. 获取插入点 index 与 array.length 之间的步长, 进行分类讨论
+         *          1) 插入的数据正好在 原array数组的后一个节点 (numMoved = len), 则直接新建一个 array, 将原来的 array copy 过来
+         *          2) 插入的 index 满足 0 <= index <= len - 1, 则新建一个数组, 原来 o -> index(index不包含) 拷贝来, index后面的数据拷贝到新数组的 index + 1 的空间
+         *      5. 将 e 设置到 新 array 的 index 位置
+         *      6. 将 新 array 设置到 CopyOnWriteArrayList 里面
+         */
+        final ReentrantLock lock = this.lock;
+        lock.lock();                                                                    // 1. 获取全局的锁
+        try{
+            Object[] elements = getArray();
+            int len = elements.length;
+            if(index > len || index < 0){
+                throw new IndexOutOfBoundsException("Index: " + index + ", Size:" + len);
+            }
+            Object[] newElements;
+            int numMoved = len - index;
+            if(numMoved == 0){ // 走到这一步, 说明 数据是插入到 oldArray.length(这个值是指下标) 位置上的元素
+                newElements = Arrays.copyOf(elements, len + 1); // 直接拷贝原数组到一个新的 array 数组中, 这个数组的长度是 len + 1
+            }else{
+                newElements = new Object[len + 1];
+                System.arraycopy(elements, 0, newElements, 0, index); // 将原数组 index 前的数组都拷贝到新的数组里面
+                System.arraycopy(elements, index, newElements, index + 1, numMoved); // 将原数组 index 以后的元素都 copy到新的数组里面(包括index位置的元素)
+            }
+            newElements[index] = element; // 将 index 赋值 element
+            setArray(newElements); // 将 新的 array set到 CopyOnWriteArrayList 上
+        }finally {
+            lock.unlock();
+        }
 
     }
 
+    /**
+     * Removes the element at the specified position in this list.
+     * Shifts any subsequent elements to the left (subtracts one from their
+     * indices). Returns the lement that was removed from the list
+     */
     @Override
     public E remove(int index) {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            Object[] elements = getArray();
+            int len = elements.length;
+            E oldValue = get(elements, index);
+            int numMoved = len - index - 1;
+            if(numMoved == 0){ // 说明删除的元素的位置在 len - 1 上, 直接拷贝原数组的前 len - 1 个元素
+                setArray(Arrays.copyOf(elements, len - 1));
+            }else{
+                Object[] newElements = new Object[len - 1];
+                System.arraycopy(elements, 0, newElements, 0, index); // 拷贝原数组 0 - index之间的元素 (index 不拷贝)
+                System.arraycopy(elements, index + 1, newElements, index, numMoved); // 拷贝原数组 index+1 到末尾之间的元素 (index＋1也进行拷贝)
+                setArray(newElements);
+            }
+        }finally {
+            lock.unlock();
+        }
         return null;
+    }
+
+    /**
+     *  Removes the first occurrence of the specified element from this list,
+     *  if it is present. If this list does not contain the element, it is
+     *  unchanged. More formally, removes the element with the lowest index
+     *  {@code i} such that
+     *  ( o == null get(i) == null o.equals(get(i)))
+     *  (if such an element exist). Returns {@code true} if this list
+     *  contained the specified element (or equivalently), if this list
+     *  changed as a result of the call
+     *
+     *  @param o element to be removed from this list, if present
+     *  @return {@code true} if this list contained the specified element
+     *
+     */
+    public boolean remove(Object o){
+        Object[] snapshot = getArray();
+        // 获取 index 在 snapshot 中的位置, －1 表示不存在
+        int index = indexOf(o, snapshot, 0, snapshot.length);
+        return (index < 0) ? false : remove(o, snapshot, index);
+    }
+
+    /**
+     * A version of remove(Object) using the strong hint that given
+     * recent snapshot contains o at the given index
+     */
+    private boolean remove(Object o, Object[] snapshot, int index){
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            Object[] current = getArray();
+            int len = current.length;
+            // findIndex: <- 这个用法平时用的比较少, 在这里, 只要 break findIndex, 那 if(snapshot != current) 这里括号里面的其他代码就不执行了, 直接跳到括号外面, 建议写个小demo试一下
+            if(snapshot != current) findIndex:{ // snapshot != current 表示数组被另外一个线程操作过, 有变化
+                /**
+                 * 下面的操作是发生在 调用方法 "remove(Object o)" 中的 "indexOf"后 , 数组 array 发生变化而做的查询修正工作
+                 * 主要分 下面 4 中情况:
+                 *  1. 从 index,len 中取出一个较小的值 prefix, 从 current的prefix前个元素中寻找元素 o, 找到后, 直接 break, 执行下面的操作
+                 *  2. 若 index >= len, 则说明 元素 o 在另外的线程中已经被删除, 直接 return
+                 *  3. current[index] = o, 则说明, index 位置上的元素 o 还在那边, 直接 break
+                 *  4. 最后 在 index 与 len 之间寻找元素, 找到位置直接接下来的代码, 没找到 直接 return
+                 */
+                int prefix = Math.min(index, len);
+                for(int i = 0; i < prefix; i++){
+                    // 找出 current 数组里面 元素 o 所在的位置 i, 并且赋值给 index
+                    if(current[i] != snapshot[i] && eq(o, current[i])){
+                        index = i;
+                        break findIndex;
+                    }
+                }
+
+                if(index >= len){ // index >= len 表示元素 o 已经被删除掉
+                    return false;
+                }
+                if(current[index] == o){ // 元素 o 也在数组 current 的 index 位置
+                    break findIndex;
+                }
+                index = indexOf(o, current, index, len); // 在 current 中寻找元素 o 所在的位置 (这里不会出现 index > len 的情况, 上面的代码中已经做了判断)
+                if(index < 0){ // 要删除的元素 在另外的线程中被删除掉了, 直接 return false
+                    return false;
+                }
+            }
+
+            Object[] newElements = new Object[len - 1]; // 新建一个 len - 1 长度的数组
+            System.arraycopy(current, 0, newElements, 0, index); // 拷贝老数组前 index 个元素
+            System.arraycopy(current, index + 1, newElements, index, len - index - 1); // 拷贝 老数组 index + 1 后的元素 ( index + 1 包含)
+            setArray(newElements);
+            return true;
+        }finally {
+            lock.unlock();
+        }
     }
 
     @Override
@@ -364,6 +553,11 @@ public class KCopyOnWriteArrayList<E> implements List<E>, RandomAccess, Cloneabl
     void removeRange(int fromIndex, int toIndex){
 
     }
+
+    private E get(Object[] a, int index){
+        return (E)a[index];
+    }
+
 
     /**
      * Sublist for CopyOnWriteArrayList.

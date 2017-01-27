@@ -652,6 +652,23 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
         }
     }
 
+    /**
+     * Queries whether the given ConditionObject
+     * uses this synchronizer as its lock
+     *
+     * @param condition the condition
+     * @return {@code  true} if owned
+     */
+    public final boolean owns(ConditionObject condition){
+        return condition.isOwnedBy(this);
+    }
+
+    public final boolean hasWaiters(ConditionObject condition){
+        if(!owns(condition)){
+            throw new IllegalArgumentException();
+        }
+        return condition.hasWaiters();
+    }
 
     /**
      * Checks and update status for a node that failed to acquire.
@@ -1157,7 +1174,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * is not the first queued thread. Used only as a heuristic in
      * ReentrantReadWriteLock
      */
-    final boolean apparentlyFirstQueuedIsExclusive(){
+    public final boolean apparentlyFirstQueuedIsExclusive(){
         Node h, s;
         return (h = head) != null &&
                 (s = h.next) != null &&
@@ -1450,8 +1467,37 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
         }
     }
 
+    /**
+     * Returns an estimate of the number of threads waiting on the
+     * given condition associated with this synchronizer. Note that
+     * because timeouts and interrupts may occur at any time, the
+     * estimate serves only as an upper bound on the actual number of
+     * waiters. This method is designed for use in monitoring of the
+     * system state, not for synchronization control
+     *
+     * @param condition the condition
+     * @return the estimate number of waiting threads
+     */
+    public final int getWaitQueueLength(ConditionObject condition){
+        if(!owns(condition)){
+            throw new IllegalArgumentException("Not owner");
+        }
+        return condition.getWaitQueueLength();
+    }
 
-
+    /**
+     * Returns a collection containing those threads that may be
+     * waiting on the given
+     *
+     * @param condition
+     * @return
+     */
+    public final Collection<Thread> getWaitingThreads(ConditionObject condition){
+        if(!owns(condition)){
+            throw new IllegalArgumentException("not owner");
+        }
+        return condition.getWaitingThreads();
+    }
 
 
 
