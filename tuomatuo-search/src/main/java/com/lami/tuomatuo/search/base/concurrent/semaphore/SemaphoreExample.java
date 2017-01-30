@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.search.base.concurrent.Semaphore;
+package com.lami.tuomatuo.search.base.concurrent.semaphore;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

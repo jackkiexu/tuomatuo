@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.search.base.concurrent.Semaphore;
+package com.lami.tuomatuo.search.base.concurrent.semaphore;
 
 import org.apache.log4j.Logger;
 
