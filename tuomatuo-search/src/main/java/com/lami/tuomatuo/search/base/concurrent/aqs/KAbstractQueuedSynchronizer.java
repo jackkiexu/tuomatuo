@@ -21,7 +21,7 @@ import java.util.concurrent.locks.LockSupport;
  *
  * Provides a framework for implementing blocking locks locks and related
  * synchronizers (semaphores, event, etc) that rely on
- * first-in-first-out (FIFO) wait queues. This class sidesigned to
+ * first-in-first-out (FIFO) wait queues. This class is designed to
  * be a useful basis for most kinds of synchronizers that rely on a
  * single atomic(@code int) value to represent state. Subclasses
  * must define the protected methods that change this state, and which
@@ -30,15 +30,14 @@ import java.util.concurrent.locks.LockSupport;
  * out all queuing and blocking mechanics. Subclasses can maintain
  * other state fields, but only the atomically updated {@code int}
  * value manipulated using methods {@link #getState}, {@link #setState}
- * and {@link #compareAndSetState} is tracked with repect
+ * and {@link #compareAndSetState} is tracked with respect
  * to synchronization
  *
  * <p>
  *     Subclasses should be defined as non-public internal helper
  *     classes that are used to implement the synchronization properties
  *     of their enclosing class, Class
- *     {@code KAbstractQueueSynchronizer} does not implement any
- *     synchronization interface. Instead it defines methods such as
+ *     {@code KAbstractQueuedSynchronizer} does not implement any
  *     synchronization interface. Instead it defines methods such as
  *     {@link #acquireInterruptibly} that can be invoked as
  *     appropriate by concrete locks and related synchronizers to
@@ -66,7 +65,7 @@ import java.util.concurrent.locks.LockSupport;
  *     held with respect to the current thread, method {@link #release}
  *     invoked with the current {@link #getState} value fully releases
  *     this object, and {@link #acquire}, given this saved state value,
- *     ebentually restores this object to its previous acquired state. No
+ *     eventually restores this object to its previous acquired state. No
  *     {@code KAbstractQueueSynchronizer} method otherwise creates such a
  *     condition, so if this constraint cannot be met, do not use it. The
  *     behavior of {@link "ConditionObject} depends of course on the
@@ -113,8 +112,8 @@ import java.util.concurrent.locks.LockSupport;
  *
  * <p>
  *     You may also find the inherited methods from {@link KAbstractOwnableSynchronizer}
- *     useful to kepp track of the thread
- *     owning an eclusive synchronizer. You are encouraged to use them
+ *     useful to keep track of the thread
+ *     owning an exclusive synchronizer. You are encouraged to use them
  *     -- this enables monitoring and diagnostic tools to assist users in
  *     determining which threads hold locks
  * </p>
@@ -132,10 +131,10 @@ import java.util.concurrent.locks.LockSupport;
  *      }
  * </pre>
  *
- * (Shared mode is similar but may invole cascading signals)
+ * (Shared mode is similar but may involve cascading signals)
  *
  *  <p id="barging">
- *      Bacause checks in acquire are invoke brefore
+ *      Bacause checks in acquire are invoke before
  *      enqueuing , a newly acquiring thread may <em>barge</em> ahead of
  *      others that are blocked and queued. However, you can, if desired,
  *      define {@code tryAcquire} and/or {@code tryAcqureShared} to
@@ -148,17 +147,17 @@ import java.util.concurrent.locks.LockSupport;
  *  </p>
  *
  * <p>
- *     Throughtput and scalability are generally hightest for the
+ *     Throughtput and scalability are generally highest for the
  *     default barging (also known as <em>greedy</em>,
  *     <em>renouncement</em>, and <em>convoy-avoidance</em>) strategy.
  *     While this is not guaranteed to be fair or starvation-free, earlier
  *     queued threads are allowed to recontend before later queued
  *     threads, and each recontention has an unbiased chance to succeed
  *     against incoming threads, Also, while acquires do not
- *     spin; in the usual sence, they may perform multiple
+ *     spin; in the usual sense, they may perform multiple
  *     invocations of {@code tryAcquire} interspersed with other
  *     computation before blocking. This gives most of the benefits of
- *     spins when exclusive sunchronization is ony briefly held, without
+ *     spins when exclusive synchronization is ony briefly held, without
  *     most of the liabilities when it isn't If so desired, you can
  *     argument this by preceding calls to acquire methods with
  *     "fast-path" checks, possibly prechecking {@link #"hasContended"}
@@ -519,7 +518,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * propagation. (Note: For exclusive mode, release just amounts
      * to calling unparkSuccessor of head if it needs signal)
      */
-    private void doReleasedShared(){
+    private void doReleaseShared(){
         /**
          * Ensure that a release propagates, even if there are other
          * in-progress acquires/releases. This proceed in the usual
@@ -585,7 +584,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
                 (h = head) == null || h.waitStatus < 0){
             Node s = node.next;
             if(s == null || s.isShared()){
-                doReleasedShared();
+                doReleaseShared();
             }
         }
     }
@@ -1242,7 +1241,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
 
     public final boolean releaseShared(int arg){
         if(tryReleaseShared(arg)){
-            doReleasedShared();
+            doReleaseShared();
             return true;
         }
         return false;

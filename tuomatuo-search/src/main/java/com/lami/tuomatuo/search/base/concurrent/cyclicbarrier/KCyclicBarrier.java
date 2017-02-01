@@ -1,6 +1,9 @@
 package com.lami.tuomatuo.search.base.concurrent.cyclicbarrier;
 
+import io.netty.util.Timeout;
+
 import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -164,7 +167,120 @@ public class KCyclicBarrier {
     }
 
 
+    /**
+     * Creates a new {@code KCyclicBarrier} that will trip then the
+     * given number of parties (threads) are waiting upon it, and
+     * does not perform a predefined action when the barrier is tripped
+     *
+     * @param parties the number of threads that must invoke {@link #"awiat}
+     *                before the barrier is tripped
+     * @throws IllegalArgumentException if {@code parties} is less than 1
+     */
+    public KCyclicBarrier(int parties){
+        this(parties, null);
+    }
+
+    /**
+     * Returns the number of parties required to trip this barrier
+     *
+     * @return the number of partis required to trip this barrier
+     */
+    public int getParties(){
+        return parties;
+    }
 
 
+    /**
+     * Waits until all {@link #getParties() parties} have invoked
+     * {@code await} on this barrier
+     *
+     * <p>
+     *     If the current thread is not the last to arrive then it is
+     *     disabled for thread scheduling purposes and lies dormant until
+     *     one of the following things happens:
+     *     <li>
+     *         The last thread arrives; or
+     *         Some other thread {@link Thread#interrupt() interrupts}
+     *         the current thread; or
+     *         Some other thread {@link Thread#interrupt() interrupts}
+     *         one of the other waiting threads; or
+     *         Some other thread times out while waiting for barrier; or
+     *         Some other thread invokes {@link #"reset} on this barrier.
+     *     </li>
+     * </p>
+     *
+     * <p>
+     *      If the current thread:
+     *      has its interrupted status set on entry to this method; or
+     *      is {@link Thread#interrupt() interrupted} while waiting
+     *      then {@link InterruptedException} is thrown and current thread's
+     *      interrupted status is cleared
+     * </p>
+     *
+     * <p>
+     *     If any current thread is the last thread to arrive, and a
+     *     non-null barrier action was supplied in the constructor, then the
+     *     current thread runs the action before allowing the other threads to
+     *     continue.
+     *     If an exception occurs during the barrier action then that exception
+     *     will be propagated in the current thread and the barrier is placed in
+     *     the broken state.
+     * </p>
+     *
+     * @return the arrival index of the current thread, where index
+     *          {@code getParties() -1} indicates the first
+     *          to arrive and zero indicates the last to arrive
+     * @throws InterruptedException ig the current thread was interrupted while waiting
+     * @throws BrokenBarrierException if <em>another</em> thread was
+     *                  interrupted or timed out while the current thread was
+     *                  waiting, or the barrier was reset, or the barrier was
+     *                  broken when {@code await} was called, or the barrier
+     *                  action (if present) failed due to an exception
+     */
+    public int await() throws InterruptedException, BrokenBarrierException{
+        try{
+            return dowait(false, 0L);
+        }catch (TimeoutException toe){
+            throw new Error(toe); // cannot happen
+        }
+    }
 
+
+    public int await(long timeout, TimeUnit unit) throws Exception{
+        return dowait(true, unit.toNanos(timeout));
+    }
+
+
+    public boolean isBroken(){
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            return generation.broken;
+        }finally {
+            lock.unlock();
+        }
+    }
+
+
+    public void reset(){
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            breakBarrier();  // break the current generation
+            nextGeneration(); // start a new generation
+        }finally {
+            lock.unlock();
+        }
+    }
+
+
+    public int getNumberWaiting(){
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            return parties - count;
+        }finally {
+            lock.unlock();
+        }
+    }
 }
