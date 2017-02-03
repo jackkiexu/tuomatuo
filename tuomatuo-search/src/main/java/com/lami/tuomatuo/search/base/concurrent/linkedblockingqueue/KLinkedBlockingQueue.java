@@ -11,6 +11,9 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
+ *
+ * http://www.cnblogs.com/leesf456/p/5539071.html
+ *
  * Created by xjk on 1/28/17.
  */
 public class KLinkedBlockingQueue<E> extends AbstractQueue<E> implements BlockingQueue<E>, Serializable {
