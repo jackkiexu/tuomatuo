@@ -245,12 +245,94 @@ public class KCyclicBarrier {
         }
     }
 
-
+    /**
+     * Waits until all {@link #getParties()} have invoked
+     * {@code await} on this barrier, or the specified waiting time elapses
+     *
+     * <p>
+     *     If the current thread is not the last to arrive then it is
+     *     disable for thread scheduling purposes and lies dormant until
+     *     one of the following things happens
+     * </p>
+     *
+     * <p>
+     *     <li>
+     *         The last thread arrives; or
+     *         The specified timeout elapses; or
+     *         Some other thread {@link Thread#interrupt() interrupts}
+     *         the current thread; or
+     *         Some other thread {@link Thread#interrupt() interrupts}
+     *         one of the other waiting threads; or
+     *         Some other thread times out while waiting for barrier; or
+     *         Some other thread invokes {@link #reset()} on this barrier
+     *     </li>
+     * </p>
+     *
+     * <p>
+     *     If the current thread:
+     *     has its interrupted status set on entry to this method; or
+     *     is {@link Thread#interrupt() interrupted} while waiting
+     *     then {@link Thread#interrupt() interrupted} while waiting
+     *     then {@link InterruptedException} is thrown and the current thread's
+     *     interrupted status is cleared
+     * </p>
+     *
+     * <p>
+     *     if the specified waiting time elapses then {@link TimeoutException}
+     *     is thrown. If the time is less than or equal to zero, the method will not wait at all
+     * </p>
+     *
+     * <p>
+     *     If the barrier is {@link #reset} while any thread is wating
+     *     or if the barrier {@link #isBroken() is broken} when
+     *     {@code await} is invoked, or while any thread is waiting, then
+     *     {@link BrokenBarrierException} is thrown
+     * </p>
+     *
+     * <p>
+     *     If any thread is {@link Thread#interrupt() interrupted} while
+     *     waiting, then all other waiting threads will throw {@link BrokenBarrierException}
+     *     and the barrier is placed in the broken state
+     * </p>
+     *
+     * <p>
+     *     If the current thread is the last thread to arrive, and a non-null
+     *     barrier action was supplied in the constructor, then the
+     *     current thread runs the action before allowing the other threads to cintinue
+     *
+     *     If an exception occurs during the barrier action then that exception
+     *     will be propagated in the current thread and the barrier is placed in
+     *     the broken state
+     * </p>
+     *
+     *
+     * @param timeout the time to wait for the barrie
+     * @param unit the time unit of the timeout parameter
+     * @return the arrival index of the current thread, where index
+     *              {@code getParties -1} indicates the first
+     *              to arrive and zero indicates the last to arrive
+     * @throws Exception InterruptedException if the current thread was interrupted
+     *              while waiting
+     * @throws TimeoutException if the specified timeout elapses.
+     *              In this case the barrier will be broken
+     * @throws BrokenBarrierException if <em>another</em> thread was
+     *              interrupted or timed out while the current thread wad
+     *              waiting, or the barrier was reset, or the barrier was broken
+     *              when {@code await} was called, or the barrier action (if
+     *              present) failed due to an exception
+     */
     public int await(long timeout, TimeUnit unit) throws Exception{
         return dowait(true, unit.toNanos(timeout));
     }
 
-
+    /**
+     * Queries if this barrier is in a broken state
+     *
+     * @return {@code true} if one or more parties broken put of this
+     *          barrier due to interruption or timeout since
+     *          construction or the last reset, or a barrier action
+     *          failed due to an exception; {@code false} otherwise
+     */
     public boolean isBroken(){
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -261,7 +343,15 @@ public class KCyclicBarrier {
         }
     }
 
-
+    /**
+     * Resets the barrier to its initial state, If any parties are
+     * currently waiting at the barrier, they will return with a
+     * {@link BrokenBarrierException}. Note that resets <em>after</em>
+     * a breakage has occurred for other reasons can be complicated to
+     * carry out; threads needs to re-synchronize in some other way
+     * and choose one to perform the reset. It may be preferable to
+     * instead create to a new barrier for subsequent use.
+     */
     public void reset(){
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -273,7 +363,12 @@ public class KCyclicBarrier {
         }
     }
 
-
+    /**
+     * Returns the number of parties currently waiting at the barrier
+     * This method is primarily useful for debugging and assertions
+     *
+     * @return the numbver of parties currently blocked in {@link #await()}s
+     */
     public int getNumberWaiting(){
         final ReentrantLock lock = this.lock;
         lock.lock();

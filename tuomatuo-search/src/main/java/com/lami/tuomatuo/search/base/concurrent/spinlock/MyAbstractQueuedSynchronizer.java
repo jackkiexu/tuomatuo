@@ -1218,12 +1218,14 @@ public abstract class MyAbstractQueuedSynchronizer extends AbstractOwnableSynchr
      * is not the first queued thread.  Used only as a heuristic in
      * ReentrantReadWriteLock.
      */
-    final boolean apparentlyFirstQueuedIsExclusive() {
+    public final boolean apparentlyFirstQueuedIsExclusive() {
         Node h, s;
-        return (h = head) != null &&
+        boolean apparentlyFirstQueuedIsExclusive = (h = head) != null &&
                 (s = h.next)  != null &&
                 !s.isShared()         &&
                 s.thread != null;
+        logger.info("apparentlyFirstQueuedIsExclusive:"+apparentlyFirstQueuedIsExclusive);
+        return apparentlyFirstQueuedIsExclusive;
     }
 
     /**

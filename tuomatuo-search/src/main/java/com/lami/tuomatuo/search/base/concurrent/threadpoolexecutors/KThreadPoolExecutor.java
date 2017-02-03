@@ -1,5 +1,7 @@
 package com.lami.tuomatuo.search.base.concurrent.threadpoolexecutors;
 
+import com.lami.tuomatuo.search.base.concurrent.scheduledthreadpoolexecutor.KRejectedExecutionHandler;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -40,10 +42,10 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * <dd>
  *     A {@code KThreadPoolExecutor} will automatically adjust the
- *     pool size (see {@link #getPoolSize})
+ *     pool size (see {@link #"getPoolSize})
  *     according to the boundd set by
- *     corePoolSize (see {@link #getCorePoolSize}) and
- *     maximumPoolSize (see {@link #getMaimumPoolSize}).
+ *     corePoolSize (see {@link #"getCorePoolSize}) and
+ *     maximumPoolSize (see {@link #"getMaimumPoolSize}).
  * </dd>
  *
  * When a new task is submitted in method {@link #execute(Runnable)},
@@ -57,15 +59,15 @@ import java.util.concurrent.locks.ReentrantLock;
  * Integer.Max_VALUE}, you allow he pool to accommodate an arbitrary
  * number of concurrent tasks. Most typically, core and maximum pool
  * sizes are set only upon construction, but many also be changed
- * dynamically using {@link #setCorePoolSize} and {@link #setMaximumPoolSize}
+ * dynamically using {@link #"setCorePoolSize} and {@link #"setMaximumPoolSize}
  *
  * <dt>On-demand construction</dt>
  *
  * <dd>
  *     By default, even core threads are initially created and
  *     started only when new tasks arrive, but can be overridden
- *     dynamically using method {@link #prestartCoreThread} or
- *     {@link #prestartAllCoreThreads}. You probably want to prestart threads if
+ *     dynamically using method {@link #"prestartCoreThread} or
+ *     {@link #"prestartAllCoreThreads}. You probably want to prestart threads if
  *     you construct the pool with a non-empty queue.
  * </dd>
  *
@@ -93,7 +95,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * <dd>
  *      If the pool currently has more than corePoolSize threads,
  *      excess threads will be terminated if they have been idle for more
- *      than the keepAliveTime (see {@link #getKeepAliveTime(TimeUnit)}).
+ *      than the keepAliveTime (see {@link #"getKeepAliveTime(TimeUnit)}).
  *      This provides a means of reducing resource consumption when the
  *      pool is not being actively used. If the pool becomes more active
  *      later,new threads will be constructed. This parameter can also be
@@ -102,7 +104,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *      TimeUnit#NANOSECONDS} effectively disables idle threads from ever
  *      terminating prior to shut down. By default, the keep-alive policy
  *      applies only when there are more than corePoolSize threads. But
- *      method {@link #allowCoreThreadTimeOut(boolean)} can be used to
+ *      method {@link #"allowCoreThreadTimeOut(boolean)} can be used to
  *      apply this time-out policy to core threads as well, so long as the
  *      keepAliveTime value is non-zero.
  * </dd>
@@ -182,7 +184,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * <dt>Rejected tasks</dt>
  *
  * <dd>
- *     New tasks submitted in method {@link #excute(Runnable)} will be
+ *     New tasks submitted in method {@link #"excute(Runnable)} will be
  *     <em>rejected</em>
  *     when the Executor has been shut down, and also when
  *     the Executor uses finite bounds for both maximum threads and work queue
@@ -199,13 +201,13 @@ import java.util.concurrent.locks.ReentrantLock;
  *         rejection
  *     </li>
  *     <li>
- *         In {@link KThreadPoolExecutor.CallerRunsPolicy}, the thread
+ *         In {@link "KThreadPoolExecutor."CallerRunsPolicy}, the thread
  *         that invokes {@code execute} itself runs the task. This provides a
  *         simple feedback control mechanism that will slow down the rate that
  *         new tasks are submitted.
  *     </li>
  *     <li>
- *         In {@link KThreadPoolExecutor.DiscardOldestPolicy}, if the
+ *         In {@link "KThreadPoolExecutor."DiscardOldestPolicy}, if the
  *         executor is not shut down, the task at the head of the work queue
  *         is dropped, and then execution is retried (which can fail again,
  *         causing this to be repeated.)
@@ -241,10 +243,10 @@ import java.util.concurrent.locks.ReentrantLock;
  * <dt>Queue maintenance</dt>
  *
  * <dd>
- *     Method {@link #getQueue()} allows access to the work queue
+ *     Method {@link #"getQueue()} allows access to the work queue
  *     for purposes of monitoring and debugging. Use of this method for
  *     any other purpose is stronglt discouraged. Two supplied methods,
- *     {@link #remove(Runnable)} and {@link #purge} are available to
+ *     {@link #"remove(Runnable)} and {@link #"purge} are available to
  *     assist in storage reclamation when large numbers of queued tasks
  *     become cancelled
  * </dd>
@@ -259,7 +261,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *     that unused threads eventually die, by setting appropriate
  *     keep-alive time, using a lower bound of zero core appropriate
  *     keep-alive time, using a lower bound of zero core threads and/or
- *     setting {@link #allowCoreThreadTimeOut(boolean)}
+ *     setting {@link #"allowCoreThreadTimeOut(boolean)}
  * </dd>
  *
  * <p>
@@ -488,7 +490,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
     private volatile ThreadFactory threadFactory;
 
     /** Handler called when saturated or shutdown in execute */
-    private volatile RejectedExecutionHandler handler;
+    private volatile KRejectedExecutionHandler handler;
 
     /**
      * Timeout in nanoseconds for idle threads waiting for work
@@ -520,7 +522,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
     /**
      * The default rejected execution handler
      */
-    private static final RejectedExecutionHandler defaultHandler = new AbortPolicy();
+    private static final KRejectedExecutionHandler defaultHandler = new AbortPolicy();
 
     /**
      * Permission required for callers of shutdown and shutdownNow
@@ -544,9 +546,6 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
      */
     private static final RuntimePermission shutdownPerm = new RuntimePermission("modifyThread");
 
-    public interface RejectedExecutionHandler {
-        void rejectedExecution(Runnable r, AbstractExecutorService executor);
-    }
 
     /**
      * Class Worker mainly maintains interrupt control state for
@@ -1216,7 +1215,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
                                TimeUnit unit,
                                BlockingQueue<Runnable> workQueue,
                                ThreadFactory threadFactory,
-                               RejectedExecutionHandler handler
+                               KRejectedExecutionHandler handler
                                ){
         if(corePoolSize < 0 ||
                 maximumPoolSize <= 0 ||
@@ -1263,12 +1262,301 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
 
     }
 
-    public static class AbortPolicy implements RejectedExecutionHandler{
+    public void setKRejectedExecutionHandler(KRejectedExecutionHandler handler){
+        if(handler == null){
+            throw new NullPointerException();
+        }
+        this.handler = handler;
+    }
 
+    /**
+     * Returns the current handler for unexecutable tasks
+     *
+     * @return the current handler
+     * @see #"setRejectedExecutionHandler(RejectedExecutionException)
+     */
+    public KRejectedExecutionHandler getKRejectedExecutionHandler(){
+        return handler;
+    }
+
+    /**
+     * Sets the core number of threads. This overrides any value set
+     * in the constructor. If the new value is smaller than the
+     * current value, excess existing threads will be terminated when
+     * they next become idle. If larger, new threads will, if needed,
+     * be started to execute any queued tasks
+     *
+     * @param corePoolSize the new core size
+     * @throws IllegalArgumentException if {@code corePoolSize < 0}
+     * @see #getCorePoolSize()
+     */
+    public void setCorePoolSize(int corePoolSize){
+        if(corePoolSize < 0){
+            throw new IllegalArgumentException();
+        }
+        int delta = corePoolSize - this.corePoolSize;
+        this.corePoolSize = corePoolSize;
+        if(workerCountOf(ctl.get()) > corePoolSize){
+            interruptIdleWorkers();
+        }
+        else if(delta > 0){
+            /**
+             * We don't really know how many new threads are "needed"
+             * As a heuristic, prestart enought new workers (up to new
+             * core size) to handle the current number of tasksin
+             * queue, but stop if queue becomes empty while doing so
+             */
+            int k = Math.min(delta, workQueue.size());
+            while(k-- > 0 && addWorker(null, true)){
+                if(workQueue.isEmpty()){
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns the core number of threads
+     *
+     * @return the core number of threads
+     * @see #"setCorePoolSize
+     */
+    public int getCorePoolSize(){
+        return corePoolSize;
+    }
+
+    /**
+     * Starts a core thread, causing it idly wait for work. This
+     * overrides the default policy of staring core threads only when
+     * new tasks are executed. This method will return {@code false}
+     * if all core threads have already been started
+     *
+     * @return {@code true} if a threaf was started
+     */
+    public boolean prestartCoreThread(){
+        return workerCountOf(ctl.get()) < corePoolSize && addWorker(null, true);
+    }
+
+    /**
+     * Same as prestartCoreThread except arranges that at least one
+     * thread is start even if corePoolSize is 0
+     */
+    void ensurePrestart(){
+        int wc = workerCountOf(ctl.get());
+        if(wc < corePoolSize){
+            addWorker(null, true);
+        }else if(wc == 0){
+            addWorker(null, false);
+        }
+    }
+
+    /**
+     * Starts all core threads, causing them to idly wait for waork. This
+     * overrides the default policy of staring core threads only when
+     * new tasks are executed.
+     *
+     * @return
+     */
+    public int prestartAllCoreThread(){
+        int n = 0;
+        while(addWorker(null, true)){
+            ++n;
+        }
+        return n;
+    }
+
+    /**
+     * Returns true if this pool allows core threads to time out and
+     * terminate if no tasks arrive within the keepAlive time, being
+     * replaced if needed when new tasks arrive, When true, the same
+     * keep-alive policy applying to non-core threads applies alose to
+     * core threads. When false (the default), core threads are never
+     * terminated due to lack of incoming tasks
+     *
+     * @return {@code true} if core threads are allowed to time out,
+     *          else {@code false}
+     */
+    public boolean allowCoreThreadTimeOut(){
+        return allowCoreThreadTimeOut;
+    }
+
+    /**
+     * Sets the policy governing whether core threads may time out and
+     * terminate if no tasks arrive withinb the keep-alive time, being
+     * replaced if needed when new tasks arrive. When false, core
+     * threads are never terminated due to lack of incoming
+     * tasks. When true, the same keep-alive policy applying to
+     * non-core thrads applies also to core threads. To avoid
+     * continual thread replacement, the keep-alive time must be
+     * greater than zero when setting {@code true}. This method
+     * should in general be called before the pool is actively used
+     *
+     * @param value {@code true} if should time out, else {@code false}
+     * @throws IllegalArgumentException if value is {@code true}
+     *              and the current keep-alive time is not greater than zero
+     */
+    public void allowCoreThreadTimeOut(boolean value){
+        if(value && keepAliveTime <= 0){
+            throw new IllegalArgumentException("Core threads must have nonzero keep alive times");
+        }
+        if(value != allowCoreThreadTimeOut){
+            if(value){
+                interruptIdleWorkers();
+            }
+        }
+    }
+
+    /**
+     * Sets the maximum allowed number of threads, This overrides any
+     * value set in the constructor. If the new value is smaller than
+     * the current value, excess existing threads will be
+     * terminated when they next become idle
+     *
+     * @param maximumPoolSize
+     */
+    public void setMaximumPoolSize(int maximumPoolSize){
+        if(maximumPoolSize <= 0 || maximumPoolSize < corePoolSize){
+            throw new IllegalArgumentException();
+        }
+        this.maximumPoolSize = maximumPoolSize;
+        if(workerCountOf(ctl.get()) > maximumPoolSize){
+            interruptIdleWorkers();
+        }
+    }
+
+    /**
+     * returns the Maximum allowed number of threads
+     *
+     * @return the maximum allowed number of threads
+     * @see #"setMaximumPoolSize
+     */
+    public int getMaximumPoolSize(){
+        return maximumPoolSize;
+    }
+
+    /**
+     * Sets the time limit for which threads may remain idle before
+     * being terminated. If there are more than the core number of
+     * threads currently in the pool, after waiting this amount of
+     * time without processing a task, excess theads will be
+     * terminated. This overrides any value set in the constructor
+     *
+     * @param time the time to wait, A time value of zero will cause
+     *             excess threads to terminate immediately after executing tasks
+     * @param unit the time unit of the {@code time} argument
+     *             if {@code time} is zero and {@code allowCoreThreadTimeOut}
+     * @see #getKeepAliveTime(TimeUnit)
+     */
+    public void setKeepAliveTime(long time, TimeUnit unit){
+        if(time < 0){
+            throw new IllegalArgumentException();
+        }
+
+        if(time == 0 && allowCoreThreadTimeOut){
+            throw new IllegalArgumentException("Core threads must have nonzero keep alive times");
+        }
+        long keepAliveTime = unit.toNanos(time);
+        long delta = keepAliveTime - this.keepAliveTime;
+        this.keepAliveTime = keepAliveTime;
+        if(delta < 0){
+            interruptIdleWorkers();
+        }
+    }
+
+    /**
+     * Returns the thread keep-alive time, which is the amount of time
+     * that threads in excess of the core pool size may remain
+     * idle before being terminated
+     *
+     * @param unit
+     * @return
+     */
+    public long getKeepAliveTime(TimeUnit unit){
+        return unit.convert(keepAliveTime, TimeUnit.NANOSECONDS);
+    }
+
+
+
+    /**
+     * Returns the task queue used by this executor, Access to the
+     * task queue is intended primarily for debugging and monitoring
+     * This queue may be in active use. Retrieving the task queue
+     * does not prevent queued task from executing
+     *
+     * @return the task queue
+     */
+    public BlockingQueue<Runnable> getQueue(){
+        return workQueue;
+    }
+
+
+    /**
+     * A handle for rejected tasks that throw a
+     * {@code RejectedExecutionException}
+     */
+    public static class AbortPolicy implements KRejectedExecutionHandler{
+        /**
+         * Creates an {@code AbortPolicy}
+         */
         public AbortPolicy(){}
 
-        public void rejectedExecution(Runnable r, AbstractExecutorService executor) {
-            throw new RejectedExecutionException("Task " + r.toString() + " rejected from " + executor.toString());
+        /**
+         * Always throws RejectedExecutionException
+         *
+         * @param a the runnable task requested to be executed
+         * @param executor the executor attempting to execute this task
+         * @throws RejectedExecutionException always
+         */
+        @Override
+        public void rejectedExecution(Runnable a, KThreadPoolExecutor executor) {
+            throw new RejectedExecutionException("Task " + a.toString() + " rejected from " + executor.toString());
+        }
+    }
+
+    /**
+     * A handler for rejected tasks that silently discards the
+     * rejected task
+     */
+    public static class DiscardPolicy implements KRejectedExecutionHandler{
+
+        /**
+         * Creates a {@code DiscardPolicy}
+         */
+        public DiscardPolicy(){}
+
+        /**
+         * Does nothing, which has effect of discarding task r
+         * @param a the runnable task requested to be executed
+         * @param executor the executor attempting to execute thistask
+         */
+        @Override
+        public void rejectedExecution(Runnable a, KThreadPoolExecutor executor) {
+
+        }
+    }
+
+
+    public static class DiscardOldestPolicy implements KRejectedExecutionHandler{
+
+        /**
+         * Creates a {@code DiscardOldestPolicy} for the gien executor
+         */
+        public DiscardOldestPolicy() {}
+
+        /**
+         * Obtains and ignores the next task that the excutor
+         * would otherwise execute, if one is immediately available,
+         * and then retries execution of task r, unless the executor
+         * is shut down, in which case task r is instead is discarded
+         *
+         * @param r
+         */
+        @Override
+        public void rejectedExecution(Runnable r, KThreadPoolExecutor e) {
+            if(!e.isShutdown()){
+                e.getQueue().poll();
+                e.execute(r);
+            }
         }
     }
 

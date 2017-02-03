@@ -404,7 +404,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
     protected final boolean compareAndSetState(int expect, int update){
         // See below for intrinsics(本质) setup to support this
         int oldState = getState();
-        logger.info("oldState:"+oldState + ", stateOffset:"+stateOffset + ", expect:"+expect + ", update:"+update);
+//        logger.info("oldState:"+oldState + ", stateOffset:"+stateOffset + ", expect:"+expect + ", update:"+update);
         return unsafe.compareAndSwapObject(this, stateOffset, expect, update);
     }
 

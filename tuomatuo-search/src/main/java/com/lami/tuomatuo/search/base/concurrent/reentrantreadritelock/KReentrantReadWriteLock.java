@@ -1,6 +1,7 @@
 package com.lami.tuomatuo.search.base.concurrent.reentrantreadritelock;
 
 import com.lami.tuomatuo.search.base.concurrent.aqs.KAbstractQueuedSynchronizer;
+import com.lami.tuomatuo.search.base.concurrent.spinlock.MyAbstractQueuedSynchronizer;
 import com.lami.tuomatuo.search.base.concurrent.unsafe.UnSafeClass;
 import sun.misc.Unsafe;
 
@@ -13,6 +14,12 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 
 /**
+ *
+ * http://blog.csdn.net/yuhongye111/article/details/39055531
+ * http://brokendreams.iteye.com/blog/2250866
+ *
+ *
+ *
  * An implementation of {@link java.util.concurrent.locks.ReadWriteLock} supporting similar
  * semantics to {@link java.util.concurrent.locks.ReentrantLock}
  *
@@ -28,7 +35,7 @@ import java.util.concurrent.locks.ReadWriteLock;
  *     <b>Non-fair mode (default)</b>
  *     When constructed as non-fair (the default), the order of entry
  *     to the read and write lock is unspecified, subject to reentrancy
- *     constraints. A nonfair lock that is continously contended may
+ *     constraints. A nonfair lock that is continuously contended may
  *     indefinitely postpone one or more reader or writer threads, but
  *     will normally have higher throughput than a fair lock
  * </dt>
@@ -46,7 +53,7 @@ import java.util.concurrent.locks.ReadWriteLock;
  * <p>
  *     A thread that tries to acquire a fair read lock (non-reentrantly)
  *     will block if either the write lock is held, or there is a waiting
- *     writer thread. The thread will not acquirethe read lock until
+ *     writer thread. The thread will not acquire the read lock until
  *     after the oldest currently waiting writer thread has acquired and
  *     released the write lock. Of course, if a waiting writer abandons
  *     its wait, leaving one or more reader threads as the longest waiters
@@ -66,14 +73,14 @@ import java.util.concurrent.locks.ReadWriteLock;
  * <p>
  *     This lock allows both readers and writers to reacquire read or
  *     write locks in the style of a {@link java.util.concurrent.locks.ReentrantLock}. Non-reentrant
- *     readers are not alloweduntil allwrite locks held by the writing
+ *     readers are not allowed until all write locks held by the writing
  *     thread have been released.
  * </p>
  *
  * <p>
  *     Additionally, a writer can acquire the read lock, but not
  *     vice-versa. Among other applications, reentrancy can be useful
- *     when write locks are heldduring calls or callbacks to method that
+ *     when write locks are held during calls or callbacks to method that
  *     perform reads under read locks. If a read tries to acquire the
  *     write lock it will never succeed.
  * </p>
@@ -245,19 +252,19 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
 
     @Override
     public Lock readLock() {
-        return null;
+        return readerLock;
     }
 
     @Override
     public Lock writeLock() {
-        return null;
+        return writerLock;
     }
 
     /**
      * Synchronization implementation for ReentrantReadWriteLock
      * Subclassed into fair and nonfair versions
      */
-    abstract static class Sync extends KAbstractQueuedSynchronizer{
+    abstract static class Sync extends MyAbstractQueuedSynchronizer {
         private static final long serialVersionUID = 6317671515068378041L;
 
         /**
@@ -341,6 +348,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          * </p>
          *
          * <p>
+         *     http://stackoverflow.com/questions/21243858/out-of-thin-air-safety
+         *     https://shipilev.net/blog/2014/jmm-pragmatics/#_java_memory_model
+         *
          *     Accessed via a benign data race; relies on the memory
          *     model's out-of-thin-air guarantees for references.
          * </p>
@@ -404,7 +414,7 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
              *      and owner is a different thread, fail
              * 2. If count would saturate, fail. (This can only
              *      happen if count is already nonzero.)
-             * 3. Otherwisethis thread is eligible for lock if
+             * 3. Otherwise this thread is eligible for lock if
              *      it is either a reentrant acquire or
              *      queue policy allows it. If so, update state
              *      and set owner.
@@ -477,7 +487,7 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
 
         protected final int tryAcquireShared(int unused){
             /**
-             * Walkthrough
+             * Walkthrough:
              *
              * 1. If write lock held by another thread, fail;
              * 2. Otherwise, this thread is eligible for
@@ -1497,7 +1507,7 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
             throw new IllegalArgumentException("not owner");
         }
 
-        return sync.hasWaiters((KAbstractQueuedSynchronizer.ConditionObject)condition);
+        return sync.hasWaiters((MyAbstractQueuedSynchronizer.ConditionObject)condition);
     }
 
 
@@ -1521,7 +1531,7 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
             throw new IllegalArgumentException("not owner");
         }
 
-        return sync.getWaitQueueLength((KAbstractQueuedSynchronizer.ConditionObject)condition);
+        return sync.getWaitQueueLength((MyAbstractQueuedSynchronizer.ConditionObject)condition);
     }
 
     /**
@@ -1543,7 +1553,7 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
         if(!(condition instanceof KAbstractQueuedSynchronizer.ConditionObject)){
             throw new IllegalArgumentException("not owner");
         }
-        return sync.getWaitingThreads((KAbstractQueuedSynchronizer.ConditionObject)condition);
+        return sync.getWaitingThreads((MyAbstractQueuedSynchronizer.ConditionObject)condition);
     }
 
 
