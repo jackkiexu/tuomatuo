@@ -14,6 +14,34 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * http://www.cnblogs.com/leesf456/p/5539071.html
  *
+ * An optionally-bounded {@link BlockingQueue} based on
+ * linked nodes
+ * This queue orders elements FIFO (first-in-first-out)
+ * The <em>head</em> of the queue is that element that has been on the
+ * queue the shortest time. new elements
+ * are inserted at the tail of the queue, and the queue retrieval
+ * operations obtain elements at the head of the queue
+ * Lonked queues typically have higher throughout than array-based queues but
+ * less predictable preformance in most concurrent applications
+ *
+ * <p>
+ *     The optional capacity bound constructor argument serves as a
+ *     way to prevent excessive queue expansion. The capacity, if unspecified,
+ *     is equal to {@link Integer#MAX_VALUE}. Linked nodes are
+ *     dynamically created upon each insertion unless this would bring the
+ *     queue above capacity
+ * </p>
+ *
+ * <p>
+ *     This class and its iterator implement all of the
+ *     <em>optional</em> methods of the {@link Collection} and {@link
+ *     Iterator} interfaces
+ * </p>
+ *
+ * <p>
+ *     This class is a memeber of the Java Collections Framework
+ * </p>
+ *
  * Created by xjk on 1/28/17.
  */
 public class KLinkedBlockingQueue<E> extends AbstractQueue<E> implements BlockingQueue<E>, Serializable {
