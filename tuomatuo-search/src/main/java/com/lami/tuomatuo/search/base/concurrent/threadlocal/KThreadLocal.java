@@ -15,6 +15,7 @@ import java.util.function.Supplier;
  * http://qifuguang.me/2015/09/02/%5BJava%E5%B9%B6%E5%8F%91%E5%8C%85%E5%AD%A6%E4%B9%A0%E4%B8%83%5D%E8%A7%A3%E5%AF%86ThreadLocal/
  * http://www.cnblogs.com/onlywujun/p/3524675.html
  * http://www.jianshu.com/p/fa2cfc445c46
+ * http://redhat.iteye.com/blog/1057974
  *
  *
  * This class provides thread-local variables. These variables differ from
