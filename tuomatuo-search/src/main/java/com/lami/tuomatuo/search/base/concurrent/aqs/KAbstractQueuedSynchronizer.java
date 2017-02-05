@@ -17,6 +17,7 @@ import java.util.concurrent.locks.LockSupport;
  * http://blog.csdn.net/yuenkin/article/details/50867530#comments
  * http://gee.cs.oswego.edu/dl/papers/aqs.pdf
  * http://www.ibm.com/developerworks/cn/java/j-jtp04186/
+ * http://gee.cs.oswego.edu/dl/papers/aqs.pdf
  *
  *
  * Provides a framework for implementing blocking locks locks and related

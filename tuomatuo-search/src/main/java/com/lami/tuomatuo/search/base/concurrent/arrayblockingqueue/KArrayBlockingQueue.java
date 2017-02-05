@@ -216,6 +216,247 @@ public class KArrayBlockingQueue<E> extends AbstractQueue<E> implements Blocking
     }
 
     /**
+     * Removes a single instance of the specified element from this queue
+     * If it is present. More formally, removes an element {@coe e} such
+     * that {@code o.equals(e)}, if this queue contains one or more such
+     * elements
+     *
+     * Returns {@code true} if this queue contained the specified element
+     * (or equalently, if this queue changed as a result of the call)
+     *
+     * <p>
+     *     Removal of interior elements in circular array based queues
+     *     is an intrinsically slow and disruptive operation, so should
+     *     be undertaken only in exceptional circumstances, ideally
+     *     only when the queue is known not to be accessible by other
+     *     threads
+     * </p>
+     *
+     * @param o element to be removed from this queue, if prevent
+     * @return {@code true} if this queue changed as a result of the call
+     */
+    public boolean remove(Object o){
+        if(o == null) return false;
+        final Object[] items = this.items;
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            if(count > 0){
+                final int putIndex = this.putIndex;
+                int i = takeIndex;
+                do{
+                    if(o.equals(items[i])){
+                        removeAt(i);
+                        return true;
+                    }
+                    if(++i == items.length){
+                        i = 0;
+                    }
+                }while(i != putIndex);
+            }
+            return false;
+        }finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns {@code true} if this queue contains the specified element
+     * More formally, returns {@code true} if and only if this queue contains
+     * at least one element {@code e} such that {@code o.equals(e)}
+     *
+     * @param o object to be checked for containment the this queue
+     * @return {@code true} if this queue contains the specified element
+     */
+    public boolean contains(Object o){
+        if(o == null) return false;
+        final Object[] items = this.items;
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            if(count > 0){
+                final int putIndex = this.putIndex;
+                int i = takeIndex;
+                do{
+                    if(o.equals(items[i])){
+                        return true;
+                    }
+                    if(++i == items.length){
+                        i = 0;
+                    }
+                }while(i != putIndex);
+            }
+            return false;
+        }finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns an array containing all of the elements in this queue, in
+     * proper sequence
+     *
+     * <p>
+     *     The returned array will be "safe" in that no references to it are
+     *     maintained by this queue. (In other words, this method must allocate
+     *     a new array). The caller is thus free to midify the returned array
+     * </p>
+     *
+     * <p>
+     *     This method acts bridge between array-based and collection-based
+     *     APIs
+     * </p>
+     *
+     * @return
+     */
+    public Object[] toArray(){
+        Object[] a;
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            final int count = this.count;
+            a = new Object[count];
+            int n = items.length - takeIndex;
+            if(count <= n){
+                System.arraycopy(items, takeIndex, a, 0, count);
+            }else {
+                System.arraycopy(items, takeIndex, a, 0, n);
+                System.arraycopy(items, 0, a, n, count - n);
+            }
+        }finally {
+            lock.unlock();
+        }
+        return a;
+    }
+
+    /**
+     * Returns an array containing all of the elements in this queue, in
+     * proper sequence: the runtime type of the returned array is that of
+     * the specified array. If the queue fits in the specified array, it
+     * is returned therein. Otherwise, a new array is allocated with the
+     * runtime type of the specified array and the sieze of this queue
+     *
+     * <p>
+     *     If the queue fits in the specified array with room to spare
+     *     (i.e, the array has more elements than this queue), the element in
+     *     the array immediately following the end of the queue is set to
+     *     {@code null}
+     * </p>
+     *
+     * <p>
+     *     Like the {@link #toArray(Object[])} method, this method acts bridge between
+     *     array-based and collection-based APIs. Further, this method allows
+     *     precise control over the runtime type of the output array, and may,
+     *     under certain circumstances, be used to save allocation costs
+     * </p>
+     *
+     * <p>
+     *     Suppose {@code x} is a queue known to contain only strings
+     *     The following code can be used to dump to queue into a newly
+     *     allocated array of {@code String}
+     * </p>
+     *
+     * <pre>
+     *     {@code String[] y = x.toArray(new String[0]);}
+     * </pre>
+     *
+     * Note that {@code toArray(new Object[0])} is identical in functiona
+     * {@code toArray()}
+     *
+     * @param a the array into which the lements of the queue are to
+     *          be stored, if it is big enough; otherwise, a new array of the
+     *          same runtime type is allocated for this purpose
+     * @return an array containing all of the elements in this queue
+     */
+    public <T> T[] toArray(T[] a){
+        final Object[] items = this.items;
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            final int count = this.count;
+            final int len = a.length;
+            if(len < count){
+                a = (T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), count);
+                int n = items.length - takeIndex;
+                if(count <= n){
+                    System.arraycopy(items, takeIndex, a, 0, count);
+                }else{
+                    System.arraycopy(items, takeIndex, a, 0, n);
+                    System.arraycopy(items, 0, a, n, count - n);
+                }
+                if(len > count){
+                    a[count] = null;
+                }
+            }
+
+        }finally {
+            lock.unlock();
+        }
+        return a;
+    }
+
+    @Override
+    public String toString() {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            int k = count;
+            if(k == 0){
+                return "[]";
+            }
+            final Object[] items = this.items;
+            StringBuilder sb = new StringBuilder();
+            sb.append("[");
+            for(int i = takeIndex;;){
+                Object e = items[i];
+                sb.append(e == this ? "(this collection)" : e);
+                if(--k == 0){
+                    return sb.append("]").toString();
+                }
+                sb.append(",").append(" ");
+                if(++i == items.length){
+                    i = 0;
+                }
+            }
+        }finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Atomically removes all of the elements from this queue
+     * The queue will be empty after this call returns
+     */
+    public void clear(){
+        final Object[] items = this.items;
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try{
+            int k = count;
+            if(k > 0){
+                final int putIndex= this.putIndex;
+                int i = takeIndex;
+                do{
+                    items[i] = null;
+                    if(++i == items.length){
+                        i = 0;
+                    }
+                }while(i != putIndex);
+                takeIndex = putIndex;
+                count = 0;
+                if(itrs != null){
+                    itrs.queueIsEmpty();
+                }
+                for(;k > 0 && lock.hasWaiters(notFull);){
+                    notFull.signal();
+                }
+            }
+        }finally {
+            lock.unlock();
+        }
+    }
+
+    /**
      * Creates an {@code KArrayBlockingQueue} with the given (fixed)
      * capacity and default access policy
      *
