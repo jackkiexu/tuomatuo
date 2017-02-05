@@ -9,6 +9,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 /**
+ *
+ * http://blog.xiaohansong.com/2016/08/06/ThreadLocal-memory-leak/
+ * http://blog.xiaohansong.com/2016/08/09/ThreadLocal-leak-analyze/
+ * http://qifuguang.me/2015/09/02/%5BJava%E5%B9%B6%E5%8F%91%E5%8C%85%E5%AD%A6%E4%B9%A0%E4%B8%83%5D%E8%A7%A3%E5%AF%86ThreadLocal/
+ * http://www.cnblogs.com/onlywujun/p/3524675.html
+ * http://www.jianshu.com/p/fa2cfc445c46
+ *
+ *
  * This class provides thread-local variables. These variables differ from
  * their normal counterparts in that each thread that access one (via its
  * {@code get} or {@code set} method) has its own.idependently initialized
@@ -77,7 +85,7 @@ public class KThreadLocal<T> {
      * Returns the current thread's "initial value" for this
      * thread-local variable. This method will be invoked the first
      * time a thread access the variable with the {@link #get}
-     * method, unless the thread previously invoked the {@link #set}
+     * method, unless the thread previously invoked the {@link #"set}
      * method, in which case the {@code initialValues} method will not
      * be invoked for the thread, Normally, this method is invoked at
      * most once per thread, but it may be invoked agein in case of
@@ -143,7 +151,7 @@ public class KThreadLocal<T> {
      * variable. if this thread-local variable is subsequently
      * {@link #get read} by the current thread, its value will be
      * reinitialized by invoking its {@link #initialValue()} method,
-     * unless its value is {@link #set} by the current thread
+     * unless its value is {@link #"set} by the current thread
      * in the interm. This may result in multiple invocations of the
      * {@code initialValue} method in the current thread
      */
