@@ -14,6 +14,14 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.LockSupport;
 
 /**
+ *
+ * http://www.cnblogs.com/go2sea/p/5618628.html
+ * http://ifeve.com/introduce-abstractqueuedsynchronizer/
+ * http://blog.csdn.net/yuenkin/article/details/50867530
+ * http://brokendreams.iteye.com/blog/2250372
+ * http://www.cnblogs.com/leesf456/p/5350186.html
+ *
+ *
  * http://blog.csdn.net/yuenkin/article/details/50867530#comments
  * http://gee.cs.oswego.edu/dl/papers/aqs.pdf
  * http://www.ibm.com/developerworks/cn/java/j-jtp04186/
