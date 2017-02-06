@@ -1,6 +1,5 @@
 package com.lami.tuomatuo.search.base.concurrent.synchronousqueue;
 
-import com.lami.tuomatuo.search.base.concurrent.future.xjk.KFutureTask;
 import com.lami.tuomatuo.search.base.concurrent.unsafe.UnSafeClass;
 import org.apache.log4j.Logger;
 import sun.misc.Unsafe;
@@ -9,7 +8,6 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;

@@ -1,6 +1,6 @@
 package com.lami.tuomatuo.search.concurrent;
 
-import com.lami.tuomatuo.search.base.concurrent.future.xjk.KFutureTask;
+import com.lami.tuomatuo.search.base.concurrent.future.KFutureTask;
 import org.junit.Test;
 
 /**

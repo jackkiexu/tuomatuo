@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.search.base.concurrent.future.xjk;
+package com.lami.tuomatuo.search.base.concurrent.future;
 
 import com.lami.tuomatuo.search.base.concurrent.unsafe.UnSafeClass;
 import sun.misc.Unsafe;

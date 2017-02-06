@@ -2,9 +2,7 @@ package com.lami.tuomatuo.search.base.concurrent.threadpoolexecutors;
 
 import com.lami.tuomatuo.search.base.concurrent.scheduledthreadpoolexecutor.KRejectedExecutionHandler;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
@@ -1236,7 +1234,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
 
 
 
-    protected void terminated() {}
+
 
     public void shutdown() {
 
@@ -1476,6 +1474,99 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
     }
 
 
+    /**
+     * Removes this task from the executor's internal queue if it is present
+     * thus causing it not to be run if it has not already
+     * started
+     *
+     * <p>
+     *     This method may be useful as one part of a cancellation
+     *     scheme. It may fail to remove tasks that have been converted
+     *     into other forms before being placed on the internal queue. For
+     *     example, a task entered using {@code submit} might be
+     *     converted into a form that maintains {@code Future} status
+     *     However, in such cases,method {@link #purge()} may be used to
+     *     remove those Futures that have been cancelled
+     * </p>
+     *
+     * @param task the task to remove
+     * @return {@code true} if the task was removed
+     */
+    public boolean remove(Runnable task){
+        boolean removed = workQueue.remove(task);
+        tryTerminate(); // In case SHUTDOWN and now emnpty
+        return removed;
+    }
+
+
+    public void purge(){
+        final BlockingQueue<Runnable> q = workQueue;
+        try{
+            Iterator<Runnable> it = q.iterator();
+            while(it.hasNext()){
+                Runnable r = it.next();
+                if(r instanceof Future<?> && ((Future<?>)r).isCancelled()){
+                    it.remove();
+                }
+            }
+        }catch (ConcurrentModificationException fallThrough){
+            /**
+             * Take slow path if we encounter interference during traversal
+             * Make copy for traversal and call remove for cancelled entries
+             * The slow path is more likely to be O(N*N)
+             */
+            for(Object r : q.toArray()){
+                if(r instanceof Future<?> && ((Future<?>)r).isCancelled()){
+                    q.remove(r);
+                }
+            }
+        }
+
+        tryTerminate();// In case SHUTDOWN and now empty
+    }
+
+
+
+
+    /**
+     * Returns the current number of threads in the pool
+     *
+     * @return the number of threads
+     */
+    public int getPoolSize(){
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try{
+            // Remove rare and surprising possibility of
+            // isTerminated() && getPoolSize() > 0
+            return runStateAtLeast(ctl.get(), TIDYING) ? 0 : workers.size();
+        }finally {
+            mainLock.unlock();
+        }
+    }
+
+    /**
+     * Returns the approximate number of threads that are actively
+     * executing tasks
+     *
+     * @return the number of threads
+     */
+    public int getActiveCount(){
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try{
+            int n = 0;
+            for(Worker w : workers){
+                if(w.isLocked()){
+                    ++n;
+                }
+            }
+            return n;
+        }finally {
+            mainLock.unlock();
+        }
+    }
+
 
     /**
      * Returns the task queue used by this executor, Access to the
@@ -1489,6 +1580,187 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         return workQueue;
     }
 
+    public int getLargestPoolSize(){
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try{
+            return largestPoolSize;
+        }finally {
+            mainLock.lock();
+        }
+    }
+
+
+    /**
+     * Returns the approximate total number of tasks that have ever been
+     * scheduled for execution. Because the states of tasks and
+     * threads may changed dynamically during computation, the returned
+     * value is only an approximation
+     *
+     * @return the number of tasks
+     */
+    public long getTaskCount(){
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try{
+            long n = completedTaskCount;
+            for(Worker w : workers){
+                n += w.completedTasks;
+                if(w.isLocked()){
+                    ++n;
+                }
+            }
+            return n + workQueue.size();
+        }finally {
+            mainLock.unlock();
+        }
+    }
+
+    /**
+     * Returns the approximate total number of tasks that have
+     * completed execution. Because the state of tasks and threads
+     * may change dynamically during computation, the returned value
+     * is only an approximation, but one that does not ever decrease
+     * across successive calls
+     *
+     * @return the number of tasks
+     */
+    public long getCompletedTaskCount(){
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try{
+            long n = completedTaskCount;
+            for(Worker w : workers){
+                n += w.completedTasks;
+            }
+            return n;
+        }finally {
+            mainLock.unlock();
+        }
+    }
+
+
+    /**
+     * Returns a string identifying this pool, as well as its state,
+     * including indications of run state and estimated worker and
+     * task counts
+     *
+     * @return a String identifying this pool, as well as its state
+     */
+    @Override
+    public String toString() {
+        long ncompleted;
+        int nworkers, nactive;
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try {
+            ncompleted = completedTaskCount;
+            nactive = 0;
+            nworkers = workers.size();
+            for (Worker w : workers) {
+                ncompleted += w.completedTasks;
+                if (w.isLocked())
+                    ++nactive;
+            }
+        } finally {
+            mainLock.unlock();
+        }
+        int c = ctl.get();
+        String rs = (runStateLessThan(c, SHUTDOWN) ? "Running" :
+                (runStateAtLeast(c, TERMINATED) ? "Terminated" :
+                        "Shutting down"));
+        return super.toString() +
+                "[" + rs +
+                ", pool size = " + nworkers +
+                ", active threads = " + nactive +
+                ", queued tasks = " + workQueue.size() +
+                ", completed tasks = " + ncompleted +
+                "]";
+    }
+
+    /**
+     * Method invoked prior executing the given Runnable in the
+     * given thread. This method is invoked by thread {@code t} that
+     * will execute task {@code r}, and may be used to re-initialize
+     * ThreadLocals, or perform logging
+     *
+     * <p>
+     *     This implementation does nothing, but may be customed in
+     *     subclass. Note: To properly nest multiple overridings, subclasses should generally invoke {@code super.beforeExecute} at the end of
+     *     this method
+     * </p>
+     *
+     * @param t the thread that will run task {@code r}
+     * @param r the task that will be executed
+     */
+    protected void beforeExecute(Thread t, Runnable r){}
+
+
+    /**
+     * Method invoked upon completion of execution of the given Runnable.
+     * This method is invoked by the thread that executed the task. If
+     * non-null, the Throwable is the uncaught {@code RuntimeException}
+     * or {@code Error} that caused execution or terminate abruptly
+     *
+     * <p>
+     *     This implementation does nothing, but may be customized in
+     *     subclasses. Note: To properly next multiple overridings, subclass
+     *     should generally invoke {@code super.afterExecution} at the
+     *     beginning of this method
+     * </p>
+     *
+     * <p>
+     *     <b>Note:</b> When actions are enclosed in tasks (such as
+     *     {@link FutureTask}) either explicitly or via methods such as
+     *     {@code submit}, these task objects catch and maintain
+     *     computational exceptions, and so they do not cause abrupt
+     *     termination, and the internal exceptions are <em>not</em>
+     *     passed to this method. If you would like to trap both kinds of
+     *     failures in this method. you can further probe for such cases,
+     *     as in this sample subclass that prints either the direct cause
+     *     or the underlying exception if a task has been aborted
+     * </p>
+     *
+     * <pre>
+     *     {@code
+     *          class ExtendedExecutor extends ThreadPoolExecutor {
+     *
+     *              protected void afterExecute(Runnable r, Throwable t)
+     *                  super.afterExecute(r, t);
+     *                  if(t == null && r instanceof Future<?>){
+     *                      try{
+     *                          Object result = ((Future<?>)r).get();
+     *                      }catch(CancellationException ce){
+     *                          t = ce;
+     *                      }catch(Executionexception ee){
+     *                              t = ee.getCause();
+     *                      }catch(InterruptedException ie){
+     *                          Thread.currentThread().interrupt();
+     *                      }
+     *                  }
+     *
+     *                  if( t != null){
+     *                      System.out.println(t);
+     *                  }
+     *              }
+     *          }
+     *     }
+     * </pre>
+     *
+     * @param r
+     * @param t
+     */
+    protected void afterExecute(Runnable r, Throwable t){}
+
+    /**
+     * Method invoked when the Executor has terminated, Default
+     * implementation does nothing. Note: To properly nest multiple
+     * overridings, subclass should generally invoke
+     * {@code super.terminated} within this method
+     */
+    protected void terminated(){
+
+    }
 
     /**
      * A handle for rejected tasks that throw a
@@ -1510,6 +1782,28 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         @Override
         public void rejectedExecution(Runnable a, KThreadPoolExecutor executor) {
             throw new RejectedExecutionException("Task " + a.toString() + " rejected from " + executor.toString());
+        }
+    }
+
+    public static class CallerRunaPolicy implements RejectedExecutionHandler{
+        /**
+         * Creates a {@code CallerRunsPolicy}
+         */
+        public CallerRunaPolicy() {
+        }
+
+        /**
+         * Executes task r in the caller's thread, unless the executor
+         * has been shut down, in which case the task is discarded
+         *
+         * @param r the runnable task requested to be executed
+         * @param executor the executor attempting to execute this task
+         */
+        @Override
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+            if(!executor.isShutdown()){
+                r.run();
+            }
         }
     }
 
@@ -1559,8 +1853,4 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
             }
         }
     }
-
-    protected void beforeExecute(Thread t, Runnable r) {}
-
-    protected void afterExecute(Runnable r, Throwable t) {}
 }

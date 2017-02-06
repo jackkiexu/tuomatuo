@@ -25,7 +25,7 @@ public class UnsafeTest {
         System.out.println("--------------------------------------- Field Offset End ----------------------");
     }
 
-    public static void main(String[] args) throws  Exception{
+    public static void main4(String[] args) throws  Exception{
         printFieldOffset(fields);
         CustomerClass obj = new CustomerClass();
 
@@ -86,6 +86,22 @@ public class UnsafeTest {
         logger.info("inner");
         LockSupport.parkNanos(1000000000);
         logger.info("end");
+    }
+
+
+    public static void main(String[] args) {
+        Thread t1 = new Thread(){
+            @Override
+            public void run() {
+                while(true){
+//                    logger.info("Thread t1 is running");
+                }
+            }
+        };
+        t1.start();
+        t1.interrupt();
+
+        logger.info("Thread t1 over");
     }
 
 }

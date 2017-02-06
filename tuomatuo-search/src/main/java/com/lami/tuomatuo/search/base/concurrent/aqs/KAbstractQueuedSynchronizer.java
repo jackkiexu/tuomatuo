@@ -20,6 +20,7 @@ import java.util.concurrent.locks.LockSupport;
  * http://blog.csdn.net/yuenkin/article/details/50867530
  * http://brokendreams.iteye.com/blog/2250372
  * http://www.cnblogs.com/leesf456/p/5350186.html
+ * http://www.ctolib.com/topics-96684.html?from=singlemessage&isappinstalled=0
  *
  *
  * http://blog.csdn.net/yuenkin/article/details/50867530#comments
@@ -1810,7 +1811,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
         private Node addConditionWaiter(){
             Node t = lastWaiter;
             // If lastWaiter is cancelled, clean out
-            if(t != null && t.waitStatus != Node.CONDITION){
+            if(t != null && t.waitStatus != Node.CONDITION){ // 何时出现   t.waitStatus != Node.CONDITION
                 unlinkCancelledWaiters();
                 t = lastWaiter;
             }
