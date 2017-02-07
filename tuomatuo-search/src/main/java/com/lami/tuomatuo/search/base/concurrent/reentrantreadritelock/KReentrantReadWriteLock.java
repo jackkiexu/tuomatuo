@@ -230,20 +230,27 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
     private static final long serialVersionUID = -6992448646407690164L;
 
     /** Inner class providing readlock */
+    /** 内部类 readLock */
     private final KReentrantReadWriteLock.ReadLock readerLock;
     /** Inner class providing writelock */
+    /** 内部类 writeLock */
     private final KReentrantReadWriteLock.WriteLock writerLock;
     /** Performs all synchronization mechanics */
+    /** sync 继承 aqs 实现基本的 tryAcquire tryRelease */
     final Sync sync;
 
     /**
      * Creates a new {@code KReentrantReadWriteLock} with
      * default (nonfair) ordering properties
+     * 用 nonfair 来构建 read/WriteLock (这里的 nonfair 指的是当进行获取 lock 时 若 aqs的syn queue 里面是否有 Node 节点而决定所采取的的策略)
      */
     public KReentrantReadWriteLock(){
         this(false);
     }
 
+    /**
+     *  构建 ReentrantReadLock
+     */
     public KReentrantReadWriteLock(boolean fair){
         sync = fair ? new FairSync() : new NonfairSync();
         readerLock = new ReadLock(this);
@@ -274,30 +281,50 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          * and the upper the shared (reader) hold count.
          */
 
+        /**
+         * ReentrantReadWriteLock 这里使用 AQS里面的 state的高低16位来记录 read /write 获取的次数(PS: writeLock 是排他的 exclusive, readLock 是共享的 sahred, )
+         * 记录的操作都是通过 CAS 操作(有竞争发生)
+         *
+         *  特点:
+         *      1) 同一个线程可以拥有 writeLock 与 readLock (但必须先获取 writeLock 再获取 readLock, 反过来进行获取会导致死锁)
+         *      2) writeLock 与 readLock 是互斥的(就像 Mysql 的 X S 锁)
+         *      3) 在因 先获取 readLock 然后再进行获取 writeLock 而导致 死锁时, 本线程一直卡住在对应获取 writeLock 的代码上(因为 readLock 与 writeLock 是互斥的, 在获取 writeLock 时监测到现在有线程获取 readLock , 锁一会一直在 aqs 的 sync queue 里面进行等待), 而此时
+         *          其他的线程想获取 writeLock 也会一直 block, 而若获取 readLock 若这个线程以前获取过 readLock, 则还能继续 重入 (reentrant), 而没有获取 readLock 的线程因为 aqs syn queue 里面有获取 writeLock 的 Node 节点存在会存放在 aqs syn queue 队列里面 一直 block
+         */
+
+        /** 对 32 位的 int 进行分割 (对半 16) */
         static final int SHARED_SHIFT   = 16;
-        static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
-        static final int MAX_COUNT      = (1 << SHARED_SHIFT) - 1;
-        static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
+        static final int SHARED_UNIT    = (1 << SHARED_SHIFT); // 000000000 00000001 00000000 00000000
+        static final int MAX_COUNT      = (1 << SHARED_SHIFT) - 1; // 000000000 00000000 11111111 11111111
+        static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1; // 000000000 00000000 11111111 11111111
 
         /** Returns the number of shared holds represented in count */
-        static int sharedCount(int c)       { return c >>> SHARED_SHIFT; }
+        /** 计算 readLock 的获取次数(包含 reentrant 的次数) */
+        static int sharedCount(int c)       { return c >>> SHARED_SHIFT; } // 将字节向右移动 16位, 只剩下 原来的 高 16 位
         /** Returns the number of exclusive holds represented in count */
-        static int exclusiveCount(int c)    { return c & EXCLUSIVE_MASK; }
+        /** 计算 writeLock 的获取的次数(包括 reentrant的次数) */
+        static int exclusiveCount(int c)    { return c & EXCLUSIVE_MASK; } // 与 EXCLUSIVE_MASK 与一下
 
         /**
          * A counter for per-thread read hold counts
          * Maintained as a ThreadLocal; cached in cachedHoldCounter
          */
+        /**
+         * 几乎每个获取 readLock 的线程都会含有一个 HoldCounter 用来记录 线程 id 与 获取 readLock 的次数 ( writeLock 的获取是由 state 的低16位 及 aqs中的exclusiveOwnerThread 来进行记录)
+         * 这里有个注意点 第一次获取 readLock 的线程使用 firstReader, firstReaderHoldCount 来进行记录
+         * (PS: 不对, 我们想一下为什么不 统一用 HoldCounter 来进行记录呢? 原因: 所用的 HoldCounter 都是放在 ThreadLocal 里面, 而很多有些场景中只有一个线程获取 readLock 与 writeLock , 这种情况还用 ThreadLocal 的话那就有点浪费(ThreadLocal.get() 比直接 通过 reference 来获取数据相对来说耗性能))
+         */
         static final class HoldCounter {
-            int count = 0;
+            int count = 0; // 重复获取 readLock/writeLock 的次数
             // Use id, not reference, to avoid garbage retention
-            final long tid = getThreadId(Thread.currentThread());
+            final long tid = getThreadId(Thread.currentThread()); // 线程 id
         }
 
         /**
          * ThreadLocal subclass, Easiest to explicitly define for sake
          * of deserialization mechanics
          */
+        /** 简单的自定义的 ThreadLocal 来用进行记录  readLock 获取的次数  */
         static final class ThreadLocalHoldCounter extends ThreadLocal<HoldCounter>{
             @Override
             protected HoldCounter initialValue() {
@@ -309,6 +336,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          * The number of reentrant read locks held by current thread.
          * Initialized only in constructor and readObject
          * Removed whenever a thread's read hold count drops to 0
+         */
+        /**
+         *  readLock 获取记录容器 ThreadLocal(ThreadLocal 的使用过程中当 HoldCounter.count == 0 时要进行 remove , 不然很有可能导致 内存的泄露)
          */
         private transient ThreadLocalHoldCounter readHolds;
 
@@ -329,6 +359,10 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          *     Accessed via a benign data race; relies on the memory
          *     model's final field and out-of-thin-air guarantees.
          * </p>
+         */
+        /**
+         * 最后一次获取 readLock 的 HoldCounter 的缓存
+         * (PS: 还是上面的问题 有了 readHolds 为什么还需要 cachedHoldCounter呢? 大非常大的场景中, 这次进行release readLock的线程就是上次 acquire 的线程, 这样直接通过cachedHoldCounter来进行获取, 节省了通过 readHolds 的 lookup 的过程)
          */
         private transient HoldCounter cachedHoldCounter;
 
@@ -360,9 +394,16 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          *     locks to be very cheap
          * </p>
          */
+        /**
+         * 下面两个是用来进行记录 第一次获取 readLock 的线程的信息
+         * 准确的说是第一次获取 readLock 并且 没有 release 的线程, 一旦线程进行 release readLock, 则 firstReader会被置位 null
+         */
         private transient Thread firstReader = null;
         private transient int    firstReaderHoldCount;
 
+        /**
+         * Syn 的初始化
+         */
         Sync(){
             readHolds = new ThreadLocalHoldCounter();
             setState(getState()); // ensures visibility of readHolds
@@ -379,12 +420,29 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          * the read lock, and otherwise eligible to do so, should block
          * because of policy for overtaking other waiting threads.
          */
+
+        /**
+         * ReentrantReadWriteLock 的公不公平就是由 readerShouldBlock writerShouldBlock 来进行决定的
+         * 公平: readerShouldBlock writerShouldBlock 都会检测 aqs sync queue 里面是否有Node节点来决定获取
+         * 非公平:
+         *      readerShouldBlock 根据 aqs sync queue 里面 head.next 的节点是否是获取 writeLock 来决定
+         *      writerShouldBlock 直接返回 false
+         */
+
+        /**
+         * 当线程进行获取 readLock 时的策略(这个策略依赖于 aqs 中 sync queue 里面的Node存在的情况来定),
+         * @return
+         */
         abstract boolean readerShouldBlock();
 
         /**
          * Returns true if the current thread, when trying to acquire
          * the write lock, and otherwise eligible to do so, should block
          * because of policy for overtaking other waiting threads.
+         */
+        /**
+         * 当线程进行获取 readLock 时的策略(这个策略依赖于 aqs 中 sync queue 里面的Node存在的情况来定)
+         * @return
          */
         abstract boolean writerShouldBlock();
 
@@ -394,19 +452,29 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          * both read and write holds that are all released during a
          * condition wait and re-established in tryAcquire
          */
+        /**
+         * 在进行 release 锁 时, 调用子类的方法 tryRelease(主要是增对 aqs 的 state 的一下赋值操作) (PS: 这个操作只有exclusive的lock才会调用到)
+         * @param releases
+         * @return
+         */
         protected final boolean tryRelease(int releases){
-            if(!isHeldExclusively()){
+            if(!isHeldExclusively()){                           // 1 监测当前的线程进行释放锁的线程是否是获取独占锁的线程
                 throw new IllegalMonitorStateException();
             }
-            int nextc = getState() - releases;
-            boolean free = exclusiveCount(nextc) == 0;
-            if(free){
+            int nextc = getState() - releases;                 // 2. 进行 state 的释放操作
+            boolean free = exclusiveCount(nextc) == 0;        // 3. 判断 exclusive lock 是否释放完(因为这里支持 lock 的 reentrant)
+            if(free){                                          // 4. 锁释放掉后 清除掉 独占锁 exclusiveOwnerThread 的标志
                 setExclusiveOwnerThread(null);
             }
-            setState(nextc);
+            setState(nextc);                                   // 5. 直接修改 state 的值 (PS: 这里没有竞争的出现, 因为调用 tryRelease方法的都是独占锁, 互斥, 所以没有 readLock 的获取, 相反 readLock 对 state 的修改就需要 CAS 操作)
             return free;
         }
 
+        /**
+         * AQS 中 排他获取锁 模板方法acquire里面的策略方法  tryAcquire 的实现
+         * @param acquires
+         * @return
+         */
         protected final boolean tryAcquire(int acquires){
             /**
              * Walkthrough:
@@ -421,60 +489,65 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
              */
             Thread current = Thread.currentThread();
             int c = getState();
-            int w = exclusiveCount(c);
+            int w = exclusiveCount(c);                      // 1. 获取现在writeLock 的获取的次数
             if(c != 0){
                 // Note: if c != 0 and w == 0 then shared count != 0
-                if(w == 0 || current != getExclusiveOwnerThread()){
+                if(w == 0 || current != getExclusiveOwnerThread()){  // 2. 并发的情况来了, 这里有两种情况 (1) c != 0 &&  w == 0 -> 说明现在只有读锁的存在, 则直接 return, return后一般就是进入 aqs 的 sync queue 里面进行等待获取 (2) c != 0 && w != 0 && current != getExclusiveOwnerThread() 压根就是其他的线程获取 read/writeLock, 读锁是排他的, 所以这里也直接 return -> 进入 aqs 的 sync queue 队列
                     return false;
                 }
-                if(w + exclusiveCount(acquires) > MAX_COUNT){
+                if(w + exclusiveCount(acquires) > MAX_COUNT){      // 3. 计算是否获取writeLock的次数 饱和了(saturate)
                     throw new Error("Maximum lock count exceeded");
                 }
                 // Reentrant acquire
-                setState(c + acquires);
+                setState(c + acquires);                             // 4. 进行 state值得修改 (这里也不需要 CAS 为什么? 读锁是排他的, 没有其他线程和他竞争修改)
                 return true;
             }
-            if(writerShouldBlock() || !compareAndSetState(c, c + acquires)){
+            if(writerShouldBlock() || !compareAndSetState(c, c + acquires)){  // 5. 代码运行到这里 (c == 0) 这时可能代码刚刚到这边时, 就有可能其他的线程获取读锁, 所以 c == 0 不一定了, 所以需要再次调用 writerShouldBlock查看, 并且用 CAS 来进行 state 值得更改
                 return false;
             }
-            setExclusiveOwnerThread(current);
+            setExclusiveOwnerThread(current);                       //  6. 设置 exclusiveOwnerThread writeLock 获取成功
             return true;
         }
 
+        /**
+         *  AQS 里面 releaseShared 的实现
+         * @param unused
+         * @return
+         */
         protected final boolean tryReleaseShared(int unused){
             Thread current = Thread.currentThread();
-            if(firstReader == current){
+            if(firstReader == current){                      // 1. 判断现在进行 release 的线程是否是 firstReader
                 // assert firstReaderHoldCount > 0
-                if(firstReaderHoldCount == 1){
+                if(firstReaderHoldCount == 1){             // 2. 只获取一次 readLock 直接置空 firstReader
                     firstReader = null;
                 }else{
-                    firstReaderHoldCount--;
+                    firstReaderHoldCount--;                // 3. 将 firstReaderHoldCount 减 1
                 }
             }else{
-                HoldCounter rh = cachedHoldCounter;
-                if(rh == null || rh.tid != getThreadId(current)){
+                HoldCounter rh = cachedHoldCounter;        // 4. 先通过 cachedHoldCounter 来取值
+                if(rh == null || rh.tid != getThreadId(current)){  // 5. cachedHoldCounter 代表的是上次获取 readLock 的线程, 若这次进行 release 的线程不是, 再通过 readHolds 进行 lookup 查找
                     rh = readHolds.get();
                 }
                 int count = rh.count;
                 if(count <= 1){
-                    readHolds.remove();
+                    readHolds.remove();                     // 6. count <= 1 时要进行 ThreadLocal 的 remove , 不然容易内存泄露
                     if(count <= 0){
-                        throw unmatchedUnlockException();
+                        throw unmatchedUnlockException();   // 7. 并发多次释放就有可能出现
                     }
                 }
-                --rh.count;
+                --rh.count;                                // 9. HoldCounter.count 减 1
             }
 
-            for(;;){
+            for(;;){                                       // 10. 这里是一个 loop CAS 操作, 因为可能其他的线程此刻也在进行 release操作
                 int c = getState();
-                int nextc = c - SHARED_UNIT;
+                int nextc = c - SHARED_UNIT;             // 11. 这里是 readLock 的减 1, 也就是 aqs里面state的高 16 上进行 减 1, 所以 减 SHARED_UNIT
                 if(compareAndSetState(c, nextc)){
                     /**
                      * Releasing the read lock has no effect on readers,
                      * but it may allow waiting writers to proceed if
                      * both read and write locks are now free
                      */
-                    return nextc == 0;
+                    return nextc == 0;                   // 12. 返回值是判断 是否还有 readLock 没有释放完, 当释放完了会进行 后继节点的 唤醒( readLock 在进行获取成功时也进行传播式的唤醒后继的 获取 readLock 的节点)
                 }
             }
         }
@@ -485,6 +558,12 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
             );
         }
 
+        /**
+         * AQS 中 acquireShared 的子方法
+         * 主要是进行改变 aqs 的state的值进行获取 readLock
+         * @param unused
+         * @return
+         */
         protected final int tryAcquireShared(int unused){
             /**
              * Walkthrough:
@@ -504,35 +583,38 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
              */
             Thread current = Thread.currentThread();
             int c = getState();
-            if(exclusiveCount(c) != 0 && getExclusiveOwnerThread() != current){
+            if(exclusiveCount(c) != 0 && getExclusiveOwnerThread() != current){         // 1. 判断是否有其他的线程获取了 writeLock, 有的话直接返回 -1 进行 aqs的 sync queue 里面
                 return  -1;
             }
-            int r = sharedCount(c);
+            int r = sharedCount(c);                                                    // 2. 获取 readLock的获取次数
             if(!readerShouldBlock() &&
                     r < MAX_COUNT &&
-                    compareAndSetState(c, c + SHARED_UNIT)){
-                if(r == 0){
+                    compareAndSetState(c, c + SHARED_UNIT)){                         // 3. if 中的判断主要是 readLock获取的策略, 及 操作 CAS 更改 state 值是否OK
+                if(r == 0){                                                           //  4. r == 0 没有线程获取 readLock 直接对 firstReader firstReaderHoldCount 进行初始化
                     firstReader = current;
                     firstReaderHoldCount = 1;
-                }else if(firstReader == current){
+                }else if(firstReader == current){                                  // 5. 第一个获取 readLock 的是 current 线程, 直接计数器加 1
                     firstReaderHoldCount++;
                 }else{
                     HoldCounter rh = cachedHoldCounter;
-                    if(rh == null || rh.tid != getThreadId(current)){
+                    if(rh == null || rh.tid != getThreadId(current)){               // 6. 还是上面的逻辑, 先从 cachedHoldCounter, 数据不对的话, 再从readHolds拿数据
                         cachedHoldCounter = rh = readHolds.get();
-                    }else if(rh.count == 0){
+                    }else if(rh.count == 0){                                       // 7. 为什么要 count == 0 时进行 ThreadLocal.set? 因为上面 tryReleaseShared方法 中当 count == 0 时, 进行了ThreadLocal.remove
                         readHolds.set(rh);
                     }
-                    rh.count++;
+                    rh.count++;                                                    // 8. 统一的 count++
                 }
                 return 1;
             }
-            return fullTryAcquireShared(current);
+            return fullTryAcquireShared(current);                                 // 9.代码调用 fullTryAcquireShared 大体情况是 aqs 的 sync queue 里面有其他的节点 或 sync queue 的 head.next 是个获取 writeLock 的节点, 或 CAS 操作 state 失败
         }
 
         /**
          * Full version of acquire for reads, that handles CAS misses
          * and reentrant reads not dealt with in tryAcquireShared.
+         */
+        /**
+         *  fullTryAcquireShared 这个方法其实是 tryAcquireShared 的冗余(redundant)方法, 主要补足 readerShouldBlock 导致的获取等待 和 CAS 修改 AQS 中 state 值失败进行的修补工作
          */
         final int fullTryAcquireShared(Thread current){
             /**
@@ -545,54 +627,54 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
             for(;;){
                 int c= getState();
                 if(exclusiveCount(c) != 0){
-                    if(getExclusiveOwnerThread() != current){
+                    if(getExclusiveOwnerThread() != current)                    // 1. 若此刻 有其他的线程获取了 writeLock 则直接进行 return 到 aqs 的 sync queue 里面
                         return -1;
-                        // else we hold the exclusive lock; blocking here
-                        // would cause deadlock
-                    }else if(readerShouldBlock()){
-                        // Make sure we're not acquiring read lock reentrantly
-                        if(firstReader == current){
-                            // assert firstReaderHoldCount > 0
-                        }else{
-                            if(rh == null){
-                                rh = cachedHoldCounter;
-                                if(rh == null || rh.tid != getThreadId(current)){
-                                    rh = readHolds.get();
-                                    if(rh.count == 0){
-                                        readHolds.remove();
-                                    }
-                                }
-                            }
-                            if(rh.count == 0){
-                                return -1;
-                            }
-                        }
-                    }
-
-                    if(sharedCount(c) == MAX_COUNT){
-                        throw new Error("Maximum lock count exceeded");
-                    }
-                    if(compareAndSetState(c, c + SHARED_UNIT)){
-                        if(sharedCount(c) == 0){
-                            firstReader = current;
-                            firstReaderHoldCount = 1;
-                        }else if(firstReader == current){
-                            firstReaderHoldCount++;
-                        }else{
-                            if(rh == null){
-                                rh = cachedHoldCounter;
-                            }
+                    // else we hold the exclusive lock; blocking here
+                    // would cause deadlock
+                }else if(readerShouldBlock()){                                 // 2. 判断 获取 readLock 的策略
+                    // Make sure we're not acquiring read lock reentrantly
+                    if(firstReader == current){                              // 3. 若是 readLock 的 重入获取, 则直接进行下面的 CAS 操作
+                        // assert firstReaderHoldCount > 0
+                    }else{
+                        if(rh == null){
+                            rh = cachedHoldCounter;
                             if(rh == null || rh.tid != getThreadId(current)){
                                 rh = readHolds.get();
-                            }else if(rh.count == 0){
-                                readHolds.set(rh);
+                                if(rh.count == 0){
+                                    readHolds.remove();                       // 4. 若 rh.count == 0 进行 ThreadLocal.remove
+                                }
                             }
-                            rh.count++;
-                            cachedHoldCounter = rh; // cache for release
                         }
-                        return 1;
+                        if(rh.count == 0){                                    // 5.  count != 0 则说明这次是 readLock 获取锁的 重入(reentrant), 所以即使出现死锁, 以前获取过 readLock 的线程还是能继续 获取 readLock
+                            return -1;                                        // 6. 进行到这一步只有 当 aqs sync queue 里面有 获取 readLock 的node 或 head.next 是获取 writeLock 的节点
+                        }
                     }
                 }
+
+                if(sharedCount(c) == MAX_COUNT){                            // 7. 是否获取 锁溢出
+                    throw new Error("Maximum lock count exceeded");
+                }
+                if(compareAndSetState(c, c + SHARED_UNIT)){                // 8.  CAS 可能会失败, 但没事, 我们这边外围有个 for loop 来进行保证 操作一定进行
+                    if(sharedCount(c) == 0){                                //  9. r == 0 没有线程获取 readLock 直接对 firstReader firstReaderHoldCount 进行初始化
+                        firstReader = current;
+                        firstReaderHoldCount = 1;
+                    }else if(firstReader == current){                    // 10. 第一个获取 readLock 的是 current 线程, 直接计数器加 1
+                        firstReaderHoldCount++;
+                    }else{
+                        if(rh == null){
+                            rh = cachedHoldCounter;
+                        }
+                        if(rh == null || rh.tid != getThreadId(current)){
+                            rh = readHolds.get();                       // 11. 还是上面的逻辑, 先从 cachedHoldCounter, 数据不对的话, 再从readHolds拿数据
+                        }else if(rh.count == 0){
+                            readHolds.set(rh);                          // 12. 为什么要 count == 0 时进行 ThreadLocal.set? 因为上面 tryReleaseShared方法 中当 count == 0 时, 进行了ThreadLocal.remove
+                        }
+                        rh.count++;
+                        cachedHoldCounter = rh; // cache for release   // 13. 获取成功
+                    }
+                    return 1;
+                }
+
             }
         }
 
@@ -601,23 +683,27 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          * This is identical in effect to tryAcquire expect for lack
          * of calls to writerShouldBlock
          */
+        /**
+         * 尝试性的获取 writeLock 失败的话也无所谓
+         * @return
+         */
         final boolean tryWriteLock(){
             Thread current = Thread.currentThread();
             int c = getState();
             if(c != 0){
-                int w = exclusiveCount(c);
-                if(w == 0 || current != getExclusiveOwnerThread()){
+                int w = exclusiveCount(c);                              // 1. 获取现在writeLock 的获取的次数
+                if(w == 0 || current != getExclusiveOwnerThread()){     // 2. 判断是否是其他的线程获取了 writeLock
                     return false;
                 }
-                if(w == MAX_COUNT){
+                if(w == MAX_COUNT){                                    // 3. 获取锁是否 溢出
                     throw new Error("Maximum lock count exceeded");
                 }
             }
 
-            if(!compareAndSetState(c, c + 1)){
+            if(!compareAndSetState(c, c + 1)){                         // 4. 这里有竞争, cas 操作失败也无所谓
                 return false;
             }
-            setExclusiveOwnerThread(current);
+            setExclusiveOwnerThread(current);                          // 5. 设置 当前的 exclusiveOwnerThread
             return true;
         }
 
@@ -626,30 +712,33 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          * This is identical in effect to tryAcquireShared except for
          * lack of calls to readerShouldBlock
          */
+        /**
+         *  尝试性的获取一下 readLock
+         */
         final boolean tryReadLock(){
             Thread current = Thread.currentThread();
             for(;;){
                int c = getState();
                 if(exclusiveCount(c) != 0 &&
-                        getExclusiveOwnerThread() != current){
+                        getExclusiveOwnerThread() != current){      // 1. 若当前有其他的线程获取 writeLock 直接 return
                     return false;
                 }
-                int r = sharedCount(c);
+                int r = sharedCount(c);                            // 2. 获取 readLock 的次数
                 if(r == MAX_COUNT){
                     throw new Error("Maximum lock count exceeded");
                 }
-                if(compareAndSetState(c, c + SHARED_UNIT)){
-                    if(r == 0){
+                if(compareAndSetState(c, c + SHARED_UNIT)){     // 3. CAS 设置 state
+                    if(r == 0){                                  //  4. r == 0 没有线程获取 readLock 直接对 firstReader firstReaderHoldCount 进行初始化
                         firstReader = current;
                         firstReaderHoldCount = 1;
-                    }else if(firstReader == current){
+                    }else if(firstReader == current){          // 5. 第一个获取 readLock 的是 current 线程, 直接计数器加 1
                         firstReaderHoldCount++;
                     }else{
                         HoldCounter rh = cachedHoldCounter;
-                        if(rh == null || rh.tid != getThreadId(current)){
+                        if(rh == null || rh.tid != getThreadId(current)){  // 6. 还是上面的逻辑, 先从 cachedHoldCounter, 数据不对的话, 再从readHolds拿数据
                             cachedHoldCounter = rh = readHolds.get();
                         }else if(rh.count == 0){
-                            readHolds.set(rh);
+                            readHolds.set(rh);                  // 7. 为什么要 count == 0 时进行 ThreadLocal.set? 因为上面 tryReleaseShared方法 中当 count == 0 时, 进行了ThreadLocal.remove
                         }
                         rh.count++;
                     }
@@ -658,6 +747,7 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
             }
         }
 
+        /** 判断当前线程是否 是 writeLock 的获取者 */
         protected final boolean isHeldExclusively(){
             /**
              * While we must in general read state before owner,
@@ -666,11 +756,13 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
             return getExclusiveOwnerThread() == Thread.currentThread();
         }
 
+        /** 创建一个 condition, condition 只用于 独占场景 */
         // Methods relayed to outer class
         final ConditionObject newCondition(){
             return new ConditionObject();
         }
 
+        /** 判断当前线程是否 是 writeLock 的获取者 */
         final Thread getOwner(){
             // Must read state before owner to ensure memory consistency
             return ((exclusiveCount(getState()) == 0 )?
@@ -678,18 +770,22 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
                     getExclusiveOwnerThread());
         }
 
+        /** 获取 readLock 的获取次数 */
         final int getReadLockCount(){
             return sharedCount(getState());
         }
 
+        /** 判断 writeLock 是否被获取 */
         final boolean isWriteLocked(){
             return exclusiveCount(getState()) != 0;
         }
 
+        /** 获取 writeLock 的获取次数 */
         final int getWriteHoldCount(){
             return isHeldExclusively()?exclusiveCount(getState()) : 0;
         }
 
+        /** 获取当前线程获取 readLock 的次数 */
         final int getReadHoldCount(){
             if(getReadLockCount() == 0){
                 return 0;
@@ -710,6 +806,7 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
             return count;
         }
 
+        /** 序列化的恢复操作 */
         // Reconstitutes the instance from a stream (that is, deserializes it).
         private void readObject(ObjectInputStream s) throws Exception{
             s.defaultReadObject();
@@ -724,6 +821,7 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
 
     /**
      * Nonfair version of Sync
+     * 非公平版本 sync
      */
     static final class NonfairSync extends Sync{
         private static final long serialVersionUID = -8159625535654395037L;
@@ -737,21 +835,26 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
              * block if there is a waiting writer behind other enabled
              * reader that have not yet drained from the queue
              */
+            /** readLock 的获取主要看 aqs sync queue 队列里面的 head.next 是否是获取 读锁的 */
             return apparentlyFirstQueuedIsExclusive();
         }
 
         @Override
-        boolean writerShouldBlock() {
+        boolean writerShouldBlock() { // 获取 writeLock 的话 直接获取
             return false; // writers can always barge
         }
     }
 
     /**
      * Fair version of Sync
+     * 公平版的 sync
      */
     static final class FairSync extends Sync{
         private static final long serialVersionUID = -2274990926593161451L;
 
+        /**
+         * readerShouldBlock writerShouldBlock 都是看 aqs sync queue 里面是否有节点
+         */
         @Override
         boolean readerShouldBlock() {
             return hasQueuedPredecessors();
@@ -765,6 +868,7 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
 
     /**
      * The lock returned by method {@link KReentrantReadWriteLock}
+     * 读锁
      */
     public static class ReadLock implements Lock, Serializable{
         private static final long serialVersionUID = -5992448646407690164L;
@@ -794,6 +898,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          *     the current thread becomes disabled for thread scheduling
          *     purposes and lies dormant until the read lock has been acquired
          * </p>
+         */
+        /**
+         * 所得获取都是调用 aqs 中 acquireShared
          */
         public void lock() {
             sync.acquireShared(1);
@@ -836,6 +943,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          *
          * @throws InterruptedException if the current thread is interrupted
          */
+        /**
+         *  支持中断的获取锁
+         */
         public void lockInterruptibly() throws InterruptedException{
             sync.acquireSharedInterruptibly(1);
         }
@@ -866,6 +976,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          * </p>
          *
          * @return {@code true} if the read lock was acquired
+         */
+        /**
+         *  尝试获取锁
          */
         public boolean tryLock(){
             return sync.tryReadLock();
@@ -940,6 +1053,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          * @throws InterruptedException if the current thread is interrupted
          * @throws NullPointerException if the time unit is null
          */
+        /**
+         *  支持中断与 timeout 的获取 writeLock
+         */
         public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException{
             return sync.tryAcquireSharedNanos(1, unit.toNanos(timeout));
         }
@@ -952,6 +1068,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          *     is made available for write lock attempts
          * </p>
          */
+        /**
+         * 释放 readLock
+         */
         public void unlock(){
             sync.releaseShared(1);
         }
@@ -961,6 +1080,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          * {@code ReadLocks} do not support conditions
          *
          * @throws UnsupportedOperationException
+         */
+        /**
+         *  创建一个 condition
          */
         public Condition newCondition(){
             throw new UnsupportedOperationException();
@@ -981,6 +1103,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
 
     /**
      * The lock returned by method {@link KReentrantReadWriteLock}
+     */
+    /**
+     * 写锁
      */
     public static class WriteLock implements Lock, Serializable{
         private static final long serialVersionUID = -4992448646407690164L;
@@ -1013,6 +1138,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          *     lies dormant until the write lock has been acquired, at which
          *     time the write lock hold count is set to one.
          * </p>
+         */
+        /**
+         * 调用 aqs 的 acquire 来获取 锁
          */
         public void lock(){
             sync.acquire(1);
@@ -1071,6 +1199,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          *
          * @throws InterruptedException if the current thread is interrupted
          */
+        /**
+         *  支持中断方式的获取 writeLock
+         */
         public void lockInterruptibly() throws InterruptedException{
             sync.acquireInterruptibly(1);
         }
@@ -1109,6 +1240,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          * @return {@code true} if the lock was free and was acquired
          * by the current thread, or the write lock was already held
          * by the current thread; and {@code false} otherwise
+         */
+        /**
+         *  尝试性的获取锁
          */
         public boolean tryLock(){
             return sync.tryWriteLock();
@@ -1192,6 +1326,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          * @throws InterruptedException if the current thread is interrupted
          * @throws NullPointerException if the time unit is null
          */
+        /**
+         * 支持中断 timeout 方式获取锁
+         */
         public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException{
             return sync.tryAcquireNanos(1, unit.toNanos(timeout));
         }
@@ -1209,6 +1346,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          *
          * @throws IllegalMonitorStateException if the current thread does not
          *          hold this lock
+         */
+        /**
+         * 释放锁
          */
         public void unlock(){
             sync.release(1);
@@ -1267,6 +1407,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          *
          * @return the Condition object
          */
+        /**
+         *  new 一个 condition
+         */
         public Condition newCondition(){
             return sync.newCondition();
         }
@@ -1292,6 +1435,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          * @return {@code true} if the current thread holds this lock and
          *          {@code false } otherwise
          */
+        /**
+         *  判断当前的 writeLock 是否被 本线程 占用
+         */
         public boolean isHeldByCurrentThread(){
             return sync.isHeldExclusively();
         }
@@ -1305,6 +1451,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
          * @return the number of holds on this lock by the current thread,
          *          or zero if this lock is not held by the current thread
          */
+        /**
+         *  获取 writeLock 的获取次数
+         */
         public int getHoldCount(){
             return sync.getWriteHoldCount();
         }
@@ -1317,6 +1466,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
      * Returns {@code true} if this lock has fairness set true
      *
      * @return {@code true} if this lock has fairness set true
+     */
+    /**
+     * ReentrantReadWriteLock 是否是公平的
      */
     public final boolean isFair(){
         return sync instanceof FairSync;
@@ -1335,6 +1487,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
      *
      * @return the owner, or {@code null} if not owned
      */
+    /**
+     *  判断当前线程是否获取writeLock
+     */
     protected Thread getOwner(){
         return sync.getOwner();
     }
@@ -1345,6 +1500,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
      * synchronization control
      *
      * @return the number of read locks held
+     */
+    /**
+     * readLock 的获取次数
      */
     public int getReadLockCount(){
         return sync.getReadLockCount();
@@ -1358,6 +1516,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
      * @return {@code true} if any thread holds the write lock and
      *          {@code false} otherwise
      */
+    /**
+     *  writeLock 是否被获取了
+     */
     public boolean isWriteLocked(){
         return sync.isWriteLocked();
     }
@@ -1367,6 +1528,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
      *
      * @return {@code true} if the current thread holds the write lock and
      *      {@code false} otherwise
+     */
+    /**
+     * 当前线程是否获取 writeLock
      */
     public boolean isWriteLockedByCurrentThread(){
         return sync.isHeldExclusively();
@@ -1380,6 +1544,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
      * @return the number of holds on the write lock by the current thread
      *          or zero if the write lock is not held by the current thread
      */
+    /**
+     * writeLock 的获取次数
+     */
     public int getWriteHoldCount(){
         return sync.getWriteHoldCount();
     }
@@ -1391,6 +1558,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
      *
      * @return the number of holds o the read lock by the current thread,
      *      or zero if the read lock is not held by the current thread
+     */
+    /**
+     * readLock 的获取次数
      */
     public int getReadHoldCount(){
         return sync.getReadHoldCount();
@@ -1407,6 +1577,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
      *
      * @return the collection of threads
      */
+    /**
+     * aqs sync queue 里面获取 writeLock 的线程
+     */
     protected Collection<Thread> getQueuedWriterThreads(){
         return sync.getExclusiveQueuedThreads();
     }
@@ -1421,6 +1594,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
      * more extensive lock monitoring facilities
      * @return
      */
+    /**
+     * aqs sync queue 里面获取 readLock 的线程
+     */
     protected Collection<Thread> getQueuedReaderThreads(){
         return sync.getSharedQueuedThreads();
     }
@@ -1434,6 +1610,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
      *
      * @return {@code true} if there may be other threads waiting to
      *          acquire the lock
+     */
+    /**
+     * aqs sync queue里面是否有 node
      */
     public final boolean hasQueuedThreads(){
         return sync.hasQueuedThreads();
@@ -1450,6 +1629,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
      * @return {@code true} if the given thread is queued waiting for this lock
      * @throws NullPointerException if the thread is null
      */
+    /**
+     * 当前线程是否在 aqs sync queue 里面
+     */
     public final boolean hasQueuedThread(Thread thread){
         return sync.isQueued(thread);
     }
@@ -1465,6 +1647,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
      *
      * @return the estimated numberof threads waiting for this lock
      */
+    /**
+     * aqs sync queue 长度
+     */
     public final int getQueueLength(){
         return sync.getQueueLength();
     }
@@ -1479,6 +1664,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
      * subclass that provides more extensive monitoring facilities.
      *
      * @return the collection of threads
+     */
+    /**
+     * aqs sync queue 里面的线程
      */
     protected Collection<Thread> getQueuedThreads(){
         return sync.getQueuedThreads();
@@ -1498,6 +1686,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
      * @throws IllegalArgumentException if the given condition is
      *          not associated with this lock
      * @throws NullPointerException if the condition is null
+     */
+    /**
+     * 是否有线程在 condition 里面进行等待获取 writeLock
      */
     public boolean hasWaiters(Condition condition){
         if(condition == null){
@@ -1523,6 +1714,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
      *
      * @return the estimated number of waiting threads
      */
+    /**
+     *  condition queue 里面线程的多少
+     */
     public int getWaitQueueLength(Condition condition){
         if(condition == null){
             throw new NullPointerException();
@@ -1545,6 +1739,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
      *
      * @param condition the condition
      * @return the collection of threads
+     */
+    /**
+     *  condition queue 里面的线程
      */
     protected Collection<Thread> getWaitingThreads(Condition condition){
         if(condition == null){
@@ -1582,6 +1779,9 @@ public class KReentrantReadWriteLock implements ReadWriteLock, Serializable{
      * this directly rather than via method Thread.getId() because
      * getId() is not final, and has been known to be overridden in
      * ways that do not preserve unique mapping
+     */
+    /**
+     *  unsafe 类的操作
      */
     static final long getThreadId(Thread thread){
         return UNSAFE.getLongVolatile(thread, TID_OFFSET);
