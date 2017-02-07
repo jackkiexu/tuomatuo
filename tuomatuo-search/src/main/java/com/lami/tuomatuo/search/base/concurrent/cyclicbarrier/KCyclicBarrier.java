@@ -9,6 +9,124 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
+ *
+ * http://www.cnblogs.com/go2sea/p/5615531.html
+ *
+ * A synchronization aid that allows a set of threads to all wait for
+ * each other to reach a common barrier point. CyclicBarriers are
+ * useful in programs involving a fixed sized party of threads that
+ * must occasionally wait for each other. The barrier is called
+ * <em>cyclic</em> because it can be re-used after the waiting threads
+ * are released
+ *
+ * <p>
+ *     A {@code KCyclicBarrier} supports an optional {@link Runnable} command
+ *     that is run once per barrier point, after the last thread in the party
+ *     arrives, but before any threads are released
+ *     This <em>barrier action</em> is useful
+ *     for updating sahred-state before any of the parties continue
+ * </p>
+ *
+ * <p>
+ *     Sample usage. Here is an example of using a barrier in a parallel decomposition design
+ * </p>
+ *
+ * <pre>
+ *     {@code
+ *          class Solver {
+ *              final int N;
+ *              final float[][] data;
+ *              final CyclicBarrier barrier;
+ *
+ *              class Worker implement Runnable {
+ *                  int myRow;
+ *
+ *                  Worker(int row) {
+ *                      myRow = row;
+ *                  }
+ *
+ *                  public void run(){
+ *                      while(!done()){
+ *                          processRow(myRow);
+ *
+ *                          try{
+ *
+ *                          }catch(InterryptedException ex){
+ *                              return;
+ *                          }catch(BrokenBarrierException ex){
+ *                              return;
+ *                          }
+ *                      }
+ *                  }
+ *              }
+ *
+ *              public Solver(float[][] matrix){
+ *                  data = matrix;
+ *                  N = matrix.length;
+ *                  Runnable barrierAction =
+ *                      new Runnable() {public void run() {mergeRows(....); }}
+ *                  barrier = new CyclicBarrier(N, barrierAction);
+ *
+ *                  List<Thread> threads = new ArryaList<Thread>(N);
+ *
+ *                  for(int i = 0; i < N ; i++){
+ *                      Thread thread = new Thread(new Worker(i));
+ *                      thread.add(thread);
+ *                      thread.start();
+ *                  }
+ *
+ *                  // wait until done
+ *                  for(Thread thread : threads){
+ *                      thread.join();
+ *                  }
+ *              }
+ *          }
+ *     }
+ * </pre>
+ *
+ * Here, each worker thread processes a row of the matrix then waits at the
+ * barrier until all rows have been processed. When all rows are processed
+ * the supplied {@link Runnable} barrier action is executed and merges the
+ * rows. If the marger
+ *
+ * determines that a solution has been found then {@code done()} will return
+ * {@code true} and each worker will terminate
+ *
+ * <p>
+ *     If the barrier action does not rely on the parties being suspended when
+ *     it is executed. then any of the threads in the party could execute that
+ *     action when it is released. To facilitate this, each invocation of
+ *     {@link #await} returns the arrival index of that thread at the barrier
+ *     You can then choose which thread should execute the barrier action, for
+ *     eample
+ *     <pre>
+ *         {@code
+ *          if(barrier.await() == ){
+ *              // log the completion of this iteration
+ *          }
+ *         }
+ *     </pre>
+ * </p>
+ *
+ * <p>
+ *     The {@code CyclicBarrier} uses an all-or-none breakage model
+ *     for failed synchronization attempts; If a thread leaves a barrier
+ *     point prematurely because of interruption, failure, or timeout, all
+ *     other threads waiting at that barrier point will also leave
+ *     abnormally via {@link BrokenBarrierException} (or
+ *     {@link InterruptedException}) if they too were interrupted at about
+ *     the same time
+ * </p>
+ *
+ * <p>
+ *     Memory consistency effect: Actions in a thread prior calling
+ *     {@code await()}
+ *     happen-before
+ *     action that are part of the barrier action, which in turn
+ *     <i>happen-before</i> action following a successful return from the
+ *     corresponding {@code await()} in other threads
+ * </p>
+ *
  * Created by xjk on 1/29/17.
  */
 public class KCyclicBarrier {

@@ -23,6 +23,7 @@ import java.util.concurrent.locks.LockSupport;
  * http://www.ctolib.com/topics-96684.html?from=singlemessage&isappinstalled=0
  *
  *
+ *
  * http://blog.csdn.net/yuenkin/article/details/50867530#comments
  * http://gee.cs.oswego.edu/dl/papers/aqs.pdf
  * http://www.ibm.com/developerworks/cn/java/j-jtp04186/
@@ -522,6 +523,11 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
             LockSupport.unpark(s.thread);
         }
     }
+
+    /**
+     * http://www.ctolib.com/topics-96684.html
+     * http://www.cnblogs.com/go2sea/p/5618628.html
+     */
 
     /**
      * Release action for shared mode -- signals successor and ensures

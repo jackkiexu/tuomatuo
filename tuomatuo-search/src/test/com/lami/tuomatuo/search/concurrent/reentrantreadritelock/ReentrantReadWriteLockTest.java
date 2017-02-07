@@ -36,7 +36,7 @@ public class ReentrantReadWriteLockTest {
             }
         }.start();
 
-        Thread.sleep(1 * 1000);
+        Thread.sleep(10 * 1000);
 
         logger.info("readWriteLock.writeLock().lock() begin");
         readWriteLock.writeLock().lock();
