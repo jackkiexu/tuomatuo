@@ -14,6 +14,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.LockSupport;
 
 /**
+ * https://docs.oracle.com/javase/specs/jls/se7/html/index.html (第 17 章)
+ * http://www.oracle.com/technetwork/java/javase/tech/vmoptions-jsp-140102.html#Options
  *
  * http://www.cnblogs.com/go2sea/p/5618628.html
  * http://ifeve.com/introduce-abstractqueuedsynchronizer/
@@ -22,6 +24,7 @@ import java.util.concurrent.locks.LockSupport;
  * http://www.cnblogs.com/leesf456/p/5350186.html
  * http://www.ctolib.com/topics-96684.html?from=singlemessage&isappinstalled=0
  *
+ * http://www.cs.rochester.edu/wcms/research/systems/high_performance_synch/
  *
  *
  * http://blog.csdn.net/yuenkin/article/details/50867530#comments
@@ -145,7 +148,7 @@ import java.util.concurrent.locks.LockSupport;
  * (Shared mode is similar but may involve cascading signals)
  *
  *  <p id="barging">
- *      Bacause checks in acquire are invoke before
+ *      Because checks in acquire are invoke before
  *      enqueuing , a newly acquiring thread may <em>barge</em> ahead of
  *      others that are blocked and queued. However, you can, if desired,
  *      define {@code tryAcquire} and/or {@code tryAcqureShared} to
@@ -162,8 +165,8 @@ import java.util.concurrent.locks.LockSupport;
  *     default barging (also known as <em>greedy</em>,
  *     <em>renouncement</em>, and <em>convoy-avoidance</em>) strategy.
  *     While this is not guaranteed to be fair or starvation-free, earlier
- *     queued threads are allowed to recontend before later queued
- *     threads, and each recontention has an unbiased chance to succeed
+ *     queued threads are allowed to re-contend(重新竞争) before later queued
+ *     threads, and each re-contention has an unbiased chance to succeed
  *     against incoming threads, Also, while acquires do not
  *     spin; in the usual sense, they may perform multiple
  *     invocations of {@code tryAcquire} interspersed with other
@@ -295,6 +298,87 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      */
     protected KAbstractQueuedSynchronizer(){}
 
+    /**
+     * Wait queue node class
+     *
+     * <p>
+     *     The wait queue is a variant of a "CLH" (Craig, Landin, and
+     *     Hagersten) lock queue. CLH locks are normally used for
+     *     spinlocks. We insteaduse them for blocking synchronizers, but
+     *     use the same basic tactic of holding some of the control
+     *     information about a thread in the predecessor of its node. A
+     *     "status" field in each node keeps track of wether a thread
+     *     should block. A node is signalled when its predecessor
+     *     release. Each node of the queue otherwise serves as a
+     *     specific-notifications-style monitor holding a single waiting
+     *     thread. the status field does NOT control whether threads are
+     *     granted locks etc though. A thread may try to acquire if it is
+     *     first in the queue. But being first does not guarantee success;
+     *     it only gives the right to contend. So the currently released
+     *     contender thread may need to ewwait
+     * </p>
+     *
+     * <p>
+     *     To enqueue into CLH lock, you atomically splice it in as new
+     *     tail. To dequeue, you just set the head field.
+     * </p>
+     *
+     * <pre>
+     *      +------+  prev +-----+       +-----+
+     * head |      | <---- |     | <---- |     |  tail
+     *      +------+       +-----+       +-----+
+     * </pre>
+     *
+     * <p>
+     *     The "prev" links (not used in original CLH locks), are mainly
+     *     needed to handle cancellation. If a node is cancelled, its
+     *     successor is (normally) relinked to a non-cancelled
+     *     predecessor. For explanation of similar mechanics in the case
+     *     of spin locks. see the papers by Scott and Scherer at
+     *     http://www.cs.rochester.edu/u/scott/synchronization/
+     * </p>
+     *
+     * <p>
+     *    We also use "next" links to implement blocking mechanics
+     *    The thread id for each node is kept in its own node, so a
+     *    predecessor signals the next node to wake up by traversing
+     *    next link to determine which thread it is. Determination of
+     *    successor must avoid races with newly queued nodes to set
+     *    the "next" fields of their predecessors. This is sloved
+     *    when necessary by checking backwards from the atomically
+     *    update "tail" when a node's successor appear to be null.
+     *    (Or, said differently, the next-links are an optimization
+     *    so that we don't usually need a backward scan)
+     * </p>
+     *
+     * <p>
+     *     Cancellation introduces some conservatism to the basic
+     *     algorithms. Since we must poll for cancellation of other
+     *     nodes, we can miss noticing whether a cancelled node
+     *     is ahead or bebind us. This is dealt with by always unparking
+     *     successors upon cancellation, allowing them to stablizie on
+     *     a new predecessor, unless we can identify an uncancelled
+     *     predecessor who will carry this responsibility
+     * </p>
+     *
+     * <p>
+     *     CLH queue need a dummy header node to get started. But
+     *     we don't create them on construction, because it would be wasted
+     *     effort if there is never contention. Instead, the node
+     *     is constructed and head and tail pointer are set upon first
+     *     contention
+     * </p>
+     *
+     * <p>
+     *     Threads waiting on Condition use the same nodes, but
+     *     use an additional link. Conditions only need to link nodes
+     *     in simple (non-concurrent) linked queued because they are
+     *     only accessed when exclusively held. Upon await, a node is
+     *     inserted into a condition queue. Upon signal, the node is
+     *     transferred to the main queue. A special value of status
+     *     field is used to mark which queue a node is on
+     * </p>
+     */
     static final class Node {
         /** marker to indicate a node is wating in shared mode */
         static final Node SHARED = new Node();
@@ -596,8 +680,11 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
          *  racing acquires/releases, so most need signals now or soon
          *  anyway
          */
-        if(propagate > 0 || h == null || h.waitStatus < 0 ||
-                (h = head) == null || h.waitStatus < 0){
+        if(propagate > 0
+                || h == null                    // 这里面的 h== null 与 SynchronousQueue 的 TransferQueue 的 transfer方法 的 "if(t == null || h == null)" 一样, 匪夷所思, 明明初始化了, 却还需要进行判空
+                || h.waitStatus < 0
+                || (h = head) == null
+                || h.waitStatus < 0){
             Node s = node.next;
             if(s == null || s.isShared()){
                 doReleaseShared();
