@@ -593,41 +593,40 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
     }
 
     /**
-     * 唤醒节点 node 的后继节点,
-     * Wakes up node's successor, if one exists
+     * Wakes up node's successor, if one exists.
+     * 唤醒 node 的后继节点
+     * 这里有个注意点: 唤醒时会将当前node的标识归位为 0
+     * 等于当前节点标识为 的流转过程: 0(刚加入queue) -> signal (被后继节点要求在释放时需要唤醒) -> 0 (进行唤醒后继节点)
      *
-     * @param node the node
      */
-    private void unparkSuccessor(Node node){
-        /**
+    private void unparkSuccessor(Node node) {
+        logger.info("unparkSuccessor node:" + node + Thread.currentThread().getName());
+        /*
          * If status is negative (i.e., possibly needing signal) try
-         * to clear in anticipation of signalling. It is OK if this
+         * to clear in anticipation of signalling.  It is OK if this
          * fails or if status is changed by waiting thread.
          */
         int ws = node.waitStatus;
-        if(ws < 0){
-            compareAndSetWaitStatus(node, ws, 0);
-        }
+        if (ws < 0)
+            compareAndSetWaitStatus(node, ws, 0);       // 1. 清除前继节点的标识
 
-        /**
+        /*
          * Thread to unpark is held in successor, which is normally
-         * just the next node. But if cancelled or apparently null,
+         * just the next node.  But if cancelled or apparently null,
          * traverse backwards from tail to find the actual
-         * non-cancelled successor
+         * non-cancelled successor.
          */
         Node s = node.next;
-        if(s == null || s.waitStatus > 0){
+        logger.info("unparkSuccessor s:" + node + Thread.currentThread().getName());
+        if (s == null || s.waitStatus > 0) {         // 2. 这里若在 Sync Queue 里面存在想要获取 lock 的节点,则一定需要唤醒一下(跳过取消的节点)
             s = null;
-            for(Node t = tail; t != null && t != node; t = t.prev){
-                if(t.waitStatus <= 0){
+            for (Node t = tail; t != null && t != node; t = t.prev)
+                if (t.waitStatus <= 0)              // 3. 找到 queue 里面最前面想要获取 Lock 的节点
                     s = t;
-                }
-            }
         }
-
-        if(s != null){
+        logger.info("unparkSuccessor s:"+s);
+        if (s != null)
             LockSupport.unpark(s.thread);
-        }
     }
 
     /**
@@ -722,57 +721,51 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
 
 
     /**
-     * Cancels an ongoing attempt to acquire
+     * Cancels an ongoing attempt to acquire.
      *
      * @param node the node
      */
-    private void cancelAcquire(Node node){
+    /**
+     * 清除因中断/超时而放弃获取lock的线程节点(此时节点在 Sync Queue 里面)
+     */
+    private void cancelAcquire(Node node) {
         // Ignore if node doesn't exist
-        if(node == null){
+        if (node == null)
             return;
-        }
 
-        node.thread = null;
+        node.thread = null;                 // 1. 线程引用清空
 
         // Skip cancelled predecessors
         Node pred = node.prev;
-        while(pred.waitStatus > 0){
+        while (pred.waitStatus > 0)       // 2.  若前继节点是 CANCELLED 的, 则也一并清除
             node.prev = pred = pred.prev;
-        }
 
-        /**
-         * predNext is the apparent node to unsplice. CASes below will
-         * fail if not, in which case, we lost race vs another cancel
-         * or signal, so no further action is necessary
-         */
-        Node predNext = pred.next;
+        // predNext is the apparent node to unsplice. CASes below will
+        // fail if not, in which case, we lost race vs another cancel
+        // or signal, so no further action is necessary.
+        Node predNext = pred.next;         // 3. 这里的 predNext也是需要清除的(只不过在清除时的 CAS 操作需要 它)
 
-        /**
-         * Can use unconditional write instead of CAS here.
-         * After this atomic step, other Nodes can skip past us,
-         * Before, we are free of interference from other threads
-         */
-        node.waitStatus = Node.CANCELLED;
+        // Can use unconditional write instead of CAS here.
+        // After this atomic step, other Nodes can skip past us.
+        // Before, we are free of interference from other threads.
+        node.waitStatus = Node.CANCELLED; // 4. 标识节点需要清除
 
-        // If we are the tail, remove ourselves
-        if(node == tail && compareAndSetTail(node, pred)){
-            compareAndSetNext(pred, predNext, null);
-        }else{
-            /**
-             * If successor needs signal, try to set pred's next-link
-             * so it will get one. Otherwise wake it up to propagate
-             */
+        // If we are the tail, remove ourselves.
+        if (node == tail && compareAndSetTail(node, pred)) { // 5. 若需要清除额节点是尾节点, 则直接 CAS pred为尾节点
+            compareAndSetNext(pred, predNext, null);    // 6. 删除节点predNext
+        } else {
+            // If successor needs signal, try to set pred's next-link
+            // so it will get one. Otherwise wake it up to propagate.
             int ws;
-            if(pred != head &&
-                    ((ws = pred.waitStatus) == Node.SIGNAL ||
-                            (ws <= 0 && compareAndSetWaitStatus(pred, ws, Node.SIGNAL))) &&
-                    pred.thread != null){
+            if (pred != head &&
+                    ((ws = pred.waitStatus) == Node.SIGNAL || // 7. 后继节点需要唤醒(但这里的后继节点predNext已经 CANCELLED 了)
+                            (ws <= 0 && compareAndSetWaitStatus(pred, ws, Node.SIGNAL))) && // 8. 将 pred 标识为 SIGNAL
+                    pred.thread != null) {
                 Node next = node.next;
-                if(next != null && next.waitStatus <= 0){
+                if (next != null && next.waitStatus <= 0) // 8. next.waitStatus <= 0 表示 next 是个一个想要获取lock的节点
                     compareAndSetNext(pred, predNext, next);
-                }
-            }else{
-                unparkSuccessor(node);
+            } else {
+                unparkSuccessor(node); // 若 pred 是头节点, 则此刻可能有节点刚刚进入 queue ,所以进行一下唤醒
             }
 
             node.next = node; // help GC
@@ -843,11 +836,15 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
     /**
      * Convenience method to park and then check if interrupted
      *
-     * @return {@code true} if interrupt
+     * @return {@code true} if interrupted
      */
-    private final boolean parkAndCheckInterrupt(){
+    /**
+     * 中断当前线程, 并且返回此次的唤醒是否是通过中断
+     */
+    private final boolean parkAndCheckInterrupt() {
         LockSupport.park(this);
-        return Thread.interrupted();
+        logger.info(Thread.currentThread().getName() + " " + "parkAndCheckInterrupt , ThreadName:" + Thread.currentThread().getName());
+        return Thread.interrupted(); //  Thread.interrupted() 会清除中断标识, 并返上次的中断标识
     }
 
 
@@ -870,6 +867,10 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      */
     /**
      * 不支持中断的获取锁
+     * 主逻辑:
+     *  1. 当当前节点的前继节点是head节点时先 tryAcquire获取一下锁, 成功的话设置新 head, 返回
+     *  2. 第一步不成功, 检测是否需要sleep, 需要的话就 sleep, 等待前继节点在释放lock时唤醒 或通过中断来唤醒
+     *  3. 整个过程可能需要blocking nonblocking 几次
      */
     final boolean acquireQueued(final Node node, int arg){
         boolean failed = true;
@@ -900,26 +901,26 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * @param arg the acquire argument
      */
     private void doAcquireInterruptibly(int arg) throws InterruptedException{
-        final Node node = addWaiter(Node.EXCLUSIVE);
+        final Node node = addWaiter(Node.EXCLUSIVE);  // 1. 将当前的线程封装成 Node 加入到 Sync Queue 里面
         boolean failed = true;
         try {
             for(;;){
-                final Node p = node.predecessor();
-                if(p == head && tryAcquire(arg)){
+                final Node p = node.predecessor(); // 2. 获取当前节点的前继节点 (当一个n在 Sync Queue 里面, 并且没有获取 lock 的 node 的前继节点不可能是 null)
+                if(p == head && tryAcquire(arg)){  // 3. 判断前继节点是否是head节点(前继节点是head, 存在两种情况 (1) 前继节点现在占用 lock (2)前继节点是个空节点, 已经释放 lock, node 现在有机会获取 lock); 则再次调用 tryAcquire尝试获取一下
                     setHead(node);
                     p.next = null; // help GC
                     failed = false;
                     return;
                 }
 
-                if(shouldParkAfterFailedAcquire(p, node) &&
-                        parkAndCheckInterrupt()){
-                    throw new InterruptedException();
+                if(shouldParkAfterFailedAcquire(p, node) && // 4. 调用 shouldParkAfterFailedAcquire 判断是否需要中断(这里可能会一开始 返回 false, 但在此进去后直接返回 true(主要和前继节点的状态是否是 signal))
+                        parkAndCheckInterrupt()){           // 5. 现在lock还是被其他线程占用 那就睡一会, 返回值判断是否这次线程的唤醒是被中断唤醒
+                    throw new InterruptedException();       // 6. 线程此时唤醒是通过线程中断, 则直接抛异常
                 }
             }
         }finally {
-            if(failed){
-                cancelAcquire(node);
+            if(failed){                 // 7. 在整个获取中出错(比如线程中断)
+                cancelAcquire(node);    // 8. 清除 node 节点(清除的过程是先给 node 打上 CANCELLED标志, 然后再删除)
             }
         }
     }
@@ -936,35 +937,35 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
             return false;
         }
 
-        final long deadline = System.nanoTime() + nanosTimeout;
-        final Node node = addWaiter(Node.EXCLUSIVE);
+        final long deadline = System.nanoTime() + nanosTimeout; // 0. 计算截至时间
+        final Node node = addWaiter(Node.EXCLUSIVE);  // 1. 将当前的线程封装成 Node 加入到 Sync Queue 里面
         boolean failed = true;
 
         try {
             for(;;){
-                final Node p = node.predecessor();
-                if(p == head && tryAcquire(arg)){
+                final Node p = node.predecessor(); // 2. 获取当前节点的前继节点 (当一个n在 Sync Queue 里面, 并且没有获取 lock 的 node 的前继节点不可能是 null)
+                if(p == head && tryAcquire(arg)){  // 3. 判断前继节点是否是head节点(前继节点是head, 存在两种情况 (1) 前继节点现在占用 lock (2)前继节点是个空节点, 已经释放 lock, node 现在有机会获取 lock); 则再次调用 tryAcquire尝试获取一下
                     setHead(node);
                     p.next = null; // help GC
                     failed = false;
                     return true;
                 }
 
-                nanosTimeout = deadline - System.nanoTime();
-                if(nanosTimeout <= 0L){
+                nanosTimeout = deadline - System.nanoTime(); // 4. 计算还剩余的时间
+                if(nanosTimeout <= 0L){                      // 5. 时间超时, 直接返回
                     return false;
                 }
-                if(shouldParkAfterFailedAcquire(p, node) &&
-                        nanosTimeout > spinForTimeoutThreshold){
+                if(shouldParkAfterFailedAcquire(p, node) && // 6. 调用 shouldParkAfterFailedAcquire 判断是否需要中断(这里可能会一开始 返回 false, 但在此进去后直接返回 true(主要和前继节点的状态是否是 signal))
+                        nanosTimeout > spinForTimeoutThreshold){ // 7. 若没超时, 并且大于spinForTimeoutThreshold, 则线程 sleep(小于spinForTimeoutThreshold, 则直接自旋, 因为效率更高 调用 LockSupport 是需要开销的)
                     LockSupport.parkNanos(this, nanosTimeout);
                 }
-                if(Thread.interrupted()){
+                if(Thread.interrupted()){                           // 8. 线程此时唤醒是通过线程中断, 则直接抛异常
                     throw new InterruptedException();
                 }
             }
         }finally {
-            if(failed){
-                cancelAcquire(node);
+            if(failed){                 // 9. 在整个获取中出错(比如线程中断/超时)
+                cancelAcquire(node);    // 10. 清除 node 节点(清除的过程是先给 node 打上 CANCELLED标志, 然后再删除)
             }
         }
     }
@@ -1304,10 +1305,10 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * @throws InterruptedException if the current thread is interrupted
      */
     public final boolean tryAcquireNanos(int arg, long nanosTimeout) throws InterruptedException{
-        if(Thread.interrupted()){
+        if(Thread.interrupted()){                   // 1. 判断线程是否被终止
             throw new InterruptedException();
         }
-        return tryAcquire(arg) || doAcquireNanos(arg, nanosTimeout);
+        return tryAcquire(arg) || doAcquireNanos(arg, nanosTimeout); // 2. 尝试性的获取锁, 获取锁不成功, 直接加入到 Sync Queue 里面(这里的加入操作在doAcquireNanos里面)
     }
 
     /**
