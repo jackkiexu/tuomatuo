@@ -1322,10 +1322,10 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * @return the value returned from {@link #tryRelease(int)}
      */
     public final boolean release(int arg){
-        if(tryRelease(arg)){
+        if(tryRelease(arg)){   // 1. 调用子类, 若完全释放好, 则返回true(这里有lock重复获取)
             Node h = head;
-            if(h != null && h.waitStatus != 0){
-                unparkSuccessor(h);
+            if(h != null && h.waitStatus != 0){ // 2. h.waitStatus !=0 其实就是 h.waitStatus < 0 后继节点需要唤醒
+                unparkSuccessor(h);   // 3. 唤醒后继节点
             }
             return true;
         }
