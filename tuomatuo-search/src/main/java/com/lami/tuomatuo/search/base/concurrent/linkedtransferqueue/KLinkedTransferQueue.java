@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.util.AbstractQueue;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TransferQueue;
 import java.util.concurrent.locks.LockSupport;
@@ -20,6 +21,40 @@ public class KLinkedTransferQueue<E> extends AbstractQueue<E> implements Transfe
     private static final Logger logger = Logger.getLogger(KLinkedTransferQueue.class);
 
     private static final long serialVersionUID = -3223113410248163686L;
+
+    /** True if on multiprocessor */
+    private static final boolean MP = Runtime.getRuntime().availableProcessors() > 1;
+
+    /**
+     * The number of times to spin (with randomly interspersed calls
+     * or Thread yield) on multiprocessor blocking when a node
+     * is apparently the first waiter in the queue. See above for
+     * explanation. Must be a power of two. The value is empirically
+     * derived -- it works pretty well across a variety of processors
+     * derived -- it works pretty well across a variety of processors,
+     * number of CPU, and OSes.
+     */
+    private static final int FRONT_SPINS = 1 << 7;
+
+    /**
+     * The number of time to spin before blocking when a node is
+     * preceded by another node that is apparently spinning. Also
+     * servers as an increment to FRONT_SPINS on phase changes, and as
+     * base average frquency for yielding during spins. Must be a
+     * power of two
+     */
+    private static final int CHAINED_SPINS = FRONT_SPINS >>> 1;
+
+    /**
+     * The maximum number of estimated removal failure (sweepVotes)
+     * to tolerate before sweeping through the queue unlinking
+     * cancelled nodes that were not unlinked upon initial
+     * removal. See above for explanation. The value must be at least
+     * two to avoid useless sweeps when removing trailing nodes
+     */
+    static final int SWEEP_THRESHOLD = 32;
+
+
 
     /**
      * Creates an initially empty {@code KLinkedTransferQueue}
@@ -336,9 +371,167 @@ public class KLinkedTransferQueue<E> extends AbstractQueue<E> implements Transfe
         }
     }
 
-//    private E await
+    /**
+     * Spins/yeilds/blocks until node s is matched or caller gives up
+     *
+     * @param s the waiting node
+     * @param pred the predecessor of s, or s itself if it has no
+     *             predecessor, or null if uknown (the null case does not occur
+     *             in any current calls but may in possible future extension)
+     * @param e the comparison value for checking match
+     * @param timed if true, wait only until timeout elapses
+     * @param nanos timeout in nanosecs, used only if timed is true
+     * @return matched item, or e if unmatched on interrupt or timeout
+     */
+    private E awaitMatch(Node s, Node pred, E e, boolean timed, long nanos){
+        final long deadline = timed? System.nanoTime() + nanos : 0L;
+        Thread w = Thread.currentThread();
+        int spins = -1; // initialized after first item and cancel checks
+        ThreadLocalRandom randomYields = null; // bound if needed
+
+        for(;;){
+            Object item = s.item;
+            if(item != e){      // matched
+                // assert item != s
+                s.forgetContents();     // avoid garbage
+                return KLinkedTransferQueue.<E>cast(item);
+            }
+
+            if((w.isInterrupted() || (timed && nanos <= 0)) &&
+                    s.casItem(e, s)){ // cancel
+                unsplice(pred, s);
+                return e;
+            }
+
+            if(spins < 0){  // establish spins at/near front
+                if((spins = spinsFor(pred, s.isData)) > 0){
+                    randomYields = ThreadLocalRandom.current();
+                }
+            }
+            else if(spins > 0){
+                --spins;
+                if(randomYields.nextInt(CHAINED_SPINS) == 0){
+                    Thread.yield(); // occasionally yield
+                }
+            }
+            else if(s.waiter == null){
+                s.waiter = w; // request unpark then recheck
+            }
+            else if(timed){
+                nanos = deadline - System.nanoTime();
+                if(nanos > 0L){
+                    LockSupport.parkNanos(this, nanos);
+                }
+            }
+            else {
+                LockSupport.park(this);
+            }
+        }
+    }
 
 
+    /**
+     * Returns spin/tield value for a node with given predecessor and
+     * data mode. See above for explanation.
+     */
+    private static int spinsFor(Node pred, boolean haveData){
+        if(MP && pred != null){
+            if(pred.isData != haveData){        // phase change
+                return FRONT_SPINS + CHAINED_SPINS;
+            }
+            if(pred.isMatched()){               // probably at front
+                return FRONT_SPINS;
+            }
+            if(pred.waiter == null){          // pred apparently spining
+                return CHAINED_SPINS;
+            }
+        }
+        return 0;
+    }
+
+
+    /************************* Traversal methods ***************************/
+
+    /**
+     * Returns the successor of p, or the head node if p.next has been
+     * linked to self, which will only be true if traversing with a
+     * stale pointer that is now off the list
+     */
+    final Node succ(Node p){
+        Node next = p.next;
+        return (p == next) ? head : next;
+    }
+
+    /**
+     * Returns the first unmateched node of the given mode, or null if
+     * none. Used by methods isEmpty, hasWaitingConsumer
+     */
+    private Node firstOfMode(boolean isData){
+        for(Node p = head; p != null; p = succ(p)){
+            if(!p.isMatched()){
+                return (p.isData == isData)? p : null;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Version of firstOfMode used by Spliterator. Callers must
+     * recheck if the returned node's item field is null or
+     * self-linked before using
+     * @return
+     */
+    final Node firstDataNode(){
+        for(Node p = head; p != null;){
+            Object item = p.item;
+            if(p.isData){
+                if(item != null && item != p){
+                    return p;
+                }
+            }
+            else if(item == null){
+                break;
+            }
+
+            if(p == (p = p.next)){
+                p = head;
+            }
+        }
+        return  null;
+    }
+
+    /**
+     * Returns the item in the first unmatched node with isData; or
+     * null if none. Used by peek
+     */
+    private E firstDataItem(){
+       for(Node p = head; p != null; p = succ(p)){
+           Object item = p.item;
+           if(p.isData){
+               if(item != null && item != p){
+                   return KLinkedTransferQueue.<E>cast(item);
+               }
+           }
+           else if(item == null){
+               return null;
+           }
+       }
+        return null;
+    }
+
+    /**
+     * Traverses and counts unmatched nodes of the given mode.
+     * Used by method size and getWaitingConsumerCount
+     */
+    private int countOfMode(boolean data){
+        return 0;
+    }
+
+
+    /**************** Removal methods  *****************************/
+    final void unsplice(Node pred, Node s){
+
+    }
 
     // Unsafe mechanics
     private static final Unsafe unsafe;

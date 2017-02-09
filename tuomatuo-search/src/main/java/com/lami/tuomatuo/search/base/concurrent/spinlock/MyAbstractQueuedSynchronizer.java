@@ -378,8 +378,10 @@ public abstract class MyAbstractQueuedSynchronizer extends AbstractOwnableSynchr
 
     /**
      * Wakes up node's successor, if one exists.
+     * 唤醒 node 的后继节点
+     * 这里有个注意点: 唤醒时会将当前node的标识归位为 0
+     * 等于当前节点标识为 的流转过程: 0(刚加入queue) -> signal (被后继节点要求在释放时需要唤醒) -> 0 (进行唤醒后继节点)
      *
-     * @param node the node
      */
     private void unparkSuccessor(Node node) {
         logger.info("unparkSuccessor node:" + node + Thread.currentThread().getName());
@@ -390,7 +392,7 @@ public abstract class MyAbstractQueuedSynchronizer extends AbstractOwnableSynchr
          */
         int ws = node.waitStatus;
         if (ws < 0)
-            compareAndSetWaitStatus(node, ws, 0);
+            compareAndSetWaitStatus(node, ws, 0);       // 1. 清除前继节点的标识
 
         /*
          * Thread to unpark is held in successor, which is normally
@@ -400,10 +402,10 @@ public abstract class MyAbstractQueuedSynchronizer extends AbstractOwnableSynchr
          */
         Node s = node.next;
         logger.info("unparkSuccessor s:" + node + Thread.currentThread().getName());
-        if (s == null || s.waitStatus > 0) {
+        if (s == null || s.waitStatus > 0) {         // 2. 这里若在 Sync Queue 里面存在想要获取 lock 的节点,则一定需要唤醒一下(跳过取消的节点)
             s = null;
             for (Node t = tail; t != null && t != node; t = t.prev)
-                if (t.waitStatus <= 0)
+                if (t.waitStatus <= 0)              // 3. 找到 queue 里面最前面想要获取 Lock 的节点
                     s = t;
         }
         logger.info("unparkSuccessor s:"+s);
@@ -486,44 +488,47 @@ public abstract class MyAbstractQueuedSynchronizer extends AbstractOwnableSynchr
      *
      * @param node the node
      */
+    /**
+     * 清除因中断/超时而放弃获取lock的线程节点(此时节点在 Sync Queue 里面)
+     */
     private void cancelAcquire(Node node) {
         // Ignore if node doesn't exist
         if (node == null)
             return;
 
-        node.thread = null;
+        node.thread = null;                 // 1. 线程引用清空
 
         // Skip cancelled predecessors
         Node pred = node.prev;
-        while (pred.waitStatus > 0)
+        while (pred.waitStatus > 0)       // 2.  若前继节点是 CANCELLED 的, 则也一并清除
             node.prev = pred = pred.prev;
 
         // predNext is the apparent node to unsplice. CASes below will
         // fail if not, in which case, we lost race vs another cancel
         // or signal, so no further action is necessary.
-        Node predNext = pred.next;
+        Node predNext = pred.next;         // 3. 这里的 predNext也是需要清除的(只不过在清除时的 CAS 操作需要 它)
 
         // Can use unconditional write instead of CAS here.
         // After this atomic step, other Nodes can skip past us.
         // Before, we are free of interference from other threads.
-        node.waitStatus = Node.CANCELLED;
+        node.waitStatus = Node.CANCELLED; // 4. 标识节点需要清除
 
         // If we are the tail, remove ourselves.
-        if (node == tail && compareAndSetTail(node, pred)) {
-            compareAndSetNext(pred, predNext, null);
+        if (node == tail && compareAndSetTail(node, pred)) { // 5. 若需要清除额节点是尾节点, 则直接 CAS pred为尾节点
+            compareAndSetNext(pred, predNext, null);    // 6. 删除节点predNext
         } else {
             // If successor needs signal, try to set pred's next-link
             // so it will get one. Otherwise wake it up to propagate.
             int ws;
             if (pred != head &&
-                    ((ws = pred.waitStatus) == Node.SIGNAL ||
-                            (ws <= 0 && compareAndSetWaitStatus(pred, ws, Node.SIGNAL))) &&
+                    ((ws = pred.waitStatus) == Node.SIGNAL || // 7. 后继节点需要唤醒(但这里的后继节点predNext已经 CANCELLED 了)
+                            (ws <= 0 && compareAndSetWaitStatus(pred, ws, Node.SIGNAL))) && // 8. 将 pred 标识为 SIGNAL
                     pred.thread != null) {
                 Node next = node.next;
-                if (next != null && next.waitStatus <= 0)
+                if (next != null && next.waitStatus <= 0) // 8. next.waitStatus <= 0 表示 next 是个一个想要获取lock的节点
                     compareAndSetNext(pred, predNext, next);
             } else {
-                unparkSuccessor(node);
+                unparkSuccessor(node); // 若 pred 是头节点, 则此刻可能有节点刚刚进入 queue ,所以进行一下唤醒
             }
 
             node.next = node; // help GC
@@ -581,10 +586,13 @@ public abstract class MyAbstractQueuedSynchronizer extends AbstractOwnableSynchr
      *
      * @return {@code true} if interrupted
      */
+    /**
+     * 中断当前线程, 并且返回此次的唤醒是否是通过中断
+     */
     private final boolean parkAndCheckInterrupt() {
         LockSupport.park(this);
         logger.info(Thread.currentThread().getName() + " " + "parkAndCheckInterrupt , ThreadName:" + Thread.currentThread().getName());
-        return Thread.interrupted();
+        return Thread.interrupted(); //  Thread.interrupted() 会清除中断标识, 并返上次的中断标识
     }
 
     /*

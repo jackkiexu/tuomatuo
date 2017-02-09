@@ -10,7 +10,9 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * A reentrant mutual exlusion {@link "Lock} with the same basic
+ * http://www.cnblogs.com/go2sea/p/5627539.html
+ *
+ * A reentrant mutual exclusion {@link "Lock} with the same basic
  * behavior and semantics as the implicit monitor lock accessed using
  * {@code synchronized} methods and statements, but with extended
  * capabilities
@@ -28,13 +30,13 @@ import java.util.concurrent.locks.ReentrantLock;
  * <p>
  *     The constructor for this class accepts an optional
  *     <em>fairness</em> parameter, When set {@code true}, under
- *     contenttion, locks facor granting access to the longest-waiting
+ *     contention, locks factor granting access to the longest-waiting
  *     thread. Otherwise this lock does not guarantee any particular
  *     access order. Program using fair locks accessed by many threads
- *     may idsplay lower overall throughput (i.e are slower, often much
+ *     may display lower overall throughput (i.e are slower, often much
  *     slower) than those using the default setting, but have smaller
  *     variances in times to obtain locks and guarantee lack of
- *     srarvation, Note however, that fairness of locks does not guarantee
+ *     starvation, Note however, that fairness of locks does not guarantee
  *     fairness of thread scheduling, Thus, one of may threads using a
  *     fair lock many obtain it multiple times in succession while other
  *     active threads are not progressing and not currently holding the
@@ -72,7 +74,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *     In addition to implementation the {@link "Lock} interface, this
  *     class defines a number of {@code public} and {@code protected}
  *     methods for inspecting the state of the lock. Some of these
- *     methods are only useful for instrumention and monitoring
+ *     methods are only useful for instrumentation and monitoring
  * </p>
  *
  * <p>
@@ -94,12 +96,16 @@ public class KReentrantLock {
     private static final long serialVersionUID = 7373984872572414699L;
 
     /** Synchronizer providing all implementation mechanics */
+    /** 代理 ReentrantLock  来进行 lock 的获取与释放*/
     private final Sync sync;
 
     /**
      * Base of synchronization control for this lock. Subclassed
      * into fair and nonfair version below, Uses AQS state to
      * represent the number of holds on the lock
+     */
+    /**
+     *  通过继承 Sync 来实现 公平与非公平
      */
     abstract static class Sync extends KAbstractQueuedSynchronizer{
         private static final long serialVersionUID = -5179523762034025860L;
@@ -116,40 +122,49 @@ public class KReentrantLock {
          * @param acquires
          * @return
          */
+        /**
+         * 非公平的尝试获取 lock
+         */
         final boolean nonfairTryAcquire(int acquires){
-            final Thread current = Thread.currentThread();
-            int c = getState();
-            if(c == 0){
-                if(compareAndSetState(0, acquires)){
-                    setExclusiveOwnerThread(current);
-                    return true;
+            final Thread current = Thread.currentThread();  // 1. 获取当前的线程
+            int c = getState();                             // 2. 获取 aqs 中的 state(代表 独占锁 是否被获取)
+            if(c == 0){                                     // 3. c == 0 独占锁 没有被人获取
+                if(compareAndSetState(0, acquires)){        // 4. CAS 改变 state 获取锁(这里有可能有竞争, 有可能失败)
+                    setExclusiveOwnerThread(current);       // 5. 获取 lock 成功, 设置获取锁的独占线程
+                    return true;                          // 6. 直接返回 true
                 }
             }
-            else if(current == getExclusiveOwnerThread()){
-                int nextc = c + acquires;
+            else if(current == getExclusiveOwnerThread()){// 7. 判断是否现在获取 独占锁的线程是本线程
+                int nextc = c + acquires;                 // 8. 在 state 计数加1(重入获取锁)
                 if(nextc < 0){ // overflow
                     throw new Error("Maximum lock count exceeded");
                 }
-                setState(nextc);
+                setState(nextc);                           // 9. 这里因为是已经获取 lock 所以不考虑并发
                 return true;
             }
             return false;
         }
 
+        /**
+         * 释放锁 从 AQS 里面获取到的值
+         */
         protected final boolean tryRelease(int releases){
-            int c = getState() - releases;
-            if(Thread.currentThread() != getExclusiveOwnerThread()){
+            int c = getState() - releases;                          // 1. 释放 releases (因为支持重入, 所以这里的 c 可能不为 0)
+            if(Thread.currentThread() != getExclusiveOwnerThread()){// 2. 判断当前的线程是否是获取独占锁的线程
                 throw new IllegalMonitorStateException();
             }
             boolean free = false;
-            if(c == 0){
+            if(c == 0){                                             // 3. lock 完全释放
                 free = true;
-                setExclusiveOwnerThread(null);
+                setExclusiveOwnerThread(null);                      // 4. 置空 exclusiveOwnerThread
             }
             setState(c);
             return free;
         }
 
+        /**
+         *  判断当前的线程是否是获取 独占锁的线程
+         */
         protected final boolean isHeldExclusively(){
             /**
              * While we must in general read state before owner,
@@ -163,14 +178,23 @@ public class KReentrantLock {
         }
 
         /********************** Methods relayed from outer class **************************/
+        /**
+         * 获取 独占锁的获取者
+         */
         final Thread getOwner(){
             return getState() == 0 ? null : getExclusiveOwnerThread();
         }
 
+        /**
+         * 返回 锁被获取的次数
+         */
         final int getHoldCount(){
             return isHeldExclusively()? getState() : 0;
         }
 
+        /**
+         * 判断锁是否被获取了
+         */
         final boolean isLocked(){
             return getState() != 0;
         }
@@ -187,6 +211,12 @@ public class KReentrantLock {
     /**
      * Sync object for non-fair locks
      */
+    /**
+     * 继承 Sync 实现非公平
+     * 公不公平的获取锁的区别:
+     *      1. 非公平-> 在获取时先cas改变一下 AQS 的state值, 改变成功就获取, 不然就加入到  AQS 的 Sync Queue 里面
+     *      2. 每次获取lock之前判断是否 AQS 里面的 Sync Queue 是否有等待获取的线程
+     */
     static final class NonfairSync extends Sync{
         private static final long serialVersionUID = 7316153563782823691L;
 
@@ -195,14 +225,20 @@ public class KReentrantLock {
          * acquire on failure
          */
         @Override
+        /**
+         * 获取 lock
+         */
         void lock() {
-            if(compareAndSetState(0, 1)){
-                setExclusiveOwnerThread(Thread.currentThread());
+            if(compareAndSetState(0, 1)){   // 先cas改变一下 state 成功就表示获取
+                setExclusiveOwnerThread(Thread.currentThread()); // 获取成功设置 exclusiveOwnerThread
             }else{
-                acquire(1);
+                acquire(1); // 获取不成功, 调用 AQS 的 acquire 进行获取
             }
         }
 
+        /**
+         * 尝试获取锁
+         */
         protected final boolean tryAcquire(int acquires){
             return nonfairTryAcquire(acquires);
         }
@@ -210,6 +246,9 @@ public class KReentrantLock {
 
     /**
      * Sync object for fair locks
+     */
+    /**
+     * 继承 Sync的公平的方式获取锁
      */
     static final class FairSync extends Sync {
 
@@ -224,17 +263,20 @@ public class KReentrantLock {
          * Fair version of tryAcquire. Don't grant access unless
          * recursive call or no waiters or is first
          */
+        /**
+         * 公平的方式获取 锁
+         */
         protected final boolean tryAcquire(int acquires){
-            final Thread current = Thread.currentThread();
+            final Thread current = Thread.currentThread();          // 1. 获取当前的 线程
             int c = getState();
-            if(c == 0){
-                if(!hasQueuedPredecessors() && compareAndSetState(0, acquires)){
-                    setExclusiveOwnerThread(current);
+            if(c == 0){                                             // 2. c == 0 -> 现在还没有线程获取锁
+                if(!hasQueuedPredecessors() && compareAndSetState(0, acquires)){    // 3. 判断 AQS Sync Queue 里面是否有线程等待获取 锁,若没有 直接 CAS 获取lock
+                    setExclusiveOwnerThread(current);               // 4. 获取 lock 成功 设置 exclusiveOwnerThread
                     return true;
                 }
             }
-            else if(current == getExclusiveOwnerThread()){
-                int nextc = c + acquires;
+            else if(current == getExclusiveOwnerThread()){       // 5. 已经有线程获取锁, 判断是否是当前的线程
+                int nextc = c + acquires;                        // 6. 下面是进行lock 的重入, 就是计数器加 1
                 if(nextc < 0){
                     throw new Error("Maximum lock count exceeded");
                 }
@@ -249,6 +291,7 @@ public class KReentrantLock {
      * Creates an instance of {@code KReentrantLock}
      * This is equivalent to using {@code KReentrantLock(false)}
      */
+    /** 默认的使用非公平的方式创建一个  KReentrantLock */
     public KReentrantLock() {
         sync = new NonfairSync();
     }
@@ -259,6 +302,7 @@ public class KReentrantLock {
      *
      * @param fair {@code true} if this lock should use a fair ordering policy
      */
+    /** 创建 ReentrantLock 通过 fair 指定是否使用公平模式 */
     public KReentrantLock(boolean fair){
         sync = fair ? new FairSync() : new NonfairSync();
     }
@@ -283,6 +327,9 @@ public class KReentrantLock {
      *     at which time the lock hold count is set to one.
      * </p>
      *
+     */
+    /**
+     * 获取锁
      */
     public void lock(){
         sync.lock();
@@ -330,6 +377,9 @@ public class KReentrantLock {
      *
      * @throws InterruptedException if the current thread is interrupted
      */
+    /**
+     * 带中断的获取锁(被其他线程中断后就直接返回)
+     */
     public void lockInterruptibly() throws InterruptedException{
         sync.acquireInterruptibly(1);
     }
@@ -344,8 +394,8 @@ public class KReentrantLock {
      *     lock hold count to one. Even when this lock has been set to use a
      *     fair ordering policy, a call to {@code tryLock()} <em>will</em>
      *     immediately acquire the lock if it available, whether or not
-     *     other threads are currentlyt waiting for the lock
-     *     This barging bahavior can be useful in certain
+     *     other threads are currently waiting for the lock
+     *     This barging behavior can be useful in certain
      *     circumstances, event though it breaks fairness, If you want to honor
      *     the fairness setting for this lock, then use
      *     {@link #"tryLock(timeout, TimeUnit)} tryLock(0, TimeUnit.SECONDS)
@@ -365,6 +415,9 @@ public class KReentrantLock {
      * @return {@code true} if the lock was free and was acquired by the
      *                  current thread, or the lock was already held by the current
      *                  thread; and {@code false} otherwise
+     */
+    /**
+     * 尝试性的获取锁
      */
     public boolean tryLock(){
         return sync.nonfairTryAcquire(1);
@@ -430,7 +483,7 @@ public class KReentrantLock {
      *
      * <p>
      *     In this implementation, as this method is an explicit
-     *     interruption point, preference is giben to responding to the
+     *     interruption point, preference is given to responding to the
      *     interrupt over normal or reentrant acquisition of the lock, and
      *     over reporting the elapse of the waiting time
      * </p>
@@ -443,6 +496,9 @@ public class KReentrantLock {
      *              the lock could be acquired
      * @throws InterruptedException if the current thread is interrupted
      * @throws NullPointerException if the time unit is null
+     */
+    /**
+     * 带中断 及 timeout 的获取锁 (线程被中断或获取超时就直接 return )
      */
     public boolean tryLock(long timeout, TimeUnit unit) throws InterruptedException{
         return sync.tryAcquireNanos(1, unit.toNanos(timeout));
@@ -461,6 +517,9 @@ public class KReentrantLock {
      * @throws  IllegalMonitorStateException if the current thread does not
      *          hold this lock
      *
+     */
+    /**
+     * 释放 lock
      */
     public void unlock(){
         sync.release(1);
@@ -539,8 +598,11 @@ public class KReentrantLock {
      *     </pre>
      * </p>
      *
-     * @return the number of holds on this lock by the curent thread,
+     * @return the number of holds on this lock by the current thread,
      *          or zero if this lock is not held by the current thread.
+     */
+    /**
+     * lock 被获取的次数
      */
     public int getHoldCount(){
         return sync.getHoldCount();
@@ -597,6 +659,9 @@ public class KReentrantLock {
      * @return {@code true} if current thread holds this lock and
      *          {@code false} otherwise
      */
+    /**
+     * lock是否被当前的线程获取
+     */
     public boolean isHeldByCurrentThread(){
         return sync.isHeldExclusively();
     }
@@ -610,6 +675,9 @@ public class KReentrantLock {
      * @return {@code true} if any thread holds this lock and
      *          {@code false} otherwise
      */
+    /**
+     * 锁是否被获取
+     */
     public boolean isLocked(){
         return sync.isLocked();
     }
@@ -619,6 +687,9 @@ public class KReentrantLock {
      * Returns {@code true} if this lock has fairness set true
      *
      * @return {@code true} if this lock has fairness set true
+     */
+    /**
+     * 是否是公平模式
      */
     public final boolean isFair(){
         return sync instanceof FairSync;
@@ -637,6 +708,9 @@ public class KReentrantLock {
      *
      * @return the owner, or {@code null} if not owned
      */
+    /**
+     * 获取持有lock的线程
+     */
     protected Thread getOwer(){
         return sync.getOwner();
     }
@@ -650,6 +724,9 @@ public class KReentrantLock {
      *
      * @return {@code true} if there may be other threads waiting to
      *                  acquire the lock
+     */
+    /**
+     * 是否有线程等待获取lock
      */
     public final boolean hasQueuedThreads(){
         return sync.hasQueuedThreads();
@@ -666,6 +743,9 @@ public class KReentrantLock {
      * @return {@code true} if the given thread is queued waiting for this lock
      * @throws NullPointerException if the thread is null
      */
+    /**
+     * 当前的线程是否在 AQS Sync Queue 里面等待获取lock
+     */
     public final boolean hasQueuedThread(Thread thread){
         return sync.isQueued(thread);
     }
@@ -679,6 +759,9 @@ public class KReentrantLock {
      * control.
      *
      * @return the estimated number of threads waiting for this lock
+     */
+    /**
+     * AQS Sync Queue 里面等待获取锁的线程的长度
      */
     public final int getQueueLength(){
         return sync.getQueueLength();
@@ -694,6 +777,9 @@ public class KReentrantLock {
      * more extensive monitoring facilities.
      *
      * @return the collection of threads
+     */
+    /**
+     * AQS Sync Queue 里面等待获取锁的线程
      */
     protected Collection<Thread> getQueuedThreads(){
        return sync.getQueuedThreads();
@@ -713,6 +799,9 @@ public class KReentrantLock {
      * @throws IllegalArgumentException if the given condition is
      *          not associated with this lock
      * @throws NullPointerException if the condition is null
+     */
+    /**
+     * 是否有线程在 Condition Queue 里面等待获取锁
      */
     public boolean hasWaiters(Condition condition){
         if(condition == null){
@@ -739,6 +828,9 @@ public class KReentrantLock {
      * @throws IllegalArgumentException if the given condition is
      *          not associated with this lock
      * @throws NullPointerException if the condition is null
+     */
+    /**
+     *  Condition Queue 里面等待获取锁的长度
      */
     public int getWaitQueueLength(Condition condition){
         if(condition == null){
@@ -767,6 +859,9 @@ public class KReentrantLock {
      * @throws IllegalArgumentException if the given condition is
      *          not associated with this lock
      * @throws NullPointerException if the condition is null
+     */
+    /**
+     *  Condition Queue 里面等待获取锁的线程
      */
     protected Collection<Thread> getWaitingThreads(Condition condition){
         if(condition == null){
