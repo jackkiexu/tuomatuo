@@ -16,6 +16,7 @@ import java.util.concurrent.locks.LockSupport;
 /**
  * https://docs.oracle.com/javase/specs/jls/se7/html/index.html (第 17 章)
  * http://www.oracle.com/technetwork/java/javase/tech/vmoptions-jsp-140102.html#Options
+ * https://plumbr.eu/handbook/garbage-collection-algorithms-implementations
  *
  * http://www.cnblogs.com/go2sea/p/5618628.html
  * http://ifeve.com/introduce-abstractqueuedsynchronizer/
