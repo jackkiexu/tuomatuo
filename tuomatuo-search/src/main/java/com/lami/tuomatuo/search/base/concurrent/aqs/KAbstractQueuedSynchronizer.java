@@ -27,7 +27,6 @@ import java.util.concurrent.locks.LockSupport;
  *
  * http://www.cs.rochester.edu/wcms/research/systems/high_performance_synch/
  *
- *
  * http://blog.csdn.net/yuenkin/article/details/50867530#comments
  * http://gee.cs.oswego.edu/dl/papers/aqs.pdf
  * http://www.ibm.com/developerworks/cn/java/j-jtp04186/
@@ -305,10 +304,10 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * <p>
      *     The wait queue is a variant of a "CLH" (Craig, Landin, and
      *     Hagersten) lock queue. CLH locks are normally used for
-     *     spinlocks. We insteaduse them for blocking synchronizers, but
+     *     spinlocks. We instead use them for blocking synchronizers, but
      *     use the same basic tactic of holding some of the control
      *     information about a thread in the predecessor of its node. A
-     *     "status" field in each node keeps track of wether a thread
+     *     "status" field in each node keeps track of whether a thread
      *     should block. A node is signalled when its predecessor
      *     release. Each node of the queue otherwise serves as a
      *     specific-notifications-style monitor holding a single waiting
@@ -316,7 +315,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      *     granted locks etc though. A thread may try to acquire if it is
      *     first in the queue. But being first does not guarantee success;
      *     it only gives the right to contend. So the currently released
-     *     contender thread may need to ewwait
+     *     contender thread may need to rewait
      * </p>
      *
      * <p>
@@ -357,7 +356,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      *     algorithms. Since we must poll for cancellation of other
      *     nodes, we can miss noticing whether a cancelled node
      *     is ahead or bebind us. This is dealt with by always unparking
-     *     successors upon cancellation, allowing them to stablizie on
+     *     successors upon cancellation, allowing them to stabilize on
      *     a new predecessor, unless we can identify an uncancelled
      *     predecessor who will carry this responsibility
      * </p>
@@ -380,21 +379,54 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      *     field is used to mark which queue a node is on
      * </p>
      */
+    /**
+     * 代表 Thread 存在于 Sync Queue 与 Condition Queue 的节点
+     */
     static final class Node {
         /** marker to indicate a node is wating in shared mode */
+        /** 标识节点是否是 共享的节点(这样的节点只存在于 Sync Queue 里面) */
         static final Node SHARED = new Node();
         /** marker to indicate a node is waiting in exclusive mode */
+        /** 标识节点是 独占模式 */
         static final Node EXCLUSIVE = null;
 
         /** waitStatus value yto indicate thread has cancelled */
+        /**
+         *  CANCELLED 说明节点已经 取消获取 lock 了(一般是由于 interrupt 或 timeout 导致的)
+         *  很多时候是在 cancelAcquire 里面进行设置这个标识
+         */
         static final int CANCELLED = 1;
+
         /** waitStatus value to indicate successor;s thread needs unparking */
+        /**
+         * SIGNAL 标识当前节点的后继节点需要唤醒(PS: 这个通常是在 独占模式下使用, 在共享模式下有时用 PROPAGATE)
+         * waitStatus的状态变化
+         *      1. 线程刚入 Sync Queue 里面, 发现 独占锁被其他人获取, 则将其前继节点标记为 SIGNAL, 然后再尝试获取一下锁(调用 tryAcquire 方法)
+         *      2. 若 调用 tryAcquire 方法获取失败, 则判断一下是否前继节点被标记为 SIGNAL, 若是的话 直接 block(block前会确保前继节点被标记为SIGNAL, 因为前继节点在进行释放锁时根据是否标记为 SIGNAL 来决定唤醒后继节点与否 <- 这是独占的情况下)
+         *      3. 前继节点使用完lock, 进行释放, 因为自己被标记为 SIGNAL, 所以唤醒其后继节点
+         *
+         *      waitStatus 变化过程:
+         *          1. 独占模式下 0(初始) -> signal(被后继节点标记为release需要唤醒后继节点) -> 0 (等释放好lock, 会恢复到0)
+         *          2. 独占模式 + 使用 Condition 0(初始) -> signal(被后继节点标记为release需要唤醒后继节点) -> 0 (等释放好lock, 会恢复到0)
+         *              其上可能涉及 中断与超时, 只是多了一个 CANCELLED, 当节点变成 CANCELLED, 后就等着被清除
+         *          3. 共享模式: 0(初始) -> PROPAGATE(获取 lock 或release lock 时) (获取 lock 时会调用 setHeadAndPropagate 来进行 传递式的唤醒后继节点, 知道碰到 独占模式的节点)
+         *          4. 共享模式 + 独占模式: 0(初始) -> signal(被后继节点标记为release需要唤醒后继节点) -> 0 (等释放好lock, 会恢复到0)
+         *      其上的这些状态变化主要在: doReleaseShared , shouldParkAfterFailedAcquire 里面
+         *
+         */
         static final int SIGNAL = -1;
+
         /** waitStatus value to indicate thread is waiting on condition */
+        /**
+         * 当前节点在 Condition Queue 里面
+         */
         static final int CONDITION = -2;
         /**
          * waitStatus value to indicate the next acquireShared should
          * unconditionally propagate
+         */
+        /**
+         * 当前节点获取到 lock 或进行 release lock 时, 共享模式的最终状态是 PROPAGATE(PS: 有可能共享模式的节点变成 PROPAGATE 之前就被其后继节点抢占 head 节点, 而剔除 Sync Queue)
          */
         static final int PROPAGATE = -3;
 
@@ -408,19 +440,59 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
          *              first indicate they need a signal,
          *              then retry the atomic acquire, and then,
          *              on failure, block
+         *  CANCELLED: This node is cancelled due to timeout or interrupt
+         *              Nodes never leave this state. In particular,
+         *              a thread with cancelled node never again blocks
+         *  CONDITION: This node is currently on a condition queue.
+         *              It will not be used as a sync queue node
+         *              until transferred, at which time the status
+         *              will be set to 0. (Use of this value here has
+         *              nothing to do with other uses of the
+         *              field, but simplifies mechanics)
+         * PROPAGATE: A releaseShared should be propagated to other
+         *              nodes. This is set (for head node only) in
+         *              doReleaseShared to ensure propagation
+         *              continues, even if other operations hava
+         *              since intervened
+         * 0:          None of the above(以上)
          *
+         * The values are arranged numerically to simplify use.
+         * Non-negative values mean that a node doesn't need to
+         * signal. So, most code doesn't need to check for particular
+         * values, just for sign
+         *
+         * The field is initialized to 0 for narmal sync nodes, and
+         * CONDITION for condition nodes. It is modified using CAS
+         * (or when possible, unconditional volatile writes)
          *
          */
         volatile int waitStatus;
 
+        /**
+         * 节点在 Sync Queue 里面时的前继节点(主要来进行 skip CANCELLED 的节点)
+         * 注意: 根据 addWaiter方法:
+         *  1. prev节点在队列里面, 则 prev != null 肯定成立
+         *  2. prev != null 成立不一定 node 就在 Sync Queue 里面
+         */
         volatile Node prev;
 
+        /**
+         * Node 在 Sync Queue 里面的后继节点, 主要是在release lock 时进行后继节点的唤醒
+         * 而后继节点在前继节点上打上 SIGNAL 标识, 来提醒他 release lock 时需要唤醒
+         */
         volatile Node next;
 
+        /** 获取 lock 的引用 */
         volatile Thread thread;
 
+        /**
+         * 作用分成两种:
+         *  1. 在 Sync Queue 里面, nextWaiter用来判断节点是 共享模式, 还是独占模式
+         *  2. 在 Condition queue 里面, 节点主要是链接且后继节点 (Condition queue是一个单向的, 不支持并发的 list)
+         */
         Node nextWaiter;
 
+        /** 当前节点是否是共享模式 */
         final boolean isShared() {
             return nextWaiter == SHARED;
         }
@@ -441,11 +513,17 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
             // Used to establish initial head or SHARED marker
         }
 
+        /**
+         * 初始化 Node 用于 Sync Queue 里面
+         */
         Node(Thread thread, Node mode){     // Used by addWaiter
             this.nextWaiter = mode;
             this.thread = thread;
         }
 
+        /**
+         * 初始化 Node 用于 Condition Queue 里面
+         */
         Node(Thread thread, int waitStatus){ // Used by Condition
             this.waitStatus = waitStatus;
             this.thread = thread;
@@ -458,16 +536,28 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * If head exists, its waitStatus is guaranteed not to be
      * CANCELLED.
      */
+    /**
+     * Sync Queue 的头结点, 初始化是在 enq 方法中
+     * head dequeue 后 head 的 waitStatus
+     *  1. 独占模式: 0
+     *  2. 共享模式: PROPAGATE 或 0
+     */
     private transient volatile Node head;
 
     /**
      * Tail of the wait queue, lazily initialized. Modified only via
      * method enq to add new wait node.
      */
+    /**
+     * Sync Queue 的尾节点
+     */
     private transient volatile Node tail;
 
     /**
      * The synchronization state.
+     */
+    /**
+     * lock 获取标识 (在 ReentrantReadWriteLock 里面把 state 分成两段来分别记录 readLock wrietLock)
      */
     private volatile int state = 0;
 
@@ -475,6 +565,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * Returns the current value of synchronization state.
      * This operation has memory semantics of a {@code volatile} read
      * @return current state value
+     */
+    /**
+     * 返回 lock 获取情况
      */
     protected final int getState(){
         return state;
@@ -484,6 +577,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * Sets the value of synchronization state.
      * This operation has memory semantics of a {@code volatile} write.
      * @param newState the new state value
+     */
+    /**
+     * 设置 state
      */
     protected final void setState(int newState){
         state = newState;
@@ -500,6 +596,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * @return {@code true} if successful. False return indicates that the actual
      *                  value was not equal to the expected value.
      */
+    /**
+     * CAS 设置 state
+     */
     protected final boolean compareAndSetState(int expect, int update){
         // See below for intrinsics(本质) setup to support this
         int oldState = getState();
@@ -514,6 +613,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * The number of nanoseconds for which it is faster to spin
      * rather than to use timed park. A rough estimate suffices
      * to improve responsiveness with short timeouts
+     */
+    /**
+     * 当timeout 时间小于 spinForTimeoutThreshold 时, spin 比 使用 LockSupport更高效(LockSupport相对来说更耗资源)
      */
     static final long spinForTimeoutThreshold = 1000L;
 
@@ -618,7 +720,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
          */
         Node s = node.next;
         logger.info("unparkSuccessor s:" + node + Thread.currentThread().getName());
-        if (s == null || s.waitStatus > 0) {         // 2. 这里若在 Sync Queue 里面存在想要获取 lock 的节点,则一定需要唤醒一下(跳过取消的节点)
+        if (s == null || s.waitStatus > 0) {         // 2. 这里若在 Sync Queue 里面存在想要获取 lock 的节点,则一定需要唤醒一下(跳过取消的节点)　（PS: s == null发生在共享模式的竞争释放资源）
             s = null;
             for (Node t = tail; t != null && t != node; t = t.prev)
                 if (t.waitStatus <= 0)              // 3. 找到 queue 里面最前面想要获取 Lock 的节点
@@ -642,6 +744,15 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * propagation. (Note: For exclusive mode, release just amounts
      * to calling unparkSuccessor of head if it needs signal)
      */
+    /**
+     * 在共享模式中, 获取lock时, 与 release lock 时分别进行 调用 doReleaseShared 来唤醒后继的节点(包括 独占的节点)
+     * 分类:
+     *   1(共享) -> 2(共享) -> 3(共享) -> 4(共享)
+     *      节点1获取 lock 后调用 setHeadAndPropagate -> doReleaseShared 唤醒 节点2 —> 接下来 node 1 在 release 时再次 doReleaseShared, 而 node 2在获取 lock 后调用 setHeadAndPropagate 时再次 doReleaseShared -> 直至到 node 4, node 4的状态变成 PROPAGATE (期间可能有些节点还没设置为 PROPAGATE 就被其他节点调用 setHead 而踢出 Sync Queue)
+     *   1(共享) -> 2(共享) -> 3(独占) -> 4(共享)
+     *      节点1获取 lock 后调用 setHeadAndPropagate -> doReleaseShared 唤醒 节点2 —> 接下来 node 1 在 release 时再次 doReleaseShared, 而 node 2 在获取 lock 后
+     *      这是发现后继节点不是共享的, 则 Node 2 不在 setHeadAndPropagate 中调用 doReleaseShared, 而Node 3 没有获取lock, 将 Node 2 变成 SIGNAL, 而 node 2 在 release lock 时唤醒 node 3, 而 node 3 最终在 release lock 时 释放 node 4， node 4在release lock后状态还是保持 0
+     */
     private void doReleaseShared(){
         /**
          * Ensure that a release propagates, even if there are other
@@ -655,23 +766,23 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
          * fails, if so rechecking.
          */
         for(;;){
-            Node h = head;
-            if(h != null && h != tail){
+            Node h = head;                      // 1. 获取 head 节点, 准备 release
+            if(h != null && h != tail){        // 2. Sync Queue 里面不为 空
                 int ws = h.waitStatus;
-                if(ws == Node.SIGNAL){
-                    if(!compareAndSetWaitStatus(h, Node.SIGNAL, 0)){
+                if(ws == Node.SIGNAL){         // 3. h节点后面可能是 独占的节点, 也可能是 共享的, 并且请求了唤醒(就是给前继节点打标记 SIGNAL)
+                    if(!compareAndSetWaitStatus(h, Node.SIGNAL, 0)){ // 4. h 恢复  waitStatus 值置0 (为啥这里要用 CAS 呢, 因为这里的调用可能是在 节点刚刚获取 lock, 而其他线程又对其进行中断, 所用cas就出现失败)
                         continue; // loop to recheck cases
                     }
-                    unparkSuccessor(h);
+                    unparkSuccessor(h);         // 5. 唤醒后继节点
                 }
                 else if(ws == 0 &&
-                        !compareAndSetWaitStatus(h, 0, Node.PROPAGATE)){
-                    continue; // loop on failed CAS
+                        !compareAndSetWaitStatus(h, 0, Node.PROPAGATE)){ //6. h后面没有节点需要唤醒, 则标识为 PROPAGATE 表示需要继续传递唤醒(主要是区别 独占节点最终状态0 (独占的节点在没有后继节点, 并且release lock 时最终 waitStatus 保存为 0))
+                    continue; // loop on failed CAS // 7. 同样这里可能存在竞争
                 }
             }
 
-            if(h == head){
-                break;
+            if(h == head){ // 8. head 节点没变化, 直接 return(从这里也看出, 一个共享模式的 节点在其唤醒后继节点时, 只唤醒一个, 但是 它会在 获取 lock 时唤醒, 释放 lock 时也进行, 所以或导致竞争的操作)
+                break;           // head 变化了, 说明其他节点获取 lock 了, 自己的任务完成, 直接退出
             }
 
         }
@@ -684,6 +795,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      *
      * @param node the node
      * @param propagate the return value from a tryAcquireShared
+     */
+    /**
+     * 在获取 lock 成功后 set Sync Queue 的head 节点, 并且若后继节点是 共享模式则进行唤醒
      */
     private void setHeadAndPropagate(Node node, int propagate){
         Node h = head; // Record old head for check below
@@ -705,12 +819,12 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
          *  anyway
          */
         if(propagate > 0
-                || h == null                    // 并发的进行 setHeadAndPropagate 导致 前面的 获取 readLock 的节点释放了(setHead(node)导致他退出链表, 并在释放 readLock后, 系统GC回收了)
-                || h.waitStatus < 0
-                || (h = head) == null
-                || h.waitStatus < 0){
+                || h == null                    // 1. h == null, 这是何时发生的呢? 并发的进行 setHeadAndPropagate 导致 前面的 获取 readLock 的节点释放了(setHead(node)导致他退出链表, 并在释放 readLock后, 系统GC回收了)
+                || h.waitStatus < 0            // 2. h.waitStatus < 0 则waitStatus 可能是SIGNAL, 也可能是 PROPAGATE
+                || (h = head) == null          // 3. 同上 1
+                || h.waitStatus < 0){          // 4. 同上 2
             Node s = node.next;
-            if(s == null || s.isShared()){
+            if(s == null || s.isShared()){   // 5. s == null 后继节点是共享模式, 并且正在 enq 的过程中
                 doReleaseShared();
             }
         }
@@ -975,19 +1089,19 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * @param arg the acquire argument
      */
     private void doAcquireShared(int arg){
-        final Node node = addWaiter(Node.SHARED);
+        final Node node = addWaiter(Node.SHARED);       // 1. 将当前的线程封装成 Node 加入到 Sync Queue 里面
         boolean failed = true;
 
         try {
             boolean interrupted = false;
             for(;;){
-                final Node p = node.predecessor();
+                final Node p = node.predecessor();      // 2. 获取当前节点的前继节点 (当一个n在 Sync Queue 里面, 并且没有获取 lock 的 node 的前继节点不可能是 null)
                 if(p == head){
-                    int r = tryAcquireShared(arg);
+                    int r = tryAcquireShared(arg);      // 3. 判断前继节点是否是head节点(前继节点是head, 存在两种情况 (1) 前继节点现在占用 lock (2)前继节点是个空节点, 已经释放 lock, node 现在有机会获取 lock); 则再次调用 tryAcquireShared 尝试获取一下
                     if(r >= 0){
-                        setHeadAndPropagate(node, r);
+                        setHeadAndPropagate(node, r);   // 4. 获取 lock 成功, 设置新的 head, 并唤醒后继获取  readLock 的节点
                         p.next = null; // help GC
-                        if(interrupted){
+                        if(interrupted){               // 5. 在获取 lock 时, 被中断过, 则自己再自我中断一下(外面的函数可能需要这个参数)
                             selfInterrupt();
                         }
                         failed = false;
@@ -995,14 +1109,14 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
                     }
                 }
 
-                if(shouldParkAfterFailedAcquire(p, node) &&
-                        parkAndCheckInterrupt()){
+                if(shouldParkAfterFailedAcquire(p, node) && // 6. 调用 shouldParkAfterFailedAcquire 判断是否需要中断(这里可能会一开始 返回 false, 但在此进去后直接返回 true(主要和前继节点的状态是否是 signal))
+                        parkAndCheckInterrupt()){           // 7. 现在lock还是被其他线程占用 那就睡一会, 返回值判断是否这次线程的唤醒是被中断唤醒
                     interrupted = true;
                 }
             }
         }finally {
-            if(failed){
-                cancelAcquire(node);
+            if(failed){             // 8. 在整个获取中出错(比如线程中断/超时)
+                cancelAcquire(node);  // 9. 清除 node 节点(清除的过程是先给 node 打上 CANCELLED标志, 然后再删除)
             }
         }
     }
@@ -1012,30 +1126,30 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * @param arg the acquire argument
      */
     private void doAcquireSharedInterruptibly(int arg) throws InterruptedException{
-        final Node node = addWaiter(Node.SHARED);
+        final Node node = addWaiter(Node.SHARED);            // 1. 将当前的线程封装成 Node 加入到 Sync Queue 里面
         boolean failed = true;
 
         try {
             for(;;){
-                final Node p = node.predecessor();
+                final Node p = node.predecessor();          // 2. 获取当前节点的前继节点 (当一个n在 Sync Queue 里面, 并且没有获取 lock 的 node 的前继节点不可能是 null)
                 if(p == head){
-                    int r = tryAcquireShared(arg);
+                    int r = tryAcquireShared(arg);          // 3. 判断前继节点是否是head节点(前继节点是head, 存在两种情况 (1) 前继节点现在占用 lock (2)前继节点是个空节点, 已经释放 lock, node 现在有机会获取 lock); 则再次调用 tryAcquireShared 尝试获取一下
                     if(r >= 0){
-                        setHeadAndPropagate(node, r);
+                        setHeadAndPropagate(node, r);       // 4. 获取 lock 成功, 设置新的 head, 并唤醒后继获取  readLock 的节点
                         p.next = null; // help GC
                         failed = false;
                         return;
                     }
                 }
 
-                if(shouldParkAfterFailedAcquire(p, node) &&
-                        parkAndCheckInterrupt()){
-                    throw new InterruptedException();
+                if(shouldParkAfterFailedAcquire(p, node) && // 5. 调用 shouldParkAfterFailedAcquire 判断是否需要中断(这里可能会一开始 返回 false, 但在此进去后直接返回 true(主要和前继节点的状态是否是 signal))
+                        parkAndCheckInterrupt()){           // 6. 现在lock还是被其他线程占用 那就睡一会, 返回值判断是否这次线程的唤醒是被中断唤醒
+                    throw new InterruptedException();     // 7. 若此次唤醒是 通过线程中断, 则直接抛出异常
                 }
             }
         }finally {
-            if(failed){
-                cancelAcquire(node);
+            if(failed){              // 8. 在整个获取中出错(比如线程中断/超时)
+                cancelAcquire(node); // 9. 清除 node 节点(清除的过程是先给 node 打上 CANCELLED标志, 然后再删除)
             }
         }
     }
@@ -1052,38 +1166,38 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
             return false;
         }
 
-        final long deadline = System.nanoTime() + nanosTimeout;
-        final Node node = addWaiter(Node.SHARED);
+        final long deadline = System.nanoTime() + nanosTimeout;  // 0. 计算超时的时间
+        final Node node = addWaiter(Node.SHARED);               // 1. 将当前的线程封装成 Node 加入到 Sync Queue 里面
         boolean failed = true;
 
         try {
             for(;;){
-                final Node p = node.predecessor();
+                final Node p = node.predecessor();          // 2. 获取当前节点的前继节点 (当一个n在 Sync Queue 里面, 并且没有获取 lock 的 node 的前继节点不可能是 null)
                 if(p == head){
-                    int r = tryAcquireShared(arg);
+                    int r = tryAcquireShared(arg);          // 3. 判断前继节点是否是head节点(前继节点是head, 存在两种情况 (1) 前继节点现在占用 lock (2)前继节点是个空节点, 已经释放 lock, node 现在有机会获取 lock); 则再次调用 tryAcquireShared 尝试获取一下
                     if(r >= 0){
-                        setHeadAndPropagate(node, r);
+                        setHeadAndPropagate(node, r);       // 4. 获取 lock 成功, 设置新的 head, 并唤醒后继获取  readLock 的节点
                         p.next = null; // help GC
                         failed = false;
                         return true;
                     }
                 }
 
-                nanosTimeout = deadline - System.nanoTime();
+                nanosTimeout = deadline - System.nanoTime(); // 5. 计算还剩余的 timeout , 若小于0 则直接return
                 if(nanosTimeout <= 0L){
                     return false;
                 }
-                if(shouldParkAfterFailedAcquire(p, node) &&
-                        nanosTimeout > spinForTimeoutThreshold){
+                if(shouldParkAfterFailedAcquire(p, node) &&         // 6. 调用 shouldParkAfterFailedAcquire 判断是否需要中断(这里可能会一开始 返回 false, 但在此进去后直接返回 true(主要和前继节点的状态是否是 signal))
+                        nanosTimeout > spinForTimeoutThreshold){// 7. 在timeout 小于  spinForTimeoutThreshold 时 spin 的效率, 比 LockSupport 更高
                     LockSupport.parkNanos(this, nanosTimeout);
                 }
-                if(Thread.interrupted()){
+                if(Thread.interrupted()){                           // 7. 若此次唤醒是 通过线程中断, 则直接抛出异常
                     throw new InterruptedException();
                 }
             }
         }finally {
-            if (failed){
-                cancelAcquire(node);
+            if (failed){                // 8. 在整个获取中出错(比如线程中断/超时)
+                cancelAcquire(node);    // 10. 清除 node 节点(清除的过程是先给 node 打上 CANCELLED标志, 然后再删除)
             }
         }
     }
@@ -1119,6 +1233,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      *              correctly
      * @throws UnsupportedOperationException if exclusive mode is not supported
      */
+    /** AQS 的子类实现获取 独占 lock 的方式, 主要改变 state 值*/
     protected boolean tryAcquire(int arg){
         throw new UnsupportedOperationException();
     }
@@ -1146,6 +1261,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      *              correctly
      * @throws UnsupportedOperationException if exclusive mode is not supported
      */
+    /** AQS 的子类实现释放 独占 lock 的方式, 主要改变 state 值*/
     protected boolean tryRelease(int arg){
         throw new UnsupportedOperationException();
     }
@@ -1183,6 +1299,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      *              correctly
      * @throws UnsupportedOperationException if shared mode is not supported
      */
+    /** AQS 的子类实现获取 共享 lock 的方式, 主要改变 state 值*/
     protected int tryAcquireShared(int arg){
         throw new UnsupportedOperationException();
     }
@@ -1211,6 +1328,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      *              correctly
      * @throws UnsupportedOperationException if shared mode is not supported
      */
+    /** AQS 的子类实现释放 共享 lock 的方式, 主要改变 state 值*/
     protected boolean tryReleaseShared(int arg){
         throw new UnsupportedOperationException();
     }
@@ -1231,6 +1349,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      *          {@code false} otherwise
      * @throws UnsupportedOperationException if conditions are not supported
      */
+    /** 判断当前 独占lock 是否被获取   */
     protected boolean isHeldExclusively(){
         throw new UnsupportedOperationException();
     }
@@ -1343,9 +1462,12 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      *            {@link #tryAcquireShared(int)} but is otherwise uninterpreted(不间断)
      *            and can represent anything you like
      */
+    /**
+     * 获取 共享 lock
+     */
     public final void acquireShared(int arg){
-        if(tryAcquireShared(arg) < 0){
-            doAcquireShared(arg);
+        if(tryAcquireShared(arg) < 0){  // 1. 调用子类, 获取共享 lock  返回 < 0, 表示失败
+            doAcquireShared(arg);       // 2. 调用 doAcquireShared 当前 线程加入 Sync Queue 里面, 等待获取 lock
         }
     }
 
@@ -1364,11 +1486,11 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * @throws InterruptedException if the current thread is interrupted
      */
     public final void acquireSharedInterruptibly(int arg)throws InterruptedException{
-        if(Thread.interrupted()){
+        if(Thread.interrupted()){                   // 0. 线程若被中断, 则直接抛异常 放弃获取
             throw new InterruptedException();
         }
-        if(tryAcquireShared(arg) < 0){
-            doAcquireSharedInterruptibly(arg);
+        if(tryAcquireShared(arg) < 0){   // 1. 调用子类, 获取共享 lock  返回 < 0, 表示失败
+            doAcquireSharedInterruptibly(arg);  // 2. 调用 doAcquireShared 当前 线程加入 Sync Queue 里面, 等待获取 lock
         }
     }
 
@@ -1389,16 +1511,16 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * @throws InterruptedException if the current thread is interrupted
      */
     public final boolean tryAcquireSharedNanos(int arg, long nanosTimeout) throws InterruptedException{
-        if(Thread.interrupted()){
+        if(Thread.interrupted()){                // 0. 线程若被中断, 则直接抛异常 放弃获取
             throw new InterruptedException();
         }
-        return tryAcquireShared(arg) >= 0 ||
-                doAcquireSharedNanos(arg, nanosTimeout);
+        return tryAcquireShared(arg) >= 0 ||            // 1. 调用子类, 获取共享 lock  返回 < 0, 表示失败 >= 0 表示成功
+                doAcquireSharedNanos(arg, nanosTimeout); // 2. 调用 doAcquireShared 当前 线程加入 Sync Queue 里面, 等待获取 lock
     }
 
     public final boolean releaseShared(int arg){
-        if(tryReleaseShared(arg)){
-            doReleaseShared();
+        if(tryReleaseShared(arg)){      // 1. 调用子类, 释放 lock
+            doReleaseShared();          // 2. 唤醒后继节点来获取 lock
             return true;
         }
         return false;
@@ -1419,6 +1541,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      *
      * @return
      */
+    /**
+     *  SyncQueue 里面是否有 node 节点
+     */
     public final boolean hasQueuedThreads() {
         return head != tail;
     }
@@ -1433,6 +1558,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * </p>
      *
      * @return {@code true} if there has ever been contention
+     */
+    /**
+     * 获取 lock 是否发生竞争
      */
     public final boolean hasContented(){
         return head != null;
@@ -1451,10 +1579,16 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * @return the first (longest-waiting) thread in the queue, or
      *          {@code null} if no threads are currently queued
      */
+    /**
+     * Sync Queue 里面的有效的, 最前面的 node 节点
+     */
     public final Thread getFirstQueuedThread(){
         return (head == tail) ? null : fullGetFirstQueuedThread();
     }
 
+    /**
+     * Sync Queue 里面的有效的, 最前面的 node 节点
+     */
     private Thread fullGetFirstQueuedThread(){
         /**
          * The first node is normally head next. Try to get its
@@ -1467,7 +1601,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
 
         Node h, s;
         Thread st;
-
+        /**
+         * 这里两次检测是怕线程 timeout 或 cancelled
+         */
         if((
                 (h = head) != null && (s = h.next) != null &&
                         s.prev == head && (st = s.thread) != null ||
@@ -1485,6 +1621,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
          * is actually first node. If not, we continue on, safely
          * traversing from tail back to head to find first,
          * guaranteeing termination
+         */
+        /**
+         * 从 tail 开始找
          */
         Node t = tail;
         Thread firstThread = null;
@@ -1510,11 +1649,14 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * @return {@code true} if the given thread is on the queue
      * @throws NullPointerException if the thread is null
      */
+    /**
+     * 判断线程是否在 Sync Queue 里面
+     */
     public final boolean isQueued(Thread thread){
         if(thread == null){
             throw new NullPointerException();
         }
-        for(Node p = tail; p != null; p = p.prev){
+        for(Node p = tail; p != null; p = p.prev){ // 从tail 开始
             if(p.thread == thread){
                 return true;
             }
@@ -1530,6 +1672,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * #tryAcquireShared(int)}) then it is guaranteed that the current thread
      * is not the first queued thread. Used only as a heuristic in
      * ReentrantReadWriteLock
+     */
+    /**
+     * 判断 Sync Queue 中等待获取 lock 的第一个 node 是否是 获取 writeLock 的(head 节点是已经获取 lock 的节点)
      */
     public final boolean apparentlyFirstQueuedIsExclusive(){
         Node h, s;
@@ -1590,6 +1735,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      *          current thread, and {@code false} if the current thread
      *          is at the head of the queue or the queue is empty
      */
+    /**
+     * 当前节点之前在 Sync Queue 里面是否有等待获取的 Node
+     */
     public final boolean hasQueuedPredecessors(){
         /**
          * The correctness of this depends on head being initialized
@@ -1599,8 +1747,8 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
         Node t = tail; // Read fields in reverse initialization order
         Node h = head;
         Node s;
-        return h != t &&
-                ((s = h.next) == null || s.thread != Thread.currentThread());
+        return h != t &&        // h != t 表示 Sync Queu 里面至少存在 一个节点 (这时的 h节点可能是 null)
+                ((s = h.next) == null || s.thread != Thread.currentThread()); // (s = h.next) == null 说明 h节点获取 lock, 而后又被其他获取 lock 的节点从 Sync Queue 里面剔除掉了
     }
 
 
@@ -1615,6 +1763,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * control
      *
      * @return the estimated number of threads waiting to acquire
+     */
+    /**
+     * 获取 Sync Queue 里面 等待 获取 lock 的 长度
      */
     public final int getQueueLength(){
         int n = 0;
@@ -1637,6 +1788,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      *
      * @return the collection of threads
      */
+    /**
+     * 获取 Sync Queue 里面 等待 获取 lock 的 thread
+     */
     public final Collection<Thread> getQueuedThreads(){
         ArrayList<Thread> list = new ArrayList<>();
         for(Node p = tail; p != null; p = p.prev){
@@ -1655,6 +1809,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * those threads waiting due to an exclusive acquire
      *
      * @return the collection of threads
+     */
+    /**
+     * 获取 Sync Queue 里面 等待 获取 writeLock 的 thread
      */
     public final Collection<Thread> getExclusiveQueuedThreads(){
         ArrayList<Thread> list = new ArrayList<>();
@@ -1676,6 +1833,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * those threads waiting due to a shared acquire
      *
      * @return
+     */
+    /**
+     * 获取 Sync Queue 里面 等待 获取 readLock 的 thread
      */
     public final Collection<Thread> getSharedQueuedThreads(){
         ArrayList<Thread> list = new ArrayList<>();
@@ -1708,10 +1868,19 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
 
     /*********************** Internal support methods for Conditions ***********************/
 
+    /**
+     * 判断 node 是否在 Sync Queue 里面
+     */
     final boolean isOnSyncQueue(Node node){
+        /**
+         * 这里有点 tricky,
+         * node.waitStatus == Node.CONDITION 则说明 node 一定在 Condition 里面
+         * node.prev == null 说明 node 一定不在 Sync Queue 里面
+         */
         if(node.waitStatus == Node.CONDITION || node.prev == null){
             return false;
         }
+        // node.next != null 则 node 一定在 Sync Queue; 但是反过来 在Sync Queue 里面的节点 不一定  node.next != null
         if(node.next != null){ // If has successor, it must be on queue
             return true;
         }
@@ -1724,6 +1893,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
          * unless the CAS failed (which is unlikely), it will be
          * there, so we hardly ever traverse much
          */
+        /**
+         * 因为这里存在 node 开始enq Sync Queue 的情形, 所以在此查找一下
+         */
         return findNodeFromTail(node);
     }
 
@@ -1733,6 +1905,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      *
      * @param node
      * @return true if parent
+     */
+    /**
+     * 从 tail 开始查找 node
      */
     private boolean findNodeFromTail(Node node){
         Node t = tail;
@@ -1755,11 +1930,16 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * @return true if successfully transferred (else the node was
      * cancelled before signal)
      */
+    /**
+     * 将 Node 从Condition Queue 转移到 Sync Queue 里面
+     * 在调用transferForSignal之前, 会 first.nextWaiter = null;
+     * 而我们发现 若节点是因为 timeout / interrupt 进行转移, 则不会清除两种情况的转移都会把 wautStatus 置为 0
+     */
     final boolean transferForSignal(Node node){
         /**
          * If cannot change waitStatus, the node has been cancelled
          */
-        if(!compareAndSetWaitStatus(node, Node.CONDITION, 0)){
+        if(!compareAndSetWaitStatus(node, Node.CONDITION, 0)){ // 1. 若 node 已经 cancelled 则失败
             return false;
         }
 
@@ -1769,9 +1949,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
          * attempt to set waitStatus fails, wake up to resync (in which
          * case the waitStatus can be transiently and harmlessly wrong)
          */
-        Node p = enq(node);
+        Node p = enq(node);                                 // 2. 加入 Sync Queue
         int ws = p.waitStatus;
-        if(ws > 0 || !compareAndSetWaitStatus(p, ws, Node.SIGNAL)){
+        if(ws > 0 || !compareAndSetWaitStatus(p, ws, Node.SIGNAL)){ // 3. 这里的 ws > 0 指Sync Queue 中node 的前继节点cancelled 了, 所以, 唤醒一下 node ; compareAndSetWaitStatus(p, ws, Node.SIGNAL)失败, 则说明 前继节点已经变成 SIGNAL 或 cancelled, 所以也要 唤醒
             LockSupport.unpark(node.thread);
         }
         return true;
@@ -1784,8 +1964,11 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * @param node the node
      * @return true if cancelled before the node was signalled
      */
+    /**
+     * 将 Condition Queue 中因 timeout/interrupt 而唤醒的节点进行转移
+     */
     final boolean transferAfterCancelledWait(Node node){
-        if(compareAndSetWaitStatus(node, Node.CONDITION, 0)){
+        if(compareAndSetWaitStatus(node, Node.CONDITION, 0)){ // 1. 没有 node 没有 cancelled , 直接进行转移 (转移后, Sync Queue , Condition Queue 都会存在 node)
             enq(node);
             return true;
         }
@@ -1796,8 +1979,8 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
          * incomplete transfer is both race and transient, so just
          * spin
          */
-        while(!isOnSyncQueue(node)){
-            Thread.yield();
+        while(!isOnSyncQueue(node)){                // 2.这时是其他的线程发送signal,将本线程转移到 Sync Queue 里面的工程中(转移的过程中 waitStatus = 0了, 所以上面的 CAS 操作失败)
+            Thread.yield();                         // 这里调用 isOnSyncQueue判断是否已经 入Sync Queue 了
         }
         return false;
     }
@@ -1811,18 +1994,21 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * @param node the condition node for this wait
      * @return previous sync state
      */
+    /**
+     * 释放 node 上获取的全部 lock (这里有 重入的情况)
+     */
     final int fullyRelease(Node node){
         boolean failed = true;
         try{
             int savedState = getState();
-            if(release(savedState)){
+            if(release(savedState)){        // 1.调用子类进行释放
                 failed = false;
                 return savedState;
             }else{
                 throw new IllegalMonitorStateException();
             }
         }finally {
-            if(failed){
+            if(failed){     // 释放的过程失败
                 node.waitStatus = Node.CANCELLED;
             }
         }
@@ -1836,6 +2022,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      *
      * @param condition the condition
      * @return {@code  true} if owned
+     */
+    /**
+     * condition 是否属于这个 AQS 的
      */
     public final boolean owns(ConditionObject condition){
         return condition.isOwnedBy(this);
@@ -1858,6 +2047,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * @throws IllegalArgumentException if the given condition is
      *          not associated with this synchronizer
      * @throws NullPointerException if the condition is null
+     */
+    /**
+     * 这个 condition Queue 里面是否有等待的线程
      */
     public final boolean hasWaiters(ConditionObject condition){
         if(!owns(condition)){
@@ -1882,6 +2074,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      *          not associated with this synchronizer
      * @throws NullPointerException if the condition is null
      */
+    /**
+     * 这个 condition Queue 里面等待的线程的量
+     */
     public final int getWaitQueueLength(ConditionObject condition){
         if(!owns(condition)){
             throw new IllegalArgumentException("Not owner");
@@ -1904,6 +2099,9 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * @throws IllegalArgumentException if the given condition is
      *              not associated with this synchronizer
      * @throws NullPointerException if the condition is null
+     */
+    /**
+     * 这个 condition Queue 里面等待的线程
      */
     public final Collection<Thread> getWaitingThreads(ConditionObject condition){
         if(!owns(condition)){

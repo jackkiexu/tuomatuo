@@ -1,4 +1,4 @@
-package com.lami.tuomatuo.search.base.concurrent.teststampedlock;
+package com.lami.tuomatuo.search.base.concurrent.stampedlock;
 
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.StampedLock;
@@ -6,7 +6,7 @@ import java.util.concurrent.locks.StampedLock;
 /**
  * Created by xjk on 2016/11/17.
  */
-public class TestStampedLock {
+public class StampedLockTest {
     public static void main(String[] args) throws InterruptedException{
         final StampedLock lock = new StampedLock();
         new Thread(){

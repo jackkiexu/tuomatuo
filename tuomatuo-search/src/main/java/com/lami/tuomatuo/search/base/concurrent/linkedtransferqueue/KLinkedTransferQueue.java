@@ -529,8 +529,67 @@ public class KLinkedTransferQueue<E> extends AbstractQueue<E> implements Transfe
 
 
     /**************** Removal methods  *****************************/
-    final void unsplice(Node pred, Node s){
 
+    private void sweep(){
+
+    }
+
+
+    /**
+     * Unsplices (now or later) the given deleted/cancelled node with
+     * the given predecessor
+     *
+     * @param pred a node that was at one time known to be the
+     *             predecessor of s, or null or s itself if s is/was at head
+     * @param s the node t obe unspliced
+     */
+    final void unsplice(Node pred, Node s){
+        s.forgetContents(); // forget unneeded fields
+
+        /**
+         * See above for rationale. Briefly: if pred still points to
+         * s, try to unlink s. if cannot be unlinked, because it is
+         * tailing node or pred might be unlinked, and neither pred
+         * nor are head or offlist, add to sweepVotes, and if enough
+         * votes have accumulated, sweep.
+         */
+        if(pred != null && pred != s && pred.next == s){
+            Node n = s.next;
+            if(n == null ||
+                    (n != s && pred.casNext(s, n) && pred.isMatched())){
+                for(;;){ // check if at, or could be, head
+                    Node h = head;
+                    if(h == pred || h == s || h == null){
+                        return;         // at head or list empty
+                    }
+                    if(!h.isMatched()){
+                        break;
+                    }
+                    Node hn = h.next;
+                    if(hn == null){
+                        return;     // now empty
+                    }
+                    if(hn != h && casHead(h, hn)){
+                        h.forgetNext(); // advance head
+                    }
+                }
+
+                if(pred.next != pred && s.next != s){ // recheck if offlist
+                    for(;;){
+                        int v = sweepVotes;
+                        if(v < SWEEP_THRESHOLD){
+                            if(casSweepVotes(v, v + 1)){
+                                break;
+                            }
+                        }
+                        else if(casSweepVotes(v, 0)){
+                            sweep();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // Unsafe mechanics
