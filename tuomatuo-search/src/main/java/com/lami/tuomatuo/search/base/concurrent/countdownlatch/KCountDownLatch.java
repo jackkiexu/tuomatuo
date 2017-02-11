@@ -13,6 +13,9 @@ public class KCountDownLatch {
      * Synchronization control For KCountDownLatch
      * Use AQS state to represent count
      */
+    /**
+     * AQS 的继承类, 主要的 获取 释放操作
+     */
     private static final class Sync extends KAbstractQueuedSynchronizer{
         private static final long serialVersionUID = 4982264981922014374L;
 
@@ -24,10 +27,16 @@ public class KCountDownLatch {
             return getState();
         }
 
+        /**
+         * 判断是否正真的进行到了latch的位置, 也就是getState() == 0
+         */
         protected int tryAcquireShared(int acquires){
             return (getState() == 0)? 1 : -1;
         }
 
+        /**
+         * 进行释放
+         */
         protected boolean tryReleaseShared(int release){
             // Decrement count; signal when transition to zero
             for(;;){
@@ -52,6 +61,9 @@ public class KCountDownLatch {
      * @param count the number of times {@link #"countDown} must be invoked
      *              before threads can pass through {@link #"await}
      * @throws IllegalArgumentException if {@code count} is negative
+     */
+    /**
+     * 指定 latch 的数量
      */
     public KCountDownLatch(int count){
         if(count < 0) throw new IllegalArgumentException(" count < 0 ");
@@ -91,6 +103,9 @@ public class KCountDownLatch {
      *
      * @throws InterruptedException if the current thread is interrupted
      *          while waiting
+     */
+    /**
+     * 判断是否到 latch, 也就是 getState() == 0
      */
     public void await() throws InterruptedException{
         sync.acquireSharedInterruptibly(1);
@@ -138,6 +153,9 @@ public class KCountDownLatch {
      * @throws InterruptedException if the current thread is interrupted
      *          while waiting
      */
+    /**
+     * 进行指定超时的 await
+     */
     public boolean await(long timeout, TimeUnit unit) throws InterruptedException{
         return sync.tryAcquireSharedNanos(1, unit.toNanos(timeout));
     }
@@ -156,6 +174,9 @@ public class KCountDownLatch {
      *     If the current equals zero then nothing happens
      * </p>
      */
+    /**
+     * 释放获取 latch 的数量
+     */
     public void countDown(){
         sync.releaseShared(1);
     }
@@ -167,6 +188,9 @@ public class KCountDownLatch {
      * </p>
      *
      * @return the current count
+     */
+    /**
+     * 返回 latch 的数量
      */
     public long getCount(){
         return sync.getCount();

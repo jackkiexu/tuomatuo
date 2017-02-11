@@ -154,28 +154,41 @@ public class KSemaphore  implements Serializable{
      * to represent permits. Subclassed into fair and nonfair
      * versions
      */
+    /** AQS 的子类主要定义获取释放 lock */
     abstract static class Sync extends KAbstractQueuedSynchronizer{
         private static final long serialVersionUID = 1192457210091910933L;
 
+        /**
+         * 指定 permit 初始化 Semaphore
+         */
         Sync(int permits){
             setState(permits);
         }
 
+        /**
+         * 返回剩余 permit
+         */
         final int getPermits(){
             return getState();
         }
 
+        /**
+         * 获取 permit
+         */
         final int nonfairTryAcquireShared(int acquires){
             for(;;){
                 int available = getState();
-                int remaining = available - acquires;
+                int remaining = available - acquires; // 判断获取 acquires 的剩余 permit 数目
                 if(remaining < 0 ||
-                        compareAndSetState(available, remaining)){
+                        compareAndSetState(available, remaining)){ // cas改变 state
                     return remaining;
                 }
             }
         }
 
+        /**
+         * 释放 lock
+         */
         protected final boolean tryReleaseShared(int releases){
             for(;;){
                 int current = getState();
@@ -183,13 +196,13 @@ public class KSemaphore  implements Serializable{
                 if(next < current){ // overflow
                     throw new Error(" Maximum permit count exceeded");
                 }
-                if(compareAndSetState(current, next)){
+                if(compareAndSetState(current, next)){  // cas改变 state
                     return true;
                 }
             }
         }
 
-        final void reducePermits(int reductions){
+        final void reducePermits(int reductions){ // 减少 permits
             for(;;){
                 int current = getState();
                 int next = current - reductions;
@@ -217,6 +230,7 @@ public class KSemaphore  implements Serializable{
     /**
      * Nonfair version
      */
+    /** 非公平版本获取 permit */
     static final class NonfairSync extends Sync{
 
         private static final long serialVersionUID = -2694183684443567898L;
@@ -234,6 +248,7 @@ public class KSemaphore  implements Serializable{
     /**
      * Fair version
      */
+    /** 公平版本获取 permit */
     static final class FairSync extends Sync{
 
         private static final long serialVersionUID = 3245289457313211085L;
@@ -242,16 +257,19 @@ public class KSemaphore  implements Serializable{
             super(permits);
         }
 
+        /**
+         * 公平版本获取 permit 主要看是否由前继节点
+         */
         @Override
         protected int tryAcquireShared(int acquires) {
             for(;;){
-                if(hasQueuedPredecessors()){
+                if(hasQueuedPredecessors()){ // 1. 判断是否Sync Queue 里面由前几节点
                     return -1;
                 }
                 int available = getState();
                 int remaining = available - acquires;
                 if(remaining < 0 ||
-                        compareAndSetState(available, remaining)){
+                        compareAndSetState(available, remaining)){ // 2. cas 改变state
                     return remaining;
                 }
             }
@@ -265,6 +283,9 @@ public class KSemaphore  implements Serializable{
      * @param permits the initial number of permits available
      *                This value may be negative, in which case releases
      *                must occur before any acquires will be granted
+     */
+    /**
+     * 使用非公平版本构件 Semaphore
      */
     public KSemaphore(int permits){
         sync = new NonfairSync(permits);
@@ -280,6 +301,9 @@ public class KSemaphore  implements Serializable{
      * @param fair {@code true} if this ksemaphore will granted.
      *                         first-in-first-out granting of permits under contention
      *                         else {@code false}
+     */
+    /**
+     * 指定版本构件 Semaphore
      */
     public KSemaphore(int permits, boolean fair){
         sync = fair ? new FairSync(permits) : new NonfairSync(permits);
@@ -321,6 +345,9 @@ public class KSemaphore  implements Serializable{
      *
      * @throws InterruptedException if the current thread is interrupted
      */
+    /**
+     * 调用 acquireSharedInterruptibly 响应中断的方式获取 permit
+     */
     public void acquire() throws InterruptedException{
         sync.acquireSharedInterruptibly(1);
     }
@@ -351,6 +378,9 @@ public class KSemaphore  implements Serializable{
      *      occured. When the thread does return from this method its interrupt
      *      status will be set.
      * </p>
+     */
+    /**
+     * 调用 acquireUninterruptibly 非响应中断的方式获取 permit
      */
     public void acquireUninterruptibly(){
         sync.acquireShared(1);
@@ -384,6 +414,9 @@ public class KSemaphore  implements Serializable{
      * </p>
      *
      * @return {@code true} if a permit was acquired and {@code false} otherwise
+     */
+    /**
+     * 尝试获取 permit
      */
     public boolean tryAcquire(){
         return sync.nonfairTryAcquireShared(1) >= 0;
@@ -439,6 +472,9 @@ public class KSemaphore  implements Serializable{
      *              if the waiting time elapsed before a permit was acquired
      * @throws InterruptedException if the current thread is interrupted
      */
+    /**
+     * 尝试的获取 permit, 支持超时与中断
+     */
     public boolean tryAcquire(long timeout, TimeUnit unit) throws InterruptedException{
         return sync.tryAcquireSharedNanos(1, unit.toNanos(timeout));
     }
@@ -460,6 +496,9 @@ public class KSemaphore  implements Serializable{
      *     Correct usage of a ksemaphore is established by programming convention
      *     in the application
      * </p>
+     */
+    /**
+     * 释放 permit
      */
     public void release(){
         sync.releaseShared(1);
@@ -504,6 +543,9 @@ public class KSemaphore  implements Serializable{
      * @param permits the number of permits to acquire
      * @throws InterruptedException if the current thread is interrupted
      */
+    /**
+     * 支持中断的获取permit
+     */
     public void acquire(int permits) throws InterruptedException{
         if(permits < 0){
             throw new IllegalArgumentException();
@@ -538,6 +580,9 @@ public class KSemaphore  implements Serializable{
      * </p>
      *
      * @param permits
+     */
+    /**
+     * 不响应中断的获取 permit
      */
     public void acquireUninterruptibly(int permits){
         if(permits < 0) throw new IllegalArgumentException();
@@ -575,6 +620,9 @@ public class KSemaphore  implements Serializable{
      * @param permits the number of permit to acquire
      * @return {@code true} if the permits were acquired and
      *          {@code false} otherwise
+     */
+    /**
+     * 尝试获取 permit
      */
     public boolean tryAcquire(int permits){
         if(permits < 0) throw new IllegalArgumentException();
@@ -643,6 +691,9 @@ public class KSemaphore  implements Serializable{
      *              if the waiting time elapses before all permits were acquired
      * @throws InterruptedException if the current tread is interrupted
      */
+    /**
+     * 尝试 支持超时机制, 支持中断 的获取 permit
+     */
     public boolean tryAcquire(int permits, long timout, TimeUnit unit) throws InterruptedException{
         if(permits < 0) throw new IllegalArgumentException();
         return sync.tryAcquireSharedNanos(permits, unit.toNanos(timout));
@@ -675,6 +726,9 @@ public class KSemaphore  implements Serializable{
      * @param permits the number of permits to release
      * @throws IllegalArgumentException if {@code permits} is negative
      */
+    /**
+     * 释放 permit
+     */
     public void release(int permits){
         if(permits < 0) throw new IllegalArgumentException();
         sync.releaseShared(permits);
@@ -689,6 +743,9 @@ public class KSemaphore  implements Serializable{
      *
      * @return the number of permits available in this ksemaphore
      */
+    /**
+     * 返回可用的 permit
+     */
     public int availablePermits(){
         return sync.getPermits();
     }
@@ -697,6 +754,9 @@ public class KSemaphore  implements Serializable{
      * Acquires and returns all permits that are immediately available
      *
      * @return the number of permits acquired
+     */
+    /**
+     * 消耗光 permit
      */
     public int drainPermits(){
         return sync.drainPermits();
@@ -711,6 +771,9 @@ public class KSemaphore  implements Serializable{
      *
      * @param reduction
      */
+    /**
+     * 减少 reduction 个permit
+     */
     protected void reducePermits(int reduction){
        if(reduction < 0) throw new IllegalArgumentException();
         sync.reducePermits(reduction);
@@ -719,6 +782,9 @@ public class KSemaphore  implements Serializable{
     /**
      * Returns {@code true} if this ksemaphore has fairness set true
      * @return {@code true} if this ksemaphore has fairness set true
+     */
+    /**
+     * 判断是否是公平版本
      */
     public boolean isFair(){
         return sync instanceof FairSync;
@@ -735,6 +801,9 @@ public class KSemaphore  implements Serializable{
      * @return {@code true} if there may be other threads waiting to
      *          acquire the lock
      */
+    /**
+     * 返回 AQS 中 Sync Queue 里面的等待线程
+     */
     public final boolean hasQueuedThreads(){
         return sync.hasQueuedThreads();
     }
@@ -748,6 +817,9 @@ public class KSemaphore  implements Serializable{
      * system state, not for synchronization control.
      *
      * @return the estimated number of threads waiting for this lock
+     */
+    /**
+     * 返回 AQS 中 Sync Queue 里面的等待线程长度
      */
     public final int getQueueLength(){
         return sync.getQueueLength();
@@ -763,6 +835,9 @@ public class KSemaphore  implements Serializable{
      * subclasses that provide more extensive monitoring facilities
      *
      * @return the collection of threads
+     */
+    /**
+     * 返回 AQS 中 Sync Queue 里面的等待线程
      */
     protected Collection<Thread> getQueueThreads(){
         return sync.getQueuedThreads();
