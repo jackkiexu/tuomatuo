@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * http://www.cnblogs.com/go2sea/p/5625536.html
+ *
  * A counting semaphore. Conceptually, a semaphore maintains a set of
  * permits. Each {@link #acquire()} blocks if necessary until a permit is
  * available, and then takes it. Each {@link #release()} adds a permit,
@@ -309,42 +310,7 @@ public class KSemaphore  implements Serializable{
         sync = fair ? new FairSync(permits) : new NonfairSync(permits);
     }
 
-    /**
-     * Acquires a permit from this ksemaphore, blocking until one is
-     * available, ot the thread is {@link Thread#interrupt() interrupted}
-     *
-     * <p>
-     *     Acquires a permit, if one is available and returns immediately.
-     *     reducing the number of available permits by one
-     * </p>
-     *
-     * <li>
-     *     If no permit is available then the current thread becomes
-     *     disabled for thread scheduling purposes and lies dormant until
-     *     one of two thing happens:
-     * </li>
-     *
-     * <li>
-     *     Some other thread invokes the {@link #"release} method for this
-     *     ksemaphore and the current thread is next to be assigned a permit; or
-     * </li>
-     *
-     * <li>
-     *     Some other thread {@link Thread#interrupt() interrupts}
-     *     the current thread
-     * </li>
-     *
-     * <p>
-     *     If the current thread:
-     *     has its interrupted status set on entry to this method; or
-     *     is {@link Thread#interrupt() interrupted} while waiting
-     *     for a permit,
-     *     then {@link InterruptedException} is thrown anf the current thread's
-     *     interrupted status is cleared
-     * </p>
-     *
-     * @throws InterruptedException if the current thread is interrupted
-     */
+
     /**
      * 调用 acquireSharedInterruptibly 响应中断的方式获取 permit
      */
@@ -354,67 +320,13 @@ public class KSemaphore  implements Serializable{
 
 
     /**
-     * Acquires a permit from this ksemaphore,blocking until one is
-     * available.
-     *
-     * <p>
-     *     Acquires a permit, if one is available and returns immediately,
-     *     reducing the number of available permits by one.
-     * </p>
-     *
-     * <p>
-     *     If no permit is available then the current thread becomes
-     *     disabled for thread scheduling purposes and lies dormant until
-     *     some other thread invokes the {@link #"release} method for this
-     *     ksemaphore and the current thread is next to be assigned a permit
-     * </p>
-     *
-     *
-     * <p>
-     *      If the current thread is {@link Thread#interrupt() interrupted}
-     *      while waiting for a permit then it will continue to wait, but the
-     *      time at which the thread is assigned a permit may change compared to
-     *      the time it would have received the permit had no interruption
-     *      occured. When the thread does return from this method its interrupt
-     *      status will be set.
-     * </p>
-     */
-    /**
      * 调用 acquireUninterruptibly 非响应中断的方式获取 permit
      */
     public void acquireUninterruptibly(){
         sync.acquireShared(1);
     }
 
-    /**
-     * Acquires a permit from this ksemaphore, only if one is available at the
-     * time of invocation
-     *
-     * <p>
-     *     Acquires a permit, if one is available and returns immediately
-     *     with the value {@code true},
-     *     reducing the number of available permits by one.
-     * </p>
-     *
-     * <p>
-     *     If no permit is available then this method will return
-     *     immediately with the value {@code false}
-     * </p>
-     *
-     * <p>
-     *     Even when this ksemaphore has been set to use a
-     *     fair ordering policy, a call to {@code tryAcquire()} <em>will</em>
-     *     immediately acquire a permit if one is available, whether or not
-     *     other threads are currently waiting.
-     *     This barging behavior can be useful in certain
-     *     circumstances, even though it breaks fairness, If you wnt to honor
-     *     the fairness setting then use
-     *     {@code #tryAcquire}
-     *     which is almost equivalent (it also detects interruption)
-     * </p>
-     *
-     * @return {@code true} if a permit was acquired and {@code false} otherwise
-     */
+
     /**
      * 尝试获取 permit
      */
@@ -424,79 +336,12 @@ public class KSemaphore  implements Serializable{
 
 
     /**
-     * Acquires a permit from this ksemaphore, if one becomes available
-     * within the given waiting time and the current thread has not
-     * been {@link Thread#interrupt() interrupted}.
-     *
-     * <p>
-     *     Acquires a permit, if one is available and returns immediately,
-     *     with the value {@code true},
-     *     reducing the number of available permits by one.
-     * </p>
-     *
-     * <p>
-     *     If no permit is available then the current thread becomes
-     *     disabled for thread scheduling purposes and lies dormant until
-     *     one of three things happen:
-     *     <li>
-     *         Some other thread invokes the {@link #"release} method for this
-     *         ksemaphore and the current thread is next to be assigned a permit; or
-     *         Some other thread {@link Thread#interrupt() interrupts}
-     *         the current thread; or
-     *         The specified waiting time elapses
-     *     </li>
-     * </p>
-     *
-     * <p>
-     *     If a permit is acquired then the value {@code true} is returned.
-     * </p>
-     *
-     * <p>
-     *     If the current thread:
-     *     has its interrupted status set on entry to this method; or
-     *     is {@link Thread#interrupt() interrupted} while waiting
-     *     to acquire a permit
-     *     then {@link InterruptedException} is thrown and the current thread's
-     *     interrupted status is cleared
-     * </p>
-     *
-     * <p>
-     *     If the specified waiting time elapses then the value {@code false}
-     *     is returned. If the time is less than or equal to zero, the method
-     *     will not wait at all.
-     * </p>
-     *
-     * @param timeout the maximum time to wait for a permit
-     * @param unit the time unit of the {@code timeout} argument
-     * @return {@code true} if a permit was acquired and {@code false}
-     *              if the waiting time elapsed before a permit was acquired
-     * @throws InterruptedException if the current thread is interrupted
-     */
-    /**
      * 尝试的获取 permit, 支持超时与中断
      */
     public boolean tryAcquire(long timeout, TimeUnit unit) throws InterruptedException{
         return sync.tryAcquireSharedNanos(1, unit.toNanos(timeout));
     }
 
-
-    /**
-     * Releases a permit, returning it to the ksemaphore
-     *
-     * <p>
-     *     Releases a permit, increasing the number of available permits by
-     *     one. If any threads are trying to acquire a permit, then one is
-     *     selected and given the permit that was just released. That thread
-     *     is (re)enabled for threadscheduling purposes.
-     * </p>
-     *
-     * <p>
-     *     There is no requirement that a thread that releases a permit must
-     *     have acquired that permit by calling {@link #acquire()}
-     *     Correct usage of a ksemaphore is established by programming convention
-     *     in the application
-     * </p>
-     */
     /**
      * 释放 permit
      */
@@ -504,45 +349,7 @@ public class KSemaphore  implements Serializable{
         sync.releaseShared(1);
     }
 
-    /**
-     * Acquires the given number of permits from this ksemaphore
-     * blocking until all are available
-     * or the thread is {@link Thread#interrupt() interrupt}
-     *
-     *
-     * <p>
-     *     Acquires the given number of permits, if they are available,
-     *     and returns immediately, reducing the number of available permits
-     *     by the given amount.
-     * </p>
-     *
-     * <p>
-     *     If insufficient permits are available then the current thread becomes
-     *     disabled for thread scheduling purposes and lies dormant until
-     *     one of two things happens:
-     * </p>
-     *
-     * <li>
-     *     Some other thread invokes one of the {@link #release() release}
-     *     methods for this ksemaphore, the current thread is next to be assigned
-     *     permits and the number of available permits satisfies this request; or
-     *     Some other thread {@code Thread#interrupt}
-     *     the current thread
-     * </li>
-     *
-     * If the current thread:
-     * has its interrupted status set on entry to this method; or
-     * is {@link Thread#interrupt() interrupted} while waiting
-     * for a permit,
-     * then {@link InterruptedException} is thrown and the current thread's
-     * interrupted status is cleared.
-     * Any permits that were to be assigned to this thread are instead
-     * assigned to other threads trying to acquire permits, as if
-     * permits had been make available by a call to {@link #release()}
-     *
-     * @param permits the number of permits to acquire
-     * @throws InterruptedException if the current thread is interrupted
-     */
+
     /**
      * 支持中断的获取permit
      */
@@ -555,33 +362,6 @@ public class KSemaphore  implements Serializable{
 
 
     /**
-     * Acquires the given number of permits from this ksemaphore,
-     * blocking until all are available
-     *
-     * <p>
-     *     Acquires the given number of permit, if they are available,
-     *     and returns immediately, reducing the number of available permits
-     *     by the given amount.
-     * </p>
-     *
-     * <p>
-     *     If insufficient permits are available then the current thread becomes
-     *     disabled for thread scheduling purposes and lies dormant until
-     *     some other thread invokes one of the {@link #release() release}
-     *     methods for this ksemaphore, the current thread is next to be assigned
-     *     permits and the number of available permits satisfies this request
-     * </p>
-     *
-     * <p>
-     *     If the current thread is {@link Thread#interrupt() interrupted}
-     *     while waiting for permits then it will contine to wait and its
-     *     position in the queue is not affected. When the thread does return
-     *     from this method its interrupt status will be set
-     * </p>
-     *
-     * @param permits
-     */
-    /**
      * 不响应中断的获取 permit
      */
     public void acquireUninterruptibly(int permits){
@@ -590,37 +370,6 @@ public class KSemaphore  implements Serializable{
     }
 
 
-    /**
-     * Acquires the given number of permits from this ksemaphore, only
-     * if all are available at the time of invocation.
-     *
-     * <p>
-     *     Acquires the given number of permits, if they are available, and
-     *     returns immediately, with the value {@code true}
-     *     reducing the number of available permits by the given amount
-     * </p>
-     *
-     * <p>
-     *     If insufficient permits are available then this method will return
-     *     immediately with value {@code false} and the number of available
-     *     permits is unchanged
-     * </p>
-     *
-     * <p>
-     *     Even when this semaphore has been set to use a fair ordering
-     *     polic, a call to {@code tryAcquire} <em>will</em>
-     *     immediately acquire a permit if one is available, whether or
-     *     not other threads are currently waiting. This
-     *     barging behavior can be useful in certain
-     *     circumstances, even though it breaks fairness. If you want to
-     *     honor the fairness setting, then use {@code tryAcquire}
-     *     which is almost equivalent (it also detects interruption)
-     * </p>
-     *
-     * @param permits the number of permit to acquire
-     * @return {@code true} if the permits were acquired and
-     *          {@code false} otherwise
-     */
     /**
      * 尝试获取 permit
      */
@@ -631,67 +380,6 @@ public class KSemaphore  implements Serializable{
 
 
     /**
-     * Acquires the given number of permits from this ksemaphore, if all
-     * become available within the given waiting time and the current
-     * thread has not been {@link Thread#interrupt() interrupted}.
-     *
-     * <p>
-     *     Acquires the given number of permits, if they are available and
-     *     returns immediately, with the value {@code true},
-     *     reducing the number of available permits by the given amount.
-     * </p>
-     *
-     * <p>
-     *     If insufficient permits are available then
-     *     the current thread becomes disabled for thread scheduling
-     *     purposes and lies dormant until one of three things happens:
-     * </p>
-     *
-     * <li>
-     *     Some other thread invokes one of the {@link #release}
-     *     methods for this ksemaphore, the current thread is next to be assigned
-     *     permits and the number of available permits satisfies this request; or
-     *     Some other thread {@link Thread#interrupt()}
-     *     the current thread; or
-     *     The specified waiting time elapse
-     * </li>
-     *
-     * <p>
-     *     If the permits are acquired then value {@code true} is returned
-     * </p>
-     *
-     * <p>
-     *     If the current thread:
-     *     has its interrupted status set on entry to this method; or
-     *     is {@link Thread#interrupt() interrupted} while waiting
-     *     to acquire the permits
-     *     then {@link Thread#interrupt() interrupted} while waiting
-     *     to acquire the permits
-     * </p>
-     *
-     * then {@link InterruptedException} is thrown and the current thread's
-     * interrupted status is cleared.
-     * Any permits that were to be assigned to this thread, are instead
-     * assigned to other threads trying to acquire permits, as if
-     * the permits had been make available by a call to {@link #release()}
-     *
-     * <p>
-     *     If the specified waiting time elapses then the value {@code false}
-     *     is returned, If time time is less than or equal to zero, the method
-     *     will not wait at all. Any permit that were to be assigned to this
-     *     thread, are instead assigned to other threads trying to acquire
-     *     permits, as if the permits had been made available by a call to
-     *     {@link #release()}
-     * </p>
-     *
-     * @param permits the number of permit to acquire
-     * @param timout the maximum time to wait for the permits
-     * @param unit the time unit of the {@code timeout} argument
-     * @return {@code true} if all permits were acquired and {@code false}
-     *              if the waiting time elapses before all permits were acquired
-     * @throws InterruptedException if the current tread is interrupted
-     */
-    /**
      * 尝试 支持超时机制, 支持中断 的获取 permit
      */
     public boolean tryAcquire(int permits, long timout, TimeUnit unit) throws InterruptedException{
@@ -699,33 +387,6 @@ public class KSemaphore  implements Serializable{
         return sync.tryAcquireSharedNanos(permits, unit.toNanos(timout));
     }
 
-
-    /**
-     * Releases the given number of permits, returning them to the ksemaphore.
-     *
-     * <p>
-     *     Releases the given number of permits, increasing the number of
-     *     available permits by that amount.
-     *     If any threads are trying to acquire permits, then one
-     *     is selected and given the permits that were just rleased.
-     *     If the number of available permits satisfies that thread's request
-     *     then that thread is (reenabled) for thread scheduling purposes;
-     *     Otherwise the thread will wait until sufficient permits are available
-     *     If there are still permits available
-     *     after this thread's request has been satisfied, then those permits
-     *     are assigned in turn to other thread's trying to acquire permits
-     * </p>
-     *
-     * <p>
-     *     There is no requirement that a thread that releases a permit must
-     *     have acquired that permit by calling {@link KSemaphore#acquire()}.
-     *     Correct usage of a ksemaphore is established by programming convention
-     *     in the application
-     * </p>
-     *
-     * @param permits the number of permits to release
-     * @throws IllegalArgumentException if {@code permits} is negative
-     */
     /**
      * 释放 permit
      */
@@ -734,15 +395,6 @@ public class KSemaphore  implements Serializable{
         sync.releaseShared(permits);
     }
 
-
-    /**
-     * Returns the current number of permits available in this ksemaphore.
-     * <p>
-     *     This method is typically used for debugging and testing purposes
-     * </p>
-     *
-     * @return the number of permits available in this ksemaphore
-     */
     /**
      * 返回可用的 permit
      */
@@ -750,11 +402,7 @@ public class KSemaphore  implements Serializable{
         return sync.getPermits();
     }
 
-    /**
-     * Acquires and returns all permits that are immediately available
-     *
-     * @return the number of permits acquired
-     */
+
     /**
      * 消耗光 permit
      */
@@ -762,15 +410,7 @@ public class KSemaphore  implements Serializable{
         return sync.drainPermits();
     }
 
-    /**
-     * Shrinks the number of available permits by the indicated
-     * reduction. This method can be useful in subclasses that use
-     * ksemaphore to track resources that become unavailable. This
-     * method differs from {@code acquire} in that it does not block
-     * waiting for permits to become available
-     *
-     * @param reduction
-     */
+
     /**
      * 减少 reduction 个permit
      */
@@ -779,10 +419,7 @@ public class KSemaphore  implements Serializable{
         sync.reducePermits(reduction);
     }
 
-    /**
-     * Returns {@code true} if this ksemaphore has fairness set true
-     * @return {@code true} if this ksemaphore has fairness set true
-     */
+
     /**
      * 判断是否是公平版本
      */
@@ -792,32 +429,12 @@ public class KSemaphore  implements Serializable{
 
 
     /**
-     * Queries whether any threads are waiting to acquire. Note that
-     * because cancellations may occur at any time, a {@code true}
-     * return does not guarantee that any other thread will ever
-     * acquire. This method is designed primarily for use in
-     * monitoring of the system state.
-     *
-     * @return {@code true} if there may be other threads waiting to
-     *          acquire the lock
-     */
-    /**
      * 返回 AQS 中 Sync Queue 里面的等待线程
      */
     public final boolean hasQueuedThreads(){
         return sync.hasQueuedThreads();
     }
 
-
-    /**
-     * Returns an estimate of the number of threads waiting to acquire.
-     * The value is only an estimate because the number of threads may
-     * change dynamically while this method traverses internal data
-     * structures. This method is designed for use in monitoring of the
-     * system state, not for synchronization control.
-     *
-     * @return the estimated number of threads waiting for this lock
-     */
     /**
      * 返回 AQS 中 Sync Queue 里面的等待线程长度
      */
@@ -826,16 +443,6 @@ public class KSemaphore  implements Serializable{
     }
 
 
-    /**
-     * Returns a collection containing threads that may be waiting to acquire
-     * Because the actual set of threads may change dynamically while
-     * constructing this result, the returned collection is only a best-effort
-     * estimate. The elements of the returned collection are in no particular
-     * order. This method is designed to facilitate construction of
-     * subclasses that provide more extensive monitoring facilities
-     *
-     * @return the collection of threads
-     */
     /**
      * 返回 AQS 中 Sync Queue 里面的等待线程
      */
