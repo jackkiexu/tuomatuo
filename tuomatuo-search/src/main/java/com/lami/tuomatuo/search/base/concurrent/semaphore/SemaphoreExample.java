@@ -26,9 +26,15 @@ public class SemaphoreExample implements Runnable {
     }
 
     public void run() {
-        while(counter.incrementAndGet() <= 5) { // Semaphore 被循环获取 5次
+        while(counter.incrementAndGet() <= 10) { // Semaphore 被循环获取 5次
             try {
                 semaphore.acquire();                // 进行 permit 的获取
+                if(semaphore.availablePermits() == 0){
+                    // permits 被获取光, 进行sleep
+                    logger.info(" permits 被耗光 进行 sleep");
+                    Thread.sleep(5 * 1000);
+                    logger.info(" permits 被耗光 进行 sleep over");
+                }
             } catch (InterruptedException e) {
                 logger.info("["+Thread.currentThread().getName()+"] Interrupted in acquire().");
             }

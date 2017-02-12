@@ -215,7 +215,7 @@ public class KSemaphore  implements Serializable{
             }
         }
 
-
+        /** 将 permit 置为 0 */
         final int drainPermits(){
             for(;;){
                 int current = getState();
