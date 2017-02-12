@@ -1,5 +1,7 @@
 package com.lami.tuomatuo.search.base.concurrent.semaphore;
 
+import org.apache.log4j.Logger;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -9,31 +11,28 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by xjk on 9/15/16.
  */
 public class SemaphoreExample implements Runnable {
-    private static final Semaphore semaphore = new Semaphore(3, true);
-    private static final AtomicInteger counter = new AtomicInteger();
-    private static final long endMillis = System.currentTimeMillis() + 10000;
+
+    private static Logger logger = Logger.getLogger(SemaphoreExample.class);
+
+    private static final Semaphore semaphore = new Semaphore(3, true); // 初始化 Semaphore, 限流阀值 为3, 并且指定为公平模式
+    private static final AtomicInteger counter = new AtomicInteger(0);
 
     public static void main(String[] args) {
         ExecutorService executorService = Executors.newFixedThreadPool(5);
         for (int i = 0; i < 5; i++) {
-            executorService.execute(new SemaphoreExample());
+            executorService.execute(new SemaphoreExample()); // 执行 permit 的获取,
         }
         executorService.shutdown();
     }
 
     public void run() {
-        while(System.currentTimeMillis() < endMillis) {
+        while(counter.incrementAndGet() <= 5) { // Semaphore 被循环获取 5次
             try {
-                semaphore.acquire();
+                semaphore.acquire();                // 进行 permit 的获取
             } catch (InterruptedException e) {
-                System.out.println("["+Thread.currentThread().getName()+"] Interrupted in acquire().");
+                logger.info("["+Thread.currentThread().getName()+"] Interrupted in acquire().");
             }
-            int counterValue = counter.incrementAndGet();
-            System.out.println("["+Thread.currentThread().getName()+"] semaphore acquired: "+counterValue);
-            if(counterValue > 3) {
-                throw new IllegalStateException("More than three threads acquired the lock.");
-            }
-            counter.decrementAndGet();
+            logger.info("["+Thread.currentThread().getName()+"] semaphore acquired: "+counter.get());
             semaphore.release();
         }
     }

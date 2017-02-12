@@ -24,7 +24,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *     that is run once per barrier point, after the last thread in the party
  *     arrives, but before any threads are released
  *     This <em>barrier action</em> is useful
- *     for updating sahred-state before any of the parties continue
+ *     for updating shared-state before any of the parties continue
  * </p>
  *
  * <p>
@@ -141,19 +141,29 @@ public class KCyclicBarrier {
      * There need not be an active generation if there has been a break
      * but no subsequent reset
      */
+    /**
+     * 每个 Generation 代表的是一个等待事件,
+     * 当每次所有线程都到达 barrier/ 或其中的线程被中断/ 其中某个线程等待超时,
+     * 则 broken 有可能会改变, 并且会生成新的 Generation
+     */
     private static class Generation{
         boolean broken = false;
     }
 
     /** The lock for guarding barrier entry */
+    /** 全局的重入 lock */
     private final ReentrantLock lock = new ReentrantLock();
     /** Condition to wait on until tripped */
+    /** 控制线程等待  */
     private final Condition trip = lock.newCondition();
     /** The number of parties */
+    /** 参与到这次 barrier 的参与者个数 */
     private final int parties;
     /** The command to run when tripped */
+    /** 到达 barrier 时执行的command */
     private final Runnable barrierCommand;
     /** The current generation */
+    /** 初始化 generation */
     private Generation generation = new Generation();
 
     /**
@@ -161,17 +171,22 @@ public class KCyclicBarrier {
      * on each generation. It is reset to parties on each new
      * generation or when broken.
      */
+    /** 还没到达 barrier 的参与者线程个数, 每次所有线程到达后, 或其中有个线程等待超时或被中断, 则count重新赋值 */
     private int count;
 
     /**
      * Updates state on barrier trip and wakes up everyone.
      * Called only while holding lock.
      */
+    /** 生成下一个 generation */
     private void nextGeneration(){
         // signal completion of last generation
+        // 唤醒所有等待的线程来获取 AQS 的state的值
         trip.signalAll();
         // set up next generation
+        // 重新赋值计算器
         count = parties;
+        // 重新初始化 generation
         generation = new Generation();
     }
 
@@ -180,6 +195,7 @@ public class KCyclicBarrier {
      * Sets current barrier generation as broken and wakes up everyone
      * Called only while holding lock
      */
+    /** 当某个线程被中断 / 等待超时 则将 broken = true, 并且唤醒所有等待中的线程 */
     private void breakBarrier(){
         generation.broken = true;
         count = parties;
@@ -190,31 +206,37 @@ public class KCyclicBarrier {
     /**
      * Main barrier code, covering the various policies
      */
+    /**
+     * CyclicBarrier 的核心方法, 主要是所有线程都获取一个 ReeantrantLock 来控制
+     * 主要步骤:
+     *      1)
+     *      2)
+     */
     private int dowait(boolean timed, long nanos)throws InterruptedException, BrokenBarrierException, TimeoutException{
         final ReentrantLock lock = this.lock;
-        lock.lock();
+        lock.lock();                            // 1. 获取 ReentrantLock
         try{
             final Generation g = generation;
 
-            if(g.broken){
+            if(g.broken){                       // 2. 判断 generation 是否已经 broken
                 throw new BrokenBarrierException();
             }
 
-            if(Thread.interrupted()){
+            if(Thread.interrupted()){           // 3. 判断线程是否中断, 中断后就 breakBarrier
                 breakBarrier();
                 throw new InterruptedException();
             }
 
-            int index = --count;
-            if(index == 0){ // triped
+            int index = --count;                // 4. 更新已经到达 barrier 的线程数
+            if(index == 0){ // triped           // 5. index == 0 说明所有线程到达了 barrier
                 boolean ranAction = false;
                 try{
                     final Runnable command = barrierCommand;
-                    if(command != null){
+                    if(command != null){        // 6. 最后一个线程到达 barrier, 执行 command
                         command.run();
                     }
                     ranAction = true;
-                    nextGeneration();
+                    nextGeneration();           // 7. 更新 generation
                     return 0;
                 }finally {
                     if(!ranAction){
@@ -227,12 +249,12 @@ public class KCyclicBarrier {
             for(;;){
                 try{
                     if(!timed){
-                        trip.await();
+                        trip.await();           // 8. 没有进行 timeout 的 await
                     }else if(nanos > 0L){
-                        nanos = trip.awaitNanos(nanos);
+                        nanos = trip.awaitNanos(nanos); // 9. 进行 timeout 方式的等待
                     }
-                }catch (Exception e){
-                    if(g == generation && !g.broken){
+                }catch (InterruptedException e){
+                    if(g == generation && !g.broken){ // 10. 等待的过程中线程被中断, 则直接唤醒所有等待的 线程, 重置 broken 的值
                         breakBarrier();
                         throw e;
                     }else{
@@ -241,27 +263,37 @@ public class KCyclicBarrier {
                          * been interrupted, so this interrupt is deemed to
                          * "belong" to subsequent execution
                          */
+                        /**
+                         * 情况
+                         *  1. await 抛 InterruptedException && g != generation
+                         *      所有线程都到达 barrier(这是会更新 generation), 并且进行唤醒所有的线程; 但这时 当前线程被中断了
+                         *      没关系, 当前线程还是能获取 lock, 但是为了让外面的程序直到被中断过, 所以自己中断一下
+                         *  2. await 抛 InterruptedException && g == generation && g.broken = true
+                         *      其他线程触发了 barrier broken, 导致 g.broken = true, 并且进行 signalALL(), 但就在这时
+                         *      当前的线程也被 中断, 但是为了让外面的程序直到被中断过, 所以自己中断一下
+                         *
+                         */
                         Thread.currentThread().interrupt();
                     }
                 }
 
 
 
-                if(g.broken){
+                if(g.broken){                       // 11. barrier broken 直接抛异常
                     throw new BrokenBarrierException();
                 }
 
-                if(g != generation){
+                if(g != generation){                 // 12. barrier broken 直接return
                     return index;
                 }
 
-                if(timed && nanos <= 0L){
+                if(timed && nanos <= 0L){           // 13. 等待超时直接抛异常, 重置 generation
                     breakBarrier();
                     throw new TimeoutException();
                 }
             }
         }finally {
-            lock.unlock();
+            lock.unlock();                          // 14. 带用 awaitXX 获取lock后进行释放lock
         }
     }
 
@@ -276,6 +308,10 @@ public class KCyclicBarrier {
      * @param barrierCommand the command to execute when the barrier is
      *                       tripped, or {@code null} if there is no action
      * @throws IllegalArgumentException if {@code parties} is less than 1
+     */
+
+    /**
+     * 指定 barrierCommand 的构造 KCyclicBarrier
      */
     public KCyclicBarrier(int parties, Runnable barrierCommand) {
         if(parties <= 0) throw new IllegalArgumentException();
@@ -294,6 +330,9 @@ public class KCyclicBarrier {
      *                before the barrier is tripped
      * @throws IllegalArgumentException if {@code parties} is less than 1
      */
+    /**
+     * 构造 CyclicBarrier
+     */
     public KCyclicBarrier(int parties){
         this(parties, null);
     }
@@ -302,6 +341,9 @@ public class KCyclicBarrier {
      * Returns the number of parties required to trip this barrier
      *
      * @return the number of partis required to trip this barrier
+     */
+    /**
+     * 返回 barrier 的参与者数目
      */
     public int getParties(){
         return parties;
@@ -354,6 +396,10 @@ public class KCyclicBarrier {
      *                  waiting, or the barrier was reset, or the barrier was
      *                  broken when {@code await} was called, or the barrier
      *                  action (if present) failed due to an exception
+     */
+    /**
+     * 进行等待所有线程到达 barrier
+     * 除非: 其中一个线程被 inetrrupt
      */
     public int await() throws InterruptedException, BrokenBarrierException{
         try{
@@ -439,6 +485,10 @@ public class KCyclicBarrier {
      *              when {@code await} was called, or the barrier action (if
      *              present) failed due to an exception
      */
+    /**
+     * 进行等待所有线程到达 barrier
+     * 除非: 等待超时
+     */
     public int await(long timeout, TimeUnit unit) throws Exception{
         return dowait(true, unit.toNanos(timeout));
     }
@@ -450,6 +500,9 @@ public class KCyclicBarrier {
      *          barrier due to interruption or timeout since
      *          construction or the last reset, or a barrier action
      *          failed due to an exception; {@code false} otherwise
+     */
+    /**
+     * 判断 barrier 是否 broken = true
      */
     public boolean isBroken(){
         final ReentrantLock lock = this.lock;
@@ -470,6 +523,7 @@ public class KCyclicBarrier {
      * and choose one to perform the reset. It may be preferable to
      * instead create to a new barrier for subsequent use.
      */
+    // 重置 barrier
     public void reset(){
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -486,6 +540,9 @@ public class KCyclicBarrier {
      * This method is primarily useful for debugging and assertions
      *
      * @return the numbver of parties currently blocked in {@link #await()}s
+     */
+    /**
+     * 获取等待中的线程
      */
     public int getNumberWaiting(){
         final ReentrantLock lock = this.lock;
