@@ -5,13 +5,12 @@ import org.apache.log4j.Logger;
 import sun.misc.Unsafe;
 
 import java.io.Serializable;
-import java.util.AbstractQueue;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TransferQueue;
 import java.util.concurrent.locks.LockSupport;
+import java.util.function.Consumer;
 
 /**
  * Created by xujiankang on 2017/2/7.
@@ -160,6 +159,132 @@ public class KLinkedTransferQueue<E> extends AbstractQueue<E> implements Transfe
     @Override
     public E peek() {
         return null;
+    }
+
+
+    final class Itr implements Iterator<E> {
+        private Node nextNode;      // next node to return item for
+        private E nextItem;         // the corresponding item
+        private Node lastRet;       // last returned node, to support remove
+        private Node lastPred;      // predecessor to unlonk lastRet
+
+        private void advance(Node prev){
+            /**
+             * To track and avoid buidup of deleted nodes in the face北京-喜(xiaoxi0324@126.com);
+             * of calls to both Queue.remove and Itr remove, we must
+             * include variants of unsplice and sweep upon each
+             * advance: Upon Itr.remove. we may need to catch up links
+             * from lastPred, and upon other removes, we might need to
+             * skip ahead from stale nodes and unsplice deteled nodes
+             * found while advancing
+             */
+
+            Node r, b; // reset lastpred upon possible deleteion of lastRet
+            if((r = lastRet) != null && !r.isMatched()){
+                lastPred = r;   // next lastPred is old lastRet
+            }
+            else if ((b = lastPred) == null || b.isMatched()){
+                lastPred = null; // at start of list
+            }
+            else{
+                Node s, n; // help with removal of lastPred next
+                while((s = b.next) != null &&
+                        s != b && s.isMatched() &&
+                        (n = s.next) != null && n != s){
+                    b.casNext(s, n);
+                }
+            }
+            this.lastRet = prev;
+
+            for(Node p = prev, s, n;;){
+                s = (p == null) ? head : p.next;
+                if(s == null){
+                    break;
+                }
+                else if(s == p){
+                    p = null;
+                    continue;
+                }
+                Object item = s.item;
+                if(s.isData){
+                    if(item != null && item != s){
+                        nextItem = KLinkedTransferQueue.<E>cast(item);
+                        nextNode = s;
+                        return ;
+                    }
+                }
+                else if(item == null){
+                    break;
+                }
+                // assert s.isMatached();
+                if(p == null){
+                    p = s;
+                }
+                else if((n = s.next) == null){
+                    break;
+                }
+                else if(s == null){
+                    p = null;
+                }
+                else{
+                    p.casNext(s, n);
+                }
+            }
+            nextNode = null;
+            nextItem = null;
+        }
+
+        Itr() { advance(null);}
+
+
+        @Override
+        public boolean hasNext() {
+            return nextNode != null;
+        }
+
+        @Override
+        public E next() {
+            Node p = nextNode;
+            if(p == null) throw new NoSuchElementException();
+            E e = nextItem;
+            advance(p);
+            return e;
+        }
+
+        public final void remove(){
+            final Node lastRet = this.lastRet;
+            if(lastRet == null){
+                throw new IllegalStateException();
+            }
+            this.lastRet = null;
+            if(lastRet.tryMatchData()){
+                unsplice(lastPred, lastRet);
+            }
+        }
+    }
+
+    /** A customized variant of Spliterators IteratorSpliterator */
+    static final class LTQSpliterator<E> implements Spliterator<E>{
+
+        @Override
+        public boolean tryAdvance(Consumer<? super E> action) {
+            return false;
+        }
+
+        @Override
+        public Spliterator<E> trySplit() {
+            return null;
+        }
+
+        @Override
+        public long estimateSize() {
+            return 0;
+        }
+
+        @Override
+        public int characteristics() {
+            return 0;
+        }
     }
 
 
