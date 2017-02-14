@@ -626,10 +626,6 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
-    public ThreadFactory getThreadFactory(){
-        return threadFactory;
-    }
-
     /**
      * Methods for setting control state
      */
@@ -1232,31 +1228,216 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         this.handler = handler;
     }
 
-
-
-
-
+    /**
+     * Initiates an orderly shutdown in which previously submitted
+     * tasks are executed, but no new tasks will be accepted
+     * Invocation has no additional effect if already shut down.
+     *
+     * <p>
+     *     This method does not wait for previously submitted tasks to
+     *     complete execution. Use {@link #awaitTermination(long, TimeUnit)}
+     *     to do that
+     * </p>
+     */
     public void shutdown() {
-
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try{
+            checkShutdownAccess();
+            advanceRunState(SHUTDOWN);
+            interruptIdleWorkers();
+            onShutdown(); // hook for ScheduledThreadPoolExecutor
+        }finally {
+            mainLock.unlock();
+        }
+        tryTerminate();
     }
 
+    /**
+     * Attempts to stop all actively executing tasks, halts the
+     * processing of waiting tasks, and returns a list of the tasks
+     * that were awaiting execution. These tasks are drained (removed)
+     * from the task queue upon return from this method
+     *
+     * <p>
+     *     This method does not wait for actively executing tasks to
+     *     terminate. Use {@link #awaitTermination(long, TimeUnit)} to
+     *     do that
+     * </p>
+     *
+     * <p>
+     *     There are no guarantee beyond best-effort attempts to stop
+     *     processing actively executing tasks. This implementaton
+     *     cancel tasks via {@link Thread#interrupt()}, so any task that
+     *     fials to respond to interrupts may never terminate
+     * </p>
+     *
+     */
     public List<Runnable> shutdownNow() {
-        return null;
+        List<Runnable> tasks;
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try{
+            checkShutdownAccess();
+            advanceRunState(STOP);
+            interruptWorker();
+            tasks = drainQueue();
+        }finally {
+            mainLock.unlock();
+        }
+        tryTerminate();
+        return tasks;
     }
 
     public boolean isShutdown() {
-        return false;
+        return !isRunning(ctl.get());
+    }
+
+    /**
+     * Returns true if this executor is in the process of terminating
+     * after {@link #shutdown()} or {@link #shutdownNow()} but has not
+     * completely terminated. This method may be useful for
+     * debugging. A return of {@code true} reported a sufficient
+     * period after shutdown may indicate that submitted tasks have
+     * ignored or suppressed interruption, causing this executor not
+     * to properly terminate
+     *
+     * @return {@code true} if terminating but not yet terminated
+     */
+    public boolean isTerminating() {
+        int c = ctl.get();
+        return !isRunning(c) && runStateLessThan(c, TERMINATED);
     }
 
     public boolean isTerminated() {
-        return false;
+        return runStateLessThan(ctl.get(), TERMINATED);
     }
 
     public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
-        return false;
+        long nanos = unit.toNanos(timeout);
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try{
+            for(;;){
+                if(runStateAtLeast(ctl.get(), TERMINATED)){
+                    return true;
+                }
+                if(nanos <= 0){
+                    return false;
+                }
+                nanos = termination.awaitNanos(nanos);
+            }
+        }finally {
+            mainLock.unlock();
+        }
     }
 
+    /**
+     * Invokes {@code shutdown} when this executor is no longer
+     * referenced and it has no threads
+     */
+    protected void finalize(){
+        shutdown();
+    }
+
+    /**
+     * Sets the thread factory used to create new threads
+     *
+     * @param threadFactory the new thread factory
+     */
+    public void setThreadFactory(ThreadFactory threadFactory){
+        if(threadFactory == null){
+            throw new NullPointerException();
+        }
+        this.threadFactory = threadFactory;
+    }
+
+    /**
+     * Returns the thread factory used to create new threads
+     *
+     * @return the current thread factory
+     */
+    public ThreadFactory getThreadFactory(){
+        return threadFactory;
+    }
+
+    /**
+     * Sets a new handler for unexecutable tasks
+     *
+     * @param handler the new handler
+     */
+    public void setRejectedExecutionHandler(KRejectedExecutionHandler handler){
+        if(handler == null){
+            throw new NullPointerException();
+        }
+        this.handler = handler;
+    }
+
+    /**
+     * Returns the current handler for unexecutable tasks
+     *
+     * @return the current handler
+     */
+    public KRejectedExecutionHandler getRejectedExecutionHandler(){
+        return handler;
+    }
+
+    /**
+     * Executes the given task sometime in the future. The task
+     * may execute in a new thread or in an existing pooled thread.
+     *
+     * If the task cannot be submitted for execution, either because this
+     * executor has been shutdown or because its capacity has been reached.
+     * the task is handled by the current {@code KRejectedExecutionHandler}
+     *
+     * @param command the task to execute
+     * @throws KRejectedExecutionHandler at discretion of
+     *          {@code KRejectedExecutionHandler}, if the task
+     *          cannot be accepted for execution
+     */
     public void execute(Runnable command) {
+        if(command == null){
+            throw new NullPointerException();
+        }
+        /** Proceed in 3 steps:
+         *
+         * 1. If fewer than corePoolSize threads are running, try to
+         * start a new thread with the given command as its first
+         * task. The call to adWorker atomically checkes runState and
+         * workerCount, and so prevents false alarms that would add
+         * threads when it shouldn't, by returning false;
+         *
+         * 2. If a task can be successfully queued, then we still need
+         * to double-check whether we should have added a thread
+         * (because existing ones died since last checking) or that
+         * the pool shut down since entry into this method, So we
+         * recheck state and if necessary roll back the enqueuing if
+         * stopped, or start a new thread if there are none.
+         *
+         * 3. If we cannot queue task, then we try to added a new
+         * thread. If it fails, we know we are shut down or saturated
+         * and so reject the task
+         */
+
+        int c = ctl.get();
+        if(workerCountOf(c) < corePoolSize){
+            if(addWorker(command, true)){
+                return;
+            }
+            c = ctl.get();
+        }
+        if(isRunning(c) && workQueue.offer(command)){
+            int recheck = ctl.get();
+            if(!isRunning(recheck) && remove(command)){
+                reject(command);
+            }
+            else if(workerCountOf(recheck) == 0){
+                addWorker(null, false);
+            }
+        }
+        else if(!addWorker(command, false)){
+            reject(command);
+        }
 
     }
 
@@ -1473,6 +1654,18 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         return unit.convert(keepAliveTime, TimeUnit.NANOSECONDS);
     }
 
+    /**
+     * Returns the task queue used by this executor, Access to the
+     * task queue is intended primarily for debugging and monitoring
+     * This queue may be in active use. Retrieving the task queue
+     * does not prevent queued task from executing
+     *
+     * @return the task queue
+     */
+    public BlockingQueue<Runnable> getQueue(){
+        return workQueue;
+    }
+
 
     /**
      * Removes this task from the executor's internal queue if it is present
@@ -1498,7 +1691,15 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         return removed;
     }
 
-
+    /**
+     * Tries to remove from the work queue all {@link Future}
+     * tasks that have been cancelled. This method can be useful as a
+     * storage reclamation operation, that has no other impact on
+     * accumulate in work queues until worker threads can actively
+     * remove them. Invoking this method instead tries to remove them now
+     * However, this method may fail to remove tasks in
+     * the presence of interference by other threads.
+     */
     public void purge(){
         final BlockingQueue<Runnable> q = workQueue;
         try{
@@ -1526,7 +1727,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
     }
 
 
-
+    /**************************************** Statistics ***************************************/
 
     /**
      * Returns the current number of threads in the pool
@@ -1567,19 +1768,11 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
-
     /**
-     * Returns the task queue used by this executor, Access to the
-     * task queue is intended primarily for debugging and monitoring
-     * This queue may be in active use. Retrieving the task queue
-     * does not prevent queued task from executing
-     *
-     * @return the task queue
+     * Returns the largest number of threads that have ever
+     * simultaneously been in the pool
+     * @return
      */
-    public BlockingQueue<Runnable> getQueue(){
-        return workQueue;
-    }
-
     public int getLargestPoolSize(){
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
@@ -1589,7 +1782,6 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
             mainLock.lock();
         }
     }
-
 
     /**
      * Returns the approximate total number of tasks that have ever been
@@ -1678,6 +1870,8 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
                 "]";
     }
 
+    /******************************************* Extension hooks ***************************/
+
     /**
      * Method invoked prior executing the given Runnable in the
      * given thread. This method is invoked by thread {@code t} that
@@ -1758,8 +1952,34 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
      * overridings, subclass should generally invoke
      * {@code super.terminated} within this method
      */
-    protected void terminated(){
+    protected void terminated(){}
 
+    /**
+     * A handler for rejected tasks that runs the rejected task
+     * directly in the calling thread of the {@code execute} method,
+     * unless the executor has been shut down, in which case the task
+     * is discarded
+     */
+    public static class CallerRunsPolicy implements RejectedExecutionHandler{
+        /**
+         * Creates a {@code CallerRunsPolicy}
+         */
+        public CallerRunsPolicy() {
+        }
+
+        /**
+         * Executes task r in the caller's thread, unless the executor
+         * has been shut down, in which case the task is discarded
+         *
+         * @param r the runnable task requested to be executed
+         * @param executor the executor attempting to execute this task
+         */
+        @Override
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+            if(!executor.isShutdown()){
+                r.run();
+            }
+        }
     }
 
     /**
@@ -1785,27 +2005,6 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
-    public static class CallerRunaPolicy implements RejectedExecutionHandler{
-        /**
-         * Creates a {@code CallerRunsPolicy}
-         */
-        public CallerRunaPolicy() {
-        }
-
-        /**
-         * Executes task r in the caller's thread, unless the executor
-         * has been shut down, in which case the task is discarded
-         *
-         * @param r the runnable task requested to be executed
-         * @param executor the executor attempting to execute this task
-         */
-        @Override
-        public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-            if(!executor.isShutdown()){
-                r.run();
-            }
-        }
-    }
 
     /**
      * A handler for rejected tasks that silently discards the
@@ -1829,7 +2028,11 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
-
+    /**
+     * A handler for rejected tasks that discards the oldest unhandled
+     * request and then retries {@code execute}, unless the executor
+     * is shut down, in which case the task is discarded
+     */
     public static class DiscardOldestPolicy implements KRejectedExecutionHandler{
 
         /**
