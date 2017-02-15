@@ -264,7 +264,7 @@ public class KSemaphore  implements Serializable{
         @Override
         protected int tryAcquireShared(int acquires) {
             for(;;){
-                if(hasQueuedPredecessors()){ // 1. 判断是否Sync Queue 里面由前几节点
+                if(hasQueuedPredecessors()){ // 1. 判断是否Sync Queue 里面是否有前继节点
                     return -1;
                 }
                 int available = getState();

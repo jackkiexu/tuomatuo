@@ -145,6 +145,24 @@ import java.util.concurrent.locks.LockSupport;
  *      }
  * </pre>
  *
+ * <pre>
+*    # lock 获取
+     Acquire:
+         while(!tryAcquire(arg)){ // tryAcquire交由子类来实现, 改变 AQS 的state的值
+             1. tryAcquire 获取lock没成功, 则入 Sync Queue
+             2. 若当前节点是 head.next, 则再次尝试获取一下lock (tryAcquire)
+             3. 获取 lock 失败, 则改变 前继节点的 waitStatus 的值(变成SIGNAL), 进行 blocked
+         }
+
+     # lock 释放
+     Release:
+         if(tryRelease(arg)){ / tryRelease交由子类来实现, 改变 AQS 的state的值
+             1. 判断 lock 是否释放彻底
+             2. 若自己被标记为SIGNAL, 则唤醒后继节点, 通知其去获取 AQS 中 state 的值
+             3. 将自己的 waitStatus 进行复位到 0
+         }
+ * </pre>
+ *
  * (Shared mode is similar but may involve cascading signals)
  *
  *  <p id="barging">
@@ -406,10 +424,10 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
          *      3. 前继节点使用完lock, 进行释放, 因为自己被标记为 SIGNAL, 所以唤醒其后继节点
          *
          *      waitStatus 变化过程:
-         *          1. 独占模式下 0(初始) -> signal(被后继节点标记为release需要唤醒后继节点) -> 0 (等释放好lock, 会恢复到0)
-         *          2. 独占模式 + 使用 Condition 0(初始) -> signal(被后继节点标记为release需要唤醒后继节点) -> 0 (等释放好lock, 会恢复到0)
+         *          1. 独占模式下: 0(初始) -> signal(被后继节点标记为release需要唤醒后继节点) -> 0 (等释放好lock, 会恢复到0)
+         *          2. 独占模式 + 使用 Condition:  0(初始) -> signal(被后继节点标记为release需要唤醒后继节点) -> 0 (等释放好lock, 会恢复到0)
          *              其上可能涉及 中断与超时, 只是多了一个 CANCELLED, 当节点变成 CANCELLED, 后就等着被清除
-         *          3. 共享模式: 0(初始) -> PROPAGATE(获取 lock 或release lock 时) (获取 lock 时会调用 setHeadAndPropagate 来进行 传递式的唤醒后继节点, 知道碰到 独占模式的节点)
+         *          3. 共享模式: 0(初始) -> PROPAGATE(获取 lock 或release lock 时) (获取 lock 时会调用 setHeadAndPropagate 来进行 传递式的唤醒后继节点, 直到碰到 独占模式的节点)
          *          4. 共享模式 + 独占模式: 0(初始) -> signal(被后继节点标记为release需要唤醒后继节点) -> 0 (等释放好lock, 会恢复到0)
          *      其上的这些状态变化主要在: doReleaseShared , shouldParkAfterFailedAcquire 里面
          *
@@ -426,7 +444,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
          * unconditionally propagate
          */
         /**
-         * 当前节点获取到 lock 或进行 release lock 时, 共享模式的最终状态是 PROPAGATE(PS: 有可能共享模式的节点变成 PROPAGATE 之前就被其后继节点抢占 head 节点, 而剔除 Sync Queue)
+         * 当前节点获取到 lock 或进行 release lock 时, 共享模式的最终状态是 PROPAGATE(PS: 有可能共享模式的节点变成 PROPAGATE 之前就被其后继节点抢占 head 节点, 而 从Sync Queue中被踢出掉)
          */
         static final int PROPAGATE = -3;
 
@@ -472,7 +490,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
          * 节点在 Sync Queue 里面时的前继节点(主要来进行 skip CANCELLED 的节点)
          * 注意: 根据 addWaiter方法:
          *  1. prev节点在队列里面, 则 prev != null 肯定成立
-         *  2. prev != null 成立不一定 node 就在 Sync Queue 里面
+         *  2. prev != null 成立, 不一定 node 就在 Sync Queue 里面
          */
         volatile Node prev;
 
@@ -698,7 +716,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
      * Wakes up node's successor, if one exists.
      * 唤醒 node 的后继节点
      * 这里有个注意点: 唤醒时会将当前node的标识归位为 0
-     * 等于当前节点标识为 的流转过程: 0(刚加入queue) -> signal (被后继节点要求在释放时需要唤醒) -> 0 (进行唤醒后继节点)
+     * 等于当前节点标识位 的流转过程: 0(刚加入queue) -> signal (被后继节点要求在释放时需要唤醒) -> 0 (进行唤醒后继节点)
      *
      */
     private void unparkSuccessor(Node node) {
@@ -1933,7 +1951,7 @@ public abstract class KAbstractQueuedSynchronizer extends KAbstractOwnableSynchr
     /**
      * 将 Node 从Condition Queue 转移到 Sync Queue 里面
      * 在调用transferForSignal之前, 会 first.nextWaiter = null;
-     * 而我们发现 若节点是因为 timeout / interrupt 进行转移, 则不会清除两种情况的转移都会把 wautStatus 置为 0
+     * 而我们发现 若节点是因为 timeout / interrupt 进行转移, 则不会进行这步操作; 两种情况的转移都会把 wautStatus 置为 0
      */
     final boolean transferForSignal(Node node){
         /**

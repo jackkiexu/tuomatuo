@@ -10,7 +10,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * An {@link ExecutorService} that executes each submitted task usng
+ * An {@link ExecutorService} that executes each submitted task using
  * one of possibly several pooled thread, normally configured
  * using {@link Executors} factory methods
  *
@@ -370,21 +370,21 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
      * below)
      *
      */
-    private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
-    private static final int COUNT_BITS = Integer.SIZE - 3;
-    private static final int CAPACITY = (1 << COUNT_BITS) - 1;
+    public final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
+    public static final int COUNT_BITS = Integer.SIZE - 3; // 29
+    public static final int CAPACITY = (1 << COUNT_BITS) - 1;// 11111 11111111 11111111 11111111 (29个1)
 
     // runState is stored in the high-order bits
-    private static final int RUNNING      = -1 << COUNT_BITS;
-    private static final int SHUTDOWN     = 0 << COUNT_BITS;
-    private static final int STOP         = 1 << COUNT_BITS;
-    private static final int TIDYING      = 2 << COUNT_BITS;
-    private static final int TERMINATED   = 3 << COUNT_BITS;
+    public static final int RUNNING      = -1 << COUNT_BITS; // 11100000 00000000 00000000 00000000 (最前面3位是 111)
+    public static final int SHUTDOWN     = 0 << COUNT_BITS; // 00000000 00000000 00000000 00000000 (最前面3位是 000)
+    public static final int STOP         = 1 << COUNT_BITS; //  00100000 00000000 00000000 00000000 (最前面3位是 001)
+    public static final int TIDYING      = 2 << COUNT_BITS; // 01000000 00000000 00000000 00000000 (最前面3位是 010)
+    public static final int TERMINATED   = 3 << COUNT_BITS; // 01100000 00000000 00000000 00000000 (最前面3位是 011)
 
     // packing and unpacking ctl
-    private static int runStateOf(int c)     { return c & ~CAPACITY; }
-    private static int workerCountOf(int c)  { return c & CAPACITY; }
-    private static int ctlOf(int rs, int wc) { return rs | wc; }
+    public static int runStateOf(int c)     { return c & ~CAPACITY; } // 先 非 再与
+    public static int workerCountOf(int c)  { return c & CAPACITY; } // 与
+    public static int ctlOf(int rs, int wc) { return rs | wc; } // 或
 
 
     /**
@@ -1403,7 +1403,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
          *
          * 1. If fewer than corePoolSize threads are running, try to
          * start a new thread with the given command as its first
-         * task. The call to adWorker atomically checkes runState and
+         * task. The call to adWorker atomically checks runState and
          * workerCount, and so prevents false alarms that would add
          * threads when it shouldn't, by returning false;
          *

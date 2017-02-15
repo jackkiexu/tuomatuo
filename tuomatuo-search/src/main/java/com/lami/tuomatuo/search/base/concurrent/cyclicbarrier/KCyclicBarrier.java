@@ -267,10 +267,10 @@ public class KCyclicBarrier {
                          * 情况
                          *  1. await 抛 InterruptedException && g != generation
                          *      所有线程都到达 barrier(这是会更新 generation), 并且进行唤醒所有的线程; 但这时 当前线程被中断了
-                         *      没关系, 当前线程还是能获取 lock, 但是为了让外面的程序直到被中断过, 所以自己中断一下
+                         *      没关系, 当前线程还是能获取 lock, 但是为了让外面的程序知道自己被中断过, 所以自己中断一下
                          *  2. await 抛 InterruptedException && g == generation && g.broken = true
                          *      其他线程触发了 barrier broken, 导致 g.broken = true, 并且进行 signalALL(), 但就在这时
-                         *      当前的线程也被 中断, 但是为了让外面的程序直到被中断过, 所以自己中断一下
+                         *      当前的线程也被 中断, 但是为了让外面的程序知道自己被中断过, 所以自己中断一下
                          *
                          */
                         Thread.currentThread().interrupt();
@@ -283,7 +283,7 @@ public class KCyclicBarrier {
                     throw new BrokenBarrierException();
                 }
 
-                if(g != generation){                 // 12. barrier broken 直接return
+                if(g != generation){                 // 12. 所有线程到达 barrier 直接返回
                     return index;
                 }
 
@@ -293,7 +293,7 @@ public class KCyclicBarrier {
                 }
             }
         }finally {
-            lock.unlock();                          // 14. 带用 awaitXX 获取lock后进行释放lock
+            lock.unlock();                          // 14. 调用 awaitXX 获取lock后进行释放lock
         }
     }
 
