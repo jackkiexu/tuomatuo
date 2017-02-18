@@ -349,6 +349,7 @@ public class NioWorker implements Runnable {
 
                 try {
                     for(int i = channel.getConfig().getWriteSpinCount(); i > 0; i--){
+                        // 这里的 a.getBytes 是正真的写数据
                         localWrittenBytes = a.getBytes(channel.currentWriteIndex, channel.socket, Math.min(maxWritenBytes - writtenBytes, a.writerIndex() - channel.currentWriteIndex));
 
                         if(localWrittenBytes != 0){
