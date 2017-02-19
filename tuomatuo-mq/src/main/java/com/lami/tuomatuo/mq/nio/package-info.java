@@ -2,6 +2,13 @@
  * Created by xjk on 10/22/16.
  *
  * rox java nio tutorial (http://rox-xmlrpc.sourceforge.net/niotut/)
+ * 非常重要 (下面的)
+ * http://flychao88.iteye.com/blog/2207499
+ * 代码的 github 地址
+ * https://github.com/jjenkov/java-nio-server
+ * 注意点
+ * http://codepub.cn/2016/02/01/Java-NIO-development-Precautions/
+ * http://www.cnblogs.com/pingh/p/3224990.html
  *
  * General principles
  *
