@@ -10,6 +10,11 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
+ *
+ * http://fangjian0423.github.io/2016/03/22/java-threadpool-analysis/
+ * http://www.cnblogs.com/wanly3643/p/3910428.html
+ * https://my.oschina.net/pingpangkuangmo/blog/668520?fromerr=8v8wsGrl
+ *
  * An {@link ExecutorService} that executes each submitted task using
  * one of possibly several pooled thread, normally configured
  * using {@link Executors} factory methods
@@ -719,7 +724,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
      * Interrupts all threads, even if active. Ignores SecurityExceptions
      * (in which case some threads may remain uninterrupted)
      */
-    private void interruptWorker(){
+    private void interruptWorkers(){
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
@@ -1280,7 +1285,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         try{
             checkShutdownAccess();
             advanceRunState(STOP);
-            interruptWorker();
+            interruptWorkers();
             tasks = drainQueue();
         }finally {
             mainLock.unlock();

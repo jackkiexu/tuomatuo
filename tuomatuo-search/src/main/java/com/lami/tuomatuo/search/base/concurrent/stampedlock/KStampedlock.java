@@ -169,14 +169,13 @@ import java.util.concurrent.locks.ReadWriteLock;
  *
  * </p>
  *
- *
- *
- *
- *
  * Created by xujiankang on 2017/2/10.
  */
 public class KStampedlock implements Serializable {
 
+    /**
+     *
+     */
 
     private static final long serialVersionUID = -6001602636862214147L;
 
