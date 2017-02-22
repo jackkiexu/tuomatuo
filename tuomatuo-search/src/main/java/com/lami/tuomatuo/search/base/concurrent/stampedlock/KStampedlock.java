@@ -8,9 +8,13 @@ import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReadWriteLock;
 
 /**
+ *
+ * http://www.hpl.hp.com/techreports/2012/HPL-2012-68.pdf
+ *
  * A capability-based lock with three modes for controlling read/write
  * access. The state of a StampedLock consists of a version and mode
  * Lock acquisition methods return a stamp that represents and
@@ -174,7 +178,81 @@ import java.util.concurrent.locks.ReadWriteLock;
 public class KStampedlock implements Serializable {
 
     /**
+     * Algorithmic notes:
      *
+     * The design employs elements of Sequence locks
+     * (as used in linux kernels: see Lameter's
+     * http://www.lameter.com/galato2005.pdf
+     * and elsewhere; see
+     * Boehm's http://www.hpl.hp.com/techreports/2012/HPL-2012-68.html)
+     * and Ordered RW locks (see Shirako et al
+     * http:// dl.acm.org/citation.cfm?id=2312015)
+     *
+     * Conceptually, the primary state of the lock includes a sequence
+     * number that is odd when write-locked and even otherwise
+     * However, this is offset by a reader count that is non-zero when
+     * read-locked. The read count is ignored when validating
+     * "optimistic" seqlock-reader-style stamps. Because we must use
+     * a small finite a number of bits (currently 7) for readers, a
+     * supplementary reader overflow word is used when the number of
+     * readers exceeds the count field. We do this by treating the max
+     * reader exceeds the count field. We do this by treating the max
+     * reader count value(RBITS) as spinlock protecting overflow
+     * updates
+     *
+     * Waiters use a moddified form of CLH lock used in
+     * AbstractQueuedSynchronizer (see its internal documentation for
+     * a fuller account), where each node is tagged (field mode) as
+     * either a reader or writer. Sets of waiting readers are grouped
+     * (linked) under a common node (field cowait) so act as a single
+     * node with respect to most CLH mechanics. By virtue of the
+     * queue structure, wait nodes need not actually carry sequence
+     * number; we known each is greater than its predecessor. This
+     * simplifies the scheduling policy to a mainly-FIFO scheme that
+     * incorporates elements of Phase-Fair locks(see Brandenburg &
+     * Anderson, especially http://www.cs.unc.edu/~bbb/diss/). In
+     * particular, we use the phase-fair anti-barging rule: if an
+     * incoming reader arrives while read lock is held but there is a
+     * queued writer, this incoming reader is queued. (this rule is
+     * responsible for some of the complexity of method acquireRead.
+     * but without it, the lock becomes hightly unfair) Method release
+     * does not (and sometimes cannot) itself wake up cowaiters. This
+     * is done by the primary thread, but helped by any other threads
+     * with nothing better to do in methods acquireRead and
+     * acquireWrite
+     *
+     * These rules apply to threads actually queued. All tryLock forms
+     * opportunistically try to acquire locks regardless of preference
+     * rules, and so may "barge" their way in. Randomized spining is
+     * used in the acquire methods to reduce (increasingly expensive)
+     * context switching while also acoiding sustained memory
+     * thrashing among many threads. We limit spins to the head of
+     * queue. A thread spin-waits up to SPINS times (where each
+     * iteration deceases spin count with 50% probability) before
+     * blocking. If. upon wakening it fails to obtain lock, and is
+     * still (or become) the first waiting thread (which indicates
+     * that some other thread barged and obtained lock). it escalates
+     * spins (up to MAX_HEAD_SPINS) to reduce the linklihood of
+     * continually losing to barging threads
+     *
+     * Nearly all of there mechanics are carried out in methods
+     * acquireWrite and acquireRead, that, as typical of such code,
+     * sprawl out because actions and retries rely on consistent sets
+     * of locally cached reads
+     *
+     * As noted in Boehm's paper(above), sequence validation(mainly
+     * method validate()) requires stricter ordering rules than apply
+     * to normal valatile reads (of "state"). To force orderings of
+     * reads before a validation and the validation itself in those
+     * cases where this is not already forced we use
+     * Unsafe loadFence
+     *
+     * The memory layout keeps lock state and queue pointers together
+     * (normally on the same cache line). This usually works well for
+     * read-mostly loads. In most other cases. the natural tendency of
+     * adaptive-spin CLH locks to reduce memory contention lessens
+     * motivation to further spread out contended locations, but might
+     * be subject to future improvements
      */
 
     private static final long serialVersionUID = -6001602636862214147L;
@@ -252,6 +330,123 @@ public class KStampedlock implements Serializable {
     /** Creates a new lock, initially in unlocked state */
     public KStampedlock() {
         state = ORIGIN;
+    }
+
+    /**
+     * Exclusively acquires the lock, blocking if necessary
+     * until available
+     *
+     * @return a stamp that can be used to unlock or convert mode
+     */
+    public long writeLock(){
+        long s, next; // bypass acquireWrite in fully unlocked case only
+        return ((((s = state) & ABITS) == 0L &&
+                U.compareAndSwapLong(this, STATE, s, next = s + WBIT)) ?
+                next : acquireWrite(false, 0L));
+    }
+
+    /**
+     * Exclusively acquires the lock if it is immediately available
+     *
+     * @return a stamp that can be used to unlock or convert mode
+     *      or zero if the lock is not available
+     */
+    public long tryWriteLock(){
+        long s, next;
+        return ((((s = state) & ABITS) == 0L &&
+                U.compareAndSwapLong(this, STATE, s, next = s + WBIT)) ?
+                next : 0L);
+    }
+
+
+    /**
+     * See above for explanation
+     *
+     * @param interruptible true if should check interrupts and if so
+     *                      return INTERRUPTED
+     * @param deadline if nonzero, the System.nanoTime value to timeout
+     *                 at (and return zero)
+     * @return next state, or INTERRUPTED
+     */
+    private long acquireWrite(boolean interruptible, long deadline){
+        WNode node = null, p;
+        for(int spins = -1;;){ // spin while enqueuing
+            long m, s, ns;
+            if((m = (s = state) & ABITS) == 0L){
+                if(U.compareAndSwapLong(this, STATE, s, ns = s + WBIT)){
+                    return ns;
+                }
+            }
+            else if(spins < 0){
+                spins = (m == WBIT && wtail == whead) ? SPINS : 0;
+            }
+            else if(spins > 0){
+                if(LockSupport.nextSecondarySeed() >= 0){
+                    --spins;
+                }
+            }
+            else if((p = wtail) == null){ // initialize queue
+                WNode hd = new WNode(WMODE, null);
+                if(U.compareAndSwapObject(this, WHEAD, null, hd)){
+                    wtail = hd;
+                }
+            }
+            else if(node == null){
+                node = new WNode(WMODE, p);
+            }
+            else if(node.prev != p){
+                node.prev = p;
+            }
+            else if(U.compareAndSwapObject(this, WTAIL, p, node)){
+                p.next = node;
+                break;
+            }
+        }
+
+        for(int spins = -1;;){
+            WNode h, np, pp; int ps;
+            if((h = whead) == p){
+                if(spins < 0){
+                    spins = HEAD_SPINS;
+                }
+                else if(spins < MAX_HEAD_SPINS){
+                    spins <<= 1;
+                }
+
+                for(int k = spins;;){ // spin at head
+                    long s, ns;
+                    if(((s = state) & ABITS) == 0L){
+                        if(U.compareAndSwapLong(this, STATE, s, ns = s + WBIT)){
+                            whead = node;
+                            node.prev = null;
+                            return ns;
+                        }
+                    }
+                    else if(LockSupport.nextSecondarySeed() >= 0 && --k <= 0){
+                        break;
+                    }
+                }
+            }
+            else if(h != null){ // help release stale waiters
+                WNode c; Thread w;
+                while((c = h.cowait) != null){
+                    if(U.compareAndSwapObject(h, WCOWAIT, c, c.cowait) && ((w = c.thread) != null)){
+                        U.unpark(w);
+                    }
+                }
+            }
+
+            if(whead == h){
+                if((np = node.prev) != p){
+                    if(np != null){
+                        if(){
+
+                        }
+                    }
+                }
+            }
+        }
+        return 0l;
     }
 
     /**
