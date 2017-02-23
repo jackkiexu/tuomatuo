@@ -381,9 +381,9 @@ public class KStampedlock implements Serializable {
                 spins = (m == WBIT && wtail == whead) ? SPINS : 0;
             }
             else if(spins > 0){
-                if(LockSupport.nextSecondarySeed() >= 0){
+                /*if(LockSupport.nextSecondarySeed() >= 0){
                     --spins;
-                }
+                }*/
             }
             else if((p = wtail) == null){ // initialize queue
                 WNode hd = new WNode(WMODE, null);
@@ -422,9 +422,9 @@ public class KStampedlock implements Serializable {
                             return ns;
                         }
                     }
-                    else if(LockSupport.nextSecondarySeed() >= 0 && --k <= 0){
+                   /* else if(LockSupport.nextSecondarySeed() >= 0 && --k <= 0){
                         break;
-                    }
+                    }*/
                 }
             }
             else if(h != null){ // help release stale waiters
@@ -439,14 +439,56 @@ public class KStampedlock implements Serializable {
             if(whead == h){
                 if((np = node.prev) != p){
                     if(np != null){
-                        if(){
-
-                        }
+                        (p = np).next = node; // stale
+                    }
+                }
+                else if((ps = p.status) == 0){
+                    U.compareAndSwapInt(p, WSTATUS, 0, WAITING);
+                }
+                else if(ps == CANCELLED){
+                    if((pp = p.prev) != null){
+                        node.prev = pp;
+                        pp.next = node;
+                    }
+                }
+                else {
+                    long time; // 0 argument to park means no timeout
+                    if(deadline == 0L){
+                        time = 0L;
+                    }else if((time = deadline - System.nanoTime()) <= 0L){
+                        return cancelWaiter(node, node, false);
+                    }
+                    Thread wt = Thread.currentThread();
+                    U.putObject(wt, PARKBLOCKER, this);
+                    node.thread = wt;
+                    if(p.status < 0 && (p != h || (state & ABITS) != 0L) &&
+                            whead == h && node.prev == p){
+                        U.park(false, time); // emulate LockSupport park
+                    }
+                    node.thread = null;
+                    U.putObject(wt, PARKBLOCKER, null);
+                    if(interruptible && Thread.interrupted()){
+                        return cancelWaiter(node, node, true);
                     }
                 }
             }
         }
-        return 0l;
+    }
+
+    /**
+     * See above for explanation
+     *
+     * @param interruptible true if should check interrupts and if so
+     *                      return INTERRUPTED
+     * @param deadline if nonzero, the System nanoTime value to timeout
+     *                 at (and return zero)
+     * @return  next state, or INTERRUPTED
+     */
+    private long acquireRead(boolean interruptible, long deadline){
+        WNode node = null, p;
+        for(int spins = -1;;){
+            WNode h;
+        }
     }
 
     /**
@@ -465,7 +507,6 @@ public class KStampedlock implements Serializable {
 
         @Override
         public void lock() {
-
         }
 
         @Override
@@ -540,6 +581,133 @@ public class KStampedlock implements Serializable {
         }
     }
 
+
+
+    /**
+     * Wakes up successor of h (normally whead). This is normally
+     * just h.next, but may require traversal from wtail if next
+     * pointer are lagging. This may fail to wake up an acquiring
+     * thread when one or more have been cancelled, but the cancel
+     * method themsalves provide extra safeguards to ensure liveness
+     *
+     * @param h
+     */
+    private void release(WNode h){
+        if(h != null){
+            WNode q; Thread w;
+            U.compareAndSwapInt(h, WSTATUS, WAITING, 0);
+            if((q = h.next) == null || q.status == CANCELLED){
+                for(WNode t = wtail; t != null && t != h; t = t.prev){
+                    if(t.status <= 0){
+                        q = t;
+                    }
+                }
+            }
+            if(q != null && (w = q.thread) != null){
+                U.unpark(w);
+            }
+        }
+    }
+
+
+    /**
+     * If node non-null, forces cancel status and unsplices it from
+     * queue if possible and wakes up any cowaiters(of the node, or
+     * group, as applicable), and in any case helpd release current
+     * first waiter if lock is free. (Calling with null arguments
+     * serves as a conditional from of release, which is not currently
+     * needed but may needed under possible future cancellation
+     * policies). This is a variant of cancellation methods in
+     * AbstractQueuedSynchronizer (see its detailed explanation in AQS
+     * internal documentation)
+     *
+     * @param node if  nonnull, the waiter
+     * @param group either node or the group node is cowaiting with
+     * @param interrupted if already interrupted
+     * @return INTERRUPTED if interrupted or Thread interrupted, else zero
+     */
+    private long cancelWaiter(WNode node, WNode group, boolean interrupted){
+        if(node != null && group != null){
+            Thread w;
+            node.status = CANCELLED;
+            // unsplice cancelled nodes from group
+            for(WNode p = group, q; (q = p.cowait) != null;){
+                if(q.status == CANCELLED){
+                    U.compareAndSwapObject(p, WCOWAIT, q, q.cowait);
+                    p = group; // restart
+                }
+                else{
+                    p = q;
+                }
+            }
+
+            if(group == node){
+                for(WNode r = group.cowait; r != null; r = r.cowait){
+                    if((w = r.thread) != null){
+                        U.unpark(w); // wake up uncancelled co-waiters
+                    }
+                }
+
+                for(WNode pred = node.prev; pred != null;){ // unsplice
+                    WNode succ, pp; // find valid successor
+                    while((succ = node.next) == null ||
+                            succ.status == CANCELLED){
+                        WNode q = null;     // find successor the slow way
+                        for(WNode t = wtail; t != null && t != node; t = t.prev){
+                            if(t.status != CANCELLED){
+                                q = t;  // don't link if succ cancelled
+                            }
+                        }
+
+                        if(succ == q || // ensure accurate successor
+                                U.compareAndSwapObject(node, WNEXT, succ, succ = q)){
+                            if(succ == null && node == wtail){
+                                U.compareAndSwapObject(this, WTAIL, node, pred);
+                            }
+                            break;
+                        }
+                    }
+
+                    if(pred.next == node){ // unsplice pred link
+                        U.compareAndSwapObject(pred, WNEXT, node, succ);
+                    }
+                    if(succ != null && (w = succ.thread) != null){
+                        succ.thread = null;
+                        U.unpark(w);    // wake up succ to abserve new pred
+                    }
+                    if(pred.status != CANCELLED || (pp = pred.prev) == null){
+                        break;
+                    }
+                    node.prev = pp; // repeat if new pred wrong/cancelled
+                    U.compareAndSwapObject(pp, WNEXT, pred, succ);
+                    pred = pp;
+                }
+            }
+        }
+
+        WNode h; // Possibly release first waiter
+        while((h = whead) != null){
+            long s; WNode q; // similar to release() but check eligibility
+            if((q = h.next) == null || q.status == CANCELLED){
+                for(WNode t = wtail; t != null && t != h; t = t.prev){
+                    if(t.status <= 0){
+                        q = t;
+                    }
+                }
+            }
+
+            if(h == whead){
+                if(q != null && h.status == 0 &&
+                        ((s = state) & ABITS) != WBIT && // waiter is eligible
+                        (s == 0L || q.mode == RMODE)){
+                    release(h);
+                }
+                break;
+            }
+        }
+
+        return (interrupted || Thread.interrupted()) ? INTERRUPTED : 0L;
+    }
 
 
     // Unsafe mechanics
