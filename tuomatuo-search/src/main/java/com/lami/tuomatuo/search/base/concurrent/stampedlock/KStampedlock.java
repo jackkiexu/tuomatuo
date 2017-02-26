@@ -488,6 +488,8 @@ public class KStampedlock implements Serializable {
         WNode node = null, p;
         for(int spins = -1;;){
             WNode h;
+            if((h = whead) == (p = wtail)){
+            }
         }
     }
 
