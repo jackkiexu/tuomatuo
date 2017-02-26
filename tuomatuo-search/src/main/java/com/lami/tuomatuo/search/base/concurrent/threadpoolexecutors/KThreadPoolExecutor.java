@@ -10,6 +10,11 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
+ *
+ * http://fangjian0423.github.io/2016/03/22/java-threadpool-analysis/
+ * http://www.cnblogs.com/wanly3643/p/3910428.html
+ * https://my.oschina.net/pingpangkuangmo/blog/668520?fromerr=8v8wsGrl
+ *
  * An {@link ExecutorService} that executes each submitted task using
  * one of possibly several pooled thread, normally configured
  * using {@link Executors} factory methods
@@ -25,7 +30,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * </p>
  *
  * <p>
- *     To be useful, across a wide range of contexts, thisclass
+ *     To be useful, across a wide range of contexts, this class
  *     provides many adjustable parameters and extensibility
  *     hooks. However, programmers are urged to use the more convenient
  *     {@link Executors} factory method {@link Executors#newCachedThreadPool()}
@@ -41,7 +46,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * <dd>
  *     A {@code KThreadPoolExecutor} will automatically adjust the
  *     pool size (see {@link #"getPoolSize})
- *     according to the boundd set by
+ *     according to the bound set by
  *     corePoolSize (see {@link #"getCorePoolSize}) and
  *     maximumPoolSize (see {@link #"getMaimumPoolSize}).
  * </dd>
@@ -53,8 +58,8 @@ import java.util.concurrent.locks.ReentrantLock;
  * maximumPoolSize threads running, a new thread will be created only
  * if the queue is full. By setting corePoolSize and maximumPoolSize
  * the same, you create a fixed-size thread pool, By setting
- * maximumPoolSize to an exxentially unbounded value such as {@code
- * Integer.Max_VALUE}, you allow he pool to accommodate an arbitrary
+ * maximumPoolSize to an essentially unbounded value such as {@code
+ * Integer.Max_VALUE}, you allow the pool to accommodate an arbitrary
  * number of concurrent tasks. Most typically, core and maximum pool
  * sizes are set only upon construction, but many also be changed
  * dynamically using {@link #"setCorePoolSize} and {@link #"setMaximumPoolSize}
@@ -126,7 +131,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * <li>
  *     If a request cannot be queued, a new thread is created unless
- *     this would excedd maximumPoolSize, in which case, the task will be
+ *     this would exceed maximumPoolSize, in which case, the task will be
  *     rejected.
  * </li>
  *
@@ -134,7 +139,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * There are three general strategies for queuing:
  * <li>
- *     <em>Direct handoff.</em>
+ *     <em>Direct handoffs.</em>
  *     A good default choice for a work
  *     queue is a {@link com.lami.tuomatuo.search.base.concurrent.synchronousqueue.KSynchronousQueue} that hands off tasks to threads
  *     without otherwise holding them. Here, an attempt to queue a task
@@ -143,7 +148,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *     handling sets of requests that might have internal dependencies.
  *     Direct handoffs generally require unbounded maximumPoolSizes to
  *     avoid rejection of new submitted task. This in turn admits the
- *     possibility od unbounded thread growth when commands continue to
+ *     possibility of unbounded thread growth when commands continue to
  *     arrive on average faster than they can be processed.
  * </li>
  *
@@ -158,7 +163,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *     each task is completely independent of others, so tasks cannot
  *     affect each other execution; for example, in a web page server.
  *     while this style of queuing can be useful in smoothing out
- *     transient bursts of requests, it adits the possibility of
+ *     transient bursts of requests, it admits the possibility of
  *     unbounded work queue growth when commands continue to arrive on
  *     average faster than they can be processed
  * </li>
@@ -167,7 +172,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *     <em>Bounded queues</em>
  *     A bounded queue (for example, an
  *     {@link ArrayBlockingQueue}) helps prevent resource exhaustion when
- *     used with finite maximumPoolSizes, but can be more exhaustion when
+ *     used with finite maximumPoolSizes, but can be more difficult when
  *     tune and control. Queue sizes and maximum pool sizes may be traded
  *     off for each other: Using large queues and small pools minimizes
  *     CPU usage, OS resources, and context-switching overhead, but can
@@ -215,7 +220,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *     {@link java.util.concurrent.RejectedExecutionHandler} classes. Doing so requires
  *     some care
  *     especially when policies are designed to work only under particular
- *     capacity or queuin policies
+ *     capacity or queuing policies
  *
  * </ol>
  *
@@ -243,7 +248,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * <dd>
  *     Method {@link #"getQueue()} allows access to the work queue
  *     for purposes of monitoring and debugging. Use of this method for
- *     any other purpose is stronglt discouraged. Two supplied methods,
+ *     any other purpose is strongly discouraged. Two supplied methods,
  *     {@link #"remove(Runnable)} and {@link #"purge} are available to
  *     assist in storage reclamation when large numbers of queued tasks
  *     become cancelled
@@ -315,7 +320,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class KThreadPoolExecutor extends AbstractExecutorService {
 
     /**
-     * The main pool control state, ctl, is an atomic interger packing
+     * The main pool control state, ctl, is an atomic integer packing
      * two conceptual fields
      *      workerCount, indicating the effective number of threads
      *      runState, indicating whether running, shutting down etc
@@ -330,7 +335,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
      * The workerCount is the number of workers that have been
      * permitted to start and not permitted to stop. The value may be
      * transiently different from the actual number of live threads,
-     * for example when a ThreadFactory fial to create a thread when
+     * for example when a ThreadFactory fails to create a thread when
      * asked, and when exiting threads are still performing
      * bookkeeping before terminating. The user-visible pool size is
      * reported as the current size of the wokers set.
@@ -347,7 +352,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
      *  TERMINATED: terminated() has completed
      *
      *  The numerical order among these values matters, to allow
-     *  ordered comparisons. The runState monotomically increase over
+     *  ordered comparisons. The runState monotonically increase over
      *  time, but need not hit each state. The transitions are :
      *
      *   RUNNING -> SHUTDOWN
@@ -366,25 +371,25 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
      * straightforward than you'd like because the queue may become
      * empty after non-empty and vice versa during SHUTDOWN state, but
      * we can only terminate if, after seeing that it is empty, we see
-     * that workerCount is 0 (which sometimes entails a reacheck -- see
+     * that workerCount is 0 (which sometimes entails a recheck -- see
      * below)
      *
      */
-    public final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
+    public final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0)); // 整个线程池状态 与 当前线程数的 与运算后的值
     public static final int COUNT_BITS = Integer.SIZE - 3; // 29
     public static final int CAPACITY = (1 << COUNT_BITS) - 1;// 11111 11111111 11111111 11111111 (29个1)
 
     // runState is stored in the high-order bits
     public static final int RUNNING      = -1 << COUNT_BITS; // 11100000 00000000 00000000 00000000 (最前面3位是 111)
-    public static final int SHUTDOWN     = 0 << COUNT_BITS; // 00000000 00000000 00000000 00000000 (最前面3位是 000)
-    public static final int STOP         = 1 << COUNT_BITS; //  00100000 00000000 00000000 00000000 (最前面3位是 001)
-    public static final int TIDYING      = 2 << COUNT_BITS; // 01000000 00000000 00000000 00000000 (最前面3位是 010)
-    public static final int TERMINATED   = 3 << COUNT_BITS; // 01100000 00000000 00000000 00000000 (最前面3位是 011)
+    public static final int SHUTDOWN     = 0 << COUNT_BITS;  // 00000000 00000000 00000000 00000000 (最前面3位是 000)
+    public static final int STOP         = 1 << COUNT_BITS;  //  00100000 00000000 00000000 00000000 (最前面3位是 001)
+    public static final int TIDYING      = 2 << COUNT_BITS;  //  01000000 00000000 00000000 00000000 (最前面3位是 010)
+    public static final int TERMINATED   = 3 << COUNT_BITS;  //  01100000 00000000 00000000 00000000 (最前面3位是 011)
 
     // packing and unpacking ctl
-    public static int runStateOf(int c)     { return c & ~CAPACITY; } // 先 非 再与
-    public static int workerCountOf(int c)  { return c & CAPACITY; } // 与
-    public static int ctlOf(int rs, int wc) { return rs | wc; } // 或
+    public static int runStateOf(int c)     { return c & ~CAPACITY; } // 1. 将 29个1做一个非, 就变成 3个1加上29个0, 再与运算 c, 得到线程池的状态
+    public static int workerCountOf(int c)  { return c & CAPACITY; } // 与 29个1做与运算 得到现在的线程数
+    public static int ctlOf(int rs, int wc) { return rs | wc; } // 或 其实就是将 线程池状态 与 线程数合并在一起
 
 
     /**
@@ -719,7 +724,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
      * Interrupts all threads, even if active. Ignores SecurityExceptions
      * (in which case some threads may remain uninterrupted)
      */
-    private void interruptWorker(){
+    private void interruptWorkers(){
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
         try {
@@ -1280,7 +1285,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
         try{
             checkShutdownAccess();
             advanceRunState(STOP);
-            interruptWorker();
+            interruptWorkers();
             tasks = drainQueue();
         }finally {
             mainLock.unlock();

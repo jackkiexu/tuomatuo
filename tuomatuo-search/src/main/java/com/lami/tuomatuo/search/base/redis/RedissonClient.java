@@ -22,7 +22,6 @@ public class RedissonClient {
         config.useSingleServer().setAddress(host)
                 .setConnectionPoolSize(1000);
         Redisson redisson = Redisson.create(config);
-
         return redisson;
     }
 
