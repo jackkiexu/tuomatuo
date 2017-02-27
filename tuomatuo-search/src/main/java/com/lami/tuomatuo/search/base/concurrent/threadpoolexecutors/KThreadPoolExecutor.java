@@ -12,6 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  *
  * http://fangjian0423.github.io/2016/03/22/java-threadpool-analysis/
+ * http://www.cnblogs.com/zhanjindong/p/java-concurrent-package-ThreadPoolExecutor.html
  * http://www.cnblogs.com/wanly3643/p/3910428.html
  * https://my.oschina.net/pingpangkuangmo/blog/668520?fromerr=8v8wsGrl
  *
@@ -1062,7 +1063,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
                 }
                 timeOut = true;
             }catch (InterruptedException retry){
-
+                timeOut = false;    //
             }
         }
     }
@@ -1126,9 +1127,8 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
                  * shutdownNow race while clearing interrupt
                  */
                 if((runStateAtLeast(ctl.get(), STOP )||
-                                (Thread.interrupted() &&
-                                        runStateAtLeast(ctl.get(), STOP))) &&
-                        !wt.isInterrupted()
+                        (Thread.interrupted() && runStateAtLeast(ctl.get(), STOP))
+                    ) && !wt.isInterrupted() // 前两个或者, 最后一个是与
                         ){
                     wt.interrupt();
                 }
