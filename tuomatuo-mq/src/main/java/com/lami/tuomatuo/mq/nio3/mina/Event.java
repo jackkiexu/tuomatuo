@@ -1,15 +1,13 @@
 package com.lami.tuomatuo.mq.nio3.mina;
 
 /**
- * 与服务器协议好的事件号
+ * 锟斤拷锟斤拷锟斤拷锟叫拷锟矫碉拷锟铰硷拷锟斤拷
  */
 public class Event {
     /**
-     * 客户端发送给服务器事件号
      */
     public final static short EV_C_S_TEST = (short)1;
     /**
-     * 服务器回应给客户端事件号
      */
     public final static short EV_S_C_TEST = (short)2;
 }

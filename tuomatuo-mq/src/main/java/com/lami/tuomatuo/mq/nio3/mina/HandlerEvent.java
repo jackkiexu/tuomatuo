@@ -1,6 +1,6 @@
 package com.lami.tuomatuo.mq.nio3.mina;
 
-import com.lami.mina.mina.domain.MinaMsgHead;
+import com.lami.tuomatuo.mq.nio3.mina.domain.MinaMsgHead;
 import org.apache.mina.core.buffer.IoBuffer;
 
 import java.io.IOException;
@@ -9,7 +9,6 @@ import java.sql.SQLException;
 
 
 /**
- * 消息事件处理
  */
 public class HandlerEvent {
     private static HandlerEvent handlerEvent;
@@ -20,17 +19,16 @@ public class HandlerEvent {
         return handlerEvent;
     }
     public void handle(IoBuffer buf) throws IOException, InterruptedException, UnsupportedEncodingException, SQLException {
-        //解析包头
+        //锟斤拷锟斤拷锟斤拷头
         MinaMsgHead msgHead = new MinaMsgHead();
-        msgHead.bodyLen = buf.getInt();//包体长度
-        msgHead.event = buf.getShort();//事件号
+        msgHead.bodyLen = buf.getInt();
+        msgHead.event = buf.getShort();
 
-        switch (msgHead.event){//根据事件号解析消息体内容
+        switch (msgHead.event){
             case Event.EV_S_C_TEST:
                 byte[] by = new byte[msgHead.bodyLen];
                 buf.get(by, 0, by.length);
                 String json = new String(by, "UTF-8").trim();
-                //接下来根据业务处理....
                 break;
         }
     }

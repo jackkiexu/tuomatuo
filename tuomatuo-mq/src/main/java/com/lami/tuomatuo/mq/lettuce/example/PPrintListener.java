@@ -16,9 +16,6 @@ public class PPrintListener extends JedisPubSub{
 
     private String clientId;
     private PSubHandler handler;
-    // TODO heartbeat ＋ reconnect
-    // TODO pipleline tohandler message
-    // TODO factory produce the variety handler
 
     public PPrintListener(String clientId,Jedis jedis){
         this.clientId = clientId;
@@ -36,38 +33,38 @@ public class PPrintListener extends JedisPubSub{
 
     private void message(String channel,String message){
         String time = DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss");
-        logger.info("message receive:" + message + ",channel:" + channel + "..." + time);
+        System.out.println("message receive:" + message + ",channel:" + channel + "..." + time);
     }
 
     @Override
     public void onPMessage(String pattern, String channel, String message) {
-        logger.info("message receive:" + message + ",pattern channel:" + channel);
+        System.out.println("message receive:" + message + ",pattern channel:" + channel);
 
     }
 
     @Override
     public void onSubscribe(String channel, int subscribedChannels) {
         handler.subscribe(channel);
-        logger.info("subscribe:" + channel + ";total channels : " + subscribedChannels);
+        System.out.println("subscribe:" + channel + ";total channels : " + subscribedChannels);
 
     }
 
     @Override
     public void onUnsubscribe(String channel, int subscribedChannels) {
         handler.unsubscribe(channel);
-        logger.info("unsubscribe:" + channel + ";total channels : " + subscribedChannels);
+        System.out.println("unsubscribe:" + channel + ";total channels : " + subscribedChannels);
 
     }
 
     @Override
     public void onPUnsubscribe(String pattern, int subscribedChannels) {
-        logger.info("unsubscribe pattern:" + pattern + ";total channels : " + subscribedChannels);
+        System.out.println("unsubscribe pattern:" + pattern + ";total channels : " + subscribedChannels);
 
     }
 
     @Override
     public void onPSubscribe(String pattern, int subscribedChannels) {
-        logger.info("subscribe pattern:" + pattern + ";total channels : " + subscribedChannels);
+        System.out.println("subscribe pattern:" + pattern + ";total channels : " + subscribedChannels);
     }
 
     @Override
@@ -92,7 +89,6 @@ public class PPrintListener extends JedisPubSub{
             Long txid = Long.valueOf(message.substring(0,index));
             String key = clientId + "/" + channel;
             while(true){
-
                 String lm = jedis.lindex(key, 0);//获取第一个消息
                 if(lm == null){
                     break;

@@ -35,21 +35,16 @@ public class ConnectionManager {
         mAddress = new InetSocketAddress(mConfig.getIp(), mConfig.getPort());
         mConnection = new NioSocketConnector();
         mConnection.getSessionConfig().setReadBufferSize(mConfig.getReadBufferSize());
-        //ÉèÖÃ¶à³¤Ê±¼äÃ»ÓÐ½øÐÐ¶ÁÐ´²Ù×÷½øÈë¿ÕÏÐ×´Ì¬£¬»áµ÷ÓÃsessionIdle·½·¨£¬µ¥Î»£¨Ãë£©
         mConnection.getSessionConfig().setReaderIdleTime(60*5);
         mConnection.getSessionConfig().setWriterIdleTime(60*5);
         mConnection.getSessionConfig().setBothIdleTime(60*5);
         mConnection.getFilterChain().addFirst("reconnection", new MyIoFilterAdapter());
-        //×Ô¶¨Òå±à½âÂëÆ÷
         mConnection.getFilterChain().addLast("mycoder", new ProtocolCodecFilter(new MyCodecFactory()));
-        //Ìí¼ÓÏûÏ¢´¦ÀíÆ÷
         mConnection.setHandler(new DefaultHandler(mContext));
         mConnection.setDefaultRemoteAddress(mAddress);
     }
 
     /**
-     * Óë·þÎñÆ÷Á¬½Ó
-     * @return trueÁ¬½Ó³É¹¦£¬falseÁ¬½ÓÊ§°Ü
      */
     public boolean connect(){
         try{
@@ -69,7 +64,7 @@ public class ConnectionManager {
     }
 
     /**
-     * ¶Ï¿ªÁ¬½Ó
+     * ï¿½Ï¿ï¿½ï¿½ï¿½ï¿½ï¿½
      */
     public void disConnect(){
         mConnection.dispose();
@@ -89,12 +84,12 @@ public class ConnectionManager {
         @Override
         public void sessionOpened(IoSession session) throws Exception {
             super.sessionOpened(session);
-            logger.info("Á¬½Ó´ò¿ª");
+            logger.info("ï¿½ï¿½ï¿½Ó´ï¿½");
         }
 
         @Override
         public void messageReceived(IoSession session, Object message) throws Exception {
-            logger.info("ÊÕµ½Êý¾Ý£¬½ÓÏÂÀ´ÄãÒªÔõÃ´½âÎöÊý¾Ý¾ÍÊÇÄãµÄÊÂÁË");
+            logger.info("ï¿½Õµï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
             IoBuffer buf = (IoBuffer) message;
             HandlerEvent.getInstance().handle(buf);
         }
@@ -102,8 +97,7 @@ public class ConnectionManager {
         @Override
         public void sessionIdle(IoSession session, IdleStatus status) throws Exception {
             super.sessionIdle(session, status);
-            logger.info("-¿Í»§¶ËÓë·þÎñ¶ËÁ¬½Ó¿ÕÏÐ");
-            //½øÈë¿ÕÏÐ×´Ì¬ÎÒÃÇ°Ñ»á»°¹Ø±Õ£¬½Ó×Å»áµ÷ÓÃMyIoFilterAdapterµÄsessionClosed·½·¨£¬½øÐÐÖØÐÂÁ¬½Ó
+            logger.info("-ï¿½Í»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿ï¿½ï¿½ï¿½");
             if(session != null){
                 session.closeOnFlush();
             }
@@ -113,14 +107,14 @@ public class ConnectionManager {
     private  class MyIoFilterAdapter extends IoFilterAdapter {
         @Override
         public void sessionClosed(NextFilter nextFilter, IoSession session) throws Exception {
-            logger.info("Á¬½Ó¹Ø±Õ£¬Ã¿¸ô5Ãë½øÐÐÖØÐÂÁ¬½Ó");
+            logger.info("ï¿½ï¿½ï¿½Ó¹Ø±Õ£ï¿½Ã¿ï¿½ï¿½5ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
             for(;;){
                 if(mConnection==null){
                     break;
                 }
                 if(ConnectionManager.this.connect()){
-                    logger.info("¶ÏÏßÖØÁ¬[" + mConnection.getDefaultRemoteAddress().getHostName() + ":" +
-                            mConnection.getDefaultRemoteAddress().getPort() + "]³É¹¦");
+                    logger.info("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½[" + mConnection.getDefaultRemoteAddress().getHostName() + ":" +
+                            mConnection.getDefaultRemoteAddress().getPort() + "]ï¿½É¹ï¿½");
                     break;
                 }
                 Thread.sleep(5000);

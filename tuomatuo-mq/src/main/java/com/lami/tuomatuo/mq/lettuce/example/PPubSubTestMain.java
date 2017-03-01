@@ -19,6 +19,7 @@ public class PPubSubTestMain {
         final PSubClient subClient = new PSubClient(Constants.host, Constants.port,"subClient-1");
         Thread subThread = new Thread(new Runnable() {
 
+            @Override
             public void run() {
                 logger.info("----------subscribe operation begin-------");
                 //在API级别，此处为轮询操作，直到unsubscribe调用，才会返回
@@ -27,12 +28,11 @@ public class PPubSubTestMain {
 
             }
         });
-        new PSubClient(Constants.host, Constants.port,"subClient-1");
         subThread.setDaemon(true);
         subThread.start();
         int i = 0;
-        while(i < 99999999999l){
-            String message = RandomStringUtils.random(64, true, true);//apache-commons
+        while(i < 100000000){
+            String message = RandomStringUtils.random(6, true, true);//apache-commons
             pubClient.pub(channel, message);
             i++;
             Thread.sleep(10);

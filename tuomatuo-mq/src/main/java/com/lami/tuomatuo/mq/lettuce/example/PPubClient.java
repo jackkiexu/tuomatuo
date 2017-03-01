@@ -1,6 +1,7 @@
 package com.lami.tuomatuo.mq.lettuce.example;
 
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisShardInfo;
 
 import java.util.Set;
 
@@ -11,7 +12,9 @@ public class PPubClient {
 
     private Jedis jedis;//
     public PPubClient(String host,int port){
-        jedis = new Jedis(host,port);
+        JedisShardInfo jedisShardInfo = new JedisShardInfo(host, port);
+        jedisShardInfo.setPassword("redis12345");
+        jedis = new Jedis(jedisShardInfo);
     }
 
     /**
@@ -22,11 +25,7 @@ public class PPubClient {
         //期望这个集合不要太大
         Set<String> subClients = jedis.smembers(Constants.SUBSCRIBE_CENTER);
         for(String clientKey : subClients){
-            try {
-                jedis.rpush(clientKey, message);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            jedis.rpush(clientKey, message);
         }
     }
 
@@ -37,11 +36,7 @@ public class PPubClient {
         String content = txid + "/" + message;
         //非事务
         this.put(content);
-        try {
-            jedis.publish(channel, content);//为每个消息设定id，最终消息格式1000/messageContent
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        jedis.publish(channel, content);//为每个消息设定id，最终消息格式1000/messageContent
 
     }
 

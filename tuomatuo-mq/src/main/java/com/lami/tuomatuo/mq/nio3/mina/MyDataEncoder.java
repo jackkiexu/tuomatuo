@@ -6,7 +6,6 @@ import org.apache.mina.filter.codec.ProtocolEncoderAdapter;
 import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 
 /**
- *  编码器将数据直接发出去(不做处理)
  */
 public class MyDataEncoder extends ProtocolEncoderAdapter {
 

@@ -1,5 +1,6 @@
 package com.lami.tuomatuo.mq.netty.util.internal;
 
+import com.lami.tuomatuo.utils.UnSafeClass;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import sun.misc.Unsafe;
@@ -69,18 +70,19 @@ public class PlatformDependent0 {
             final Object maybeUnsafe = AccessController.doPrivileged(new PrivilegedAction<Object>() {
                 @Override
                 public Object run() {
-                    try {
-                        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+                /*    try {*/
+                        return  UnSafeClass.getInstance();
+                        /*final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
                         unsafeField.setAccessible(true);
                         // the unsafe instance
-                        return unsafeField.get(null);
-                    } catch (NoSuchFieldException e) {
+                        return unsafeField.get(null);*/
+                   /* } catch (NoSuchFieldException e) {
                         e.printStackTrace();
                         return e;
                     } catch (IllegalAccessException e) {
                         e.printStackTrace();
                         return e;
-                    }
+                    }*/
                 }
             });
 

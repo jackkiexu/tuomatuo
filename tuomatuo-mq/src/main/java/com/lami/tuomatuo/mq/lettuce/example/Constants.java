@@ -5,7 +5,7 @@ package com.lami.tuomatuo.mq.lettuce.example;
  */
 public class Constants {
 
-    public static final String host = "172.246.141.18";
+    public static final String host = "192.168.0.66";
     public static final int port = 6379;
 
     public static final String SUBSCRIBE_CENTER = "_-subscribe-center-_";
