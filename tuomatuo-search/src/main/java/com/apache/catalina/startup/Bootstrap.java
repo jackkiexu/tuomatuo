@@ -164,7 +164,7 @@ public class Bootstrap {
         value = replace(value);
 
         List<ClassLoaderFactory.Repository> repositories =  new ArrayList<>();
-        String[] repositoryPaths = getPaths(value);
+        String[] repositoryPaths = null;
 
         for(String repository : repositoryPaths){
             // check for a JAR URL repository

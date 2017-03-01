@@ -49,7 +49,7 @@ public class CatalinaProperties {
 
         if(is == null){
             try{
-                File home = File(Bootstrap.getCatalinaBase());
+                File home = new File(Bootstrap.getCatalinaBase());
                 File conf = new File(home, "conf");
                 File propsFile = new File(conf, "catalina.properties");
                 is = new FileInputStream(propsFile);

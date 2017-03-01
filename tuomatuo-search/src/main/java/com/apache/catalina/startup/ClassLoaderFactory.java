@@ -56,11 +56,10 @@ public final class ClassLoaderFactory {
         if(packed != null){
             for(int i = 0; i < unpacked.length; i++){
                 File file = unpacked[i];
-                if(){
 
-                }
             }
         }
+        return null;
     }
 
 

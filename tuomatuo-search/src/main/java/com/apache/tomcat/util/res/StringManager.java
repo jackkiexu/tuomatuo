@@ -10,8 +10,10 @@ import java.util.ResourceBundle;
  */
 public class StringManager {
 
+/*
     private final ResourceBundle bundle;
     private final Locale locale;
+*/
 
 
 
