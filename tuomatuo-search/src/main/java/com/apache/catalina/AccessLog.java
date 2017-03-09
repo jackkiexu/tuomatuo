@@ -4,7 +4,7 @@ import com.apache.catalina.connector.Request;
 import com.apache.catalina.connector.Response;
 
 /**
- * Intended for use by a {@link Value} to indicate that the {@link Value}
+ * Intended for use by a {@link Valve} to indicate that the {@link Valve}
  * provides access loging. It is used by the Tomcat internals to identify a
  * Value that logs access request so requests that are rejected
  * earlier in the processing chain can still be added to the access log

@@ -1,12 +1,10 @@
 package com.apache.catalina.startup;
 
-import com.apache.catalina.KGlobals;
+import com.apache.catalina.Globals;
 import org.apache.log4j.Logger;
 
-import javax.xml.bind.JAXBElement;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Executable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -32,7 +30,7 @@ public class Bootstrap {
         String userDir = System.getProperty("user.dir");
 
         // Home first
-        String home = System.getProperty(com.apache.catalina.KGlobals.CATALINA_HOME_PROP);
+        String home = System.getProperty(Globals.CATALINA_HOME_PROP);
         File homeFile = null;
 
         if(home != null){
@@ -70,9 +68,9 @@ public class Bootstrap {
         }
 
         catalinaHomeFile = homeFile;
-        System.setProperty(KGlobals.CATALINA_HOME_PROP, catalinaHomeFile.getPath());
+        System.setProperty(Globals.CATALINA_HOME_PROP, catalinaHomeFile.getPath());
         // Then base
-        String base = System.getProperty(KGlobals.CATALINA_BASE_PROP);
+        String base = System.getProperty(Globals.CATALINA_BASE_PROP);
         if(base == null){
             catalinaBaseFile = catalinaHomeFile;
         }else{
@@ -84,7 +82,7 @@ public class Bootstrap {
             }
             catalinaBaseFile = baseFile;
         }
-        System.setProperty(KGlobals.CATALINA_BASE_PROP, catalinaBaseFile.getPath());
+        System.setProperty(Globals.CATALINA_BASE_PROP, catalinaBaseFile.getPath());
     }
 
     // ---------------------------------------------------------------------- Variables
@@ -213,9 +211,9 @@ public class Bootstrap {
                 String replacement;
                 if(propName.length() == 0){
                     replacement = null;
-                }else if(com.apache.catalina.KGlobals.CATALINA_HOME_PROP.equals(propName)){
+                }else if(Globals.CATALINA_HOME_PROP.equals(propName)){
                     replacement = getCatalinaHome();
-                }else if(KGlobals.CATALINA_BASE_PROP.equals(propName)){
+                }else if(Globals.CATALINA_BASE_PROP.equals(propName)){
                     replacement = getCatalinaBase();
                 }else{
                     replacement = System.getProperty(propName);
