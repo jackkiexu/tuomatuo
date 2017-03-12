@@ -16,10 +16,10 @@
  */
 package com.apache.catalina.tribes.transport.io;
 
-import org.apache.catalina.tribes.ChannelMessage;
-import org.apache.catalina.tribes.util.StringManager;
-import org.apache.juli.logging.Log;
-import org.apache.juli.logging.LogFactory;
+import com.apache.catalina.tribes.ChannelMessage;
+import com.apache.juli.logging.Log;
+import com.apache.juli.logging.LogFactory;
+import com.apache.tomcat.util.res.StringManager;
 
 import java.io.IOException;
 import java.net.Socket;

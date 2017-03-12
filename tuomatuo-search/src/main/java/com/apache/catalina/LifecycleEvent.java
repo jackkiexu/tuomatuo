@@ -22,8 +22,8 @@ public class LifecycleEvent extends EventObject{
      * @param data
      * @param type
      */
-    public LifecycleEvent(Object source, Object data, String type) {
-        super(source);
+    public LifecycleEvent(Lifecycle lifecycle, String type,  Object data) {
+        super(lifecycle);
         this.data = data;
         this.type = type;
     }

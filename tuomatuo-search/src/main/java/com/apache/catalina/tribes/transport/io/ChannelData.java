@@ -16,11 +16,11 @@
  */
 package com.apache.catalina.tribes.transport.io;
 
-import org.apache.catalina.tribes.Channel;
-import org.apache.catalina.tribes.ChannelMessage;
-import org.apache.catalina.tribes.Member;
-import org.apache.catalina.tribes.membership.MemberImpl;
-import org.apache.catalina.tribes.util.UUIDGenerator;
+import com.apache.catalina.tribes.Channel;
+import com.apache.catalina.tribes.ChannelMessage;
+import com.apache.catalina.tribes.Member;
+import com.apache.catalina.tribes.membership.MemberImpl;
+import com.apache.catalina.tribes.util.UUIDGenerator;
 
 import java.sql.Timestamp;
 import java.util.Arrays;
