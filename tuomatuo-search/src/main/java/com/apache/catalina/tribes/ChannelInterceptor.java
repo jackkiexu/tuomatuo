@@ -13,7 +13,7 @@ public interface ChannelInterceptor extends MembershipListener, Heartbeat{
 
 
     /**
-     * 
+     *
      * @param svc
      * @throws ChannelException
      */

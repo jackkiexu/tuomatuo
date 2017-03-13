@@ -12,6 +12,12 @@
  * http://www.infoq.com/cn/articles/zh-tomcat-http-request-2/
  * http://kael-aiur.com/
  *
+ *
+ * 下面几个非常好
+ * http://blog.arganzheng.me/posts/tomcat-monitor.html
+ * http://blog.csdn.net/column/details/tomcat-.html?&page=4
+ * http://blog.csdn.net/beliefer/article/category/6154740
+ *
  * Created by xujiankang on 2017/2/27.
  */
 package com.apache;
