@@ -25,7 +25,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *     provide improved performance when executing large numbers of
  *     asynchronous tasks, due to reduced per-task invocation overhead,
  *     and they provide a means of bounding and managing the resources,
- *     including hreads, consumed when executing a collection of tasks
+ *     including threads, consumed when executing a collection of tasks
  *     Each {@code KThreadPoolExecutor} also maintains some basic
  *     statistics, such as the number of completed tasks
  * </p>
@@ -319,7 +319,6 @@ import java.util.concurrent.locks.ReentrantLock;
  * Created by xjk on 11/12/16.
  */
 public class KThreadPoolExecutor extends AbstractExecutorService {
-
     /**
      * The main pool control state, ctl, is an atomic integer packing
      * two conceptual fields
