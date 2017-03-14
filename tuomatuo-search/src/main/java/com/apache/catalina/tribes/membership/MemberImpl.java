@@ -124,6 +124,10 @@ public class MemberImpl implements Member, Externalizable {
     }
 
 
+    @Override
+    public boolean isReady() {
+        return false;
+    }
 
     public void setHostname(String host) throws IOException{
 
