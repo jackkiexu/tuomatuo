@@ -101,7 +101,7 @@ public interface Member {
      */
     public byte[] getCommand();
 
-    public void setCommand();
+    public void setCommand(byte[] command);
 
     /**
      * Domain for this cluster
