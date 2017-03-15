@@ -1,10 +1,13 @@
 package com.apache.catalina.tribes.membership;
 
 import com.apache.catalina.tribes.Member;
+import com.apache.catalina.tribes.transport.SenderState;
 import com.apache.tomcat.util.res.StringManager;
 
 import java.io.Externalizable;
 import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -125,11 +128,159 @@ public class MemberImpl implements Member, Externalizable {
 
 
     @Override
+    public String getName() {
+        return null;
+    }
+
+    @Override
+    public byte[] getHost() {
+        return new byte[0];
+    }
+
+    @Override
+    public int getPort() {
+        return 0;
+    }
+
+    @Override
+    public int getSecurePort() {
+        return 0;
+    }
+
+    @Override
+    public int getUdpPort() {
+        return 0;
+    }
+
+    @Override
+    public long getMemberAliveTime() {
+        return 0;
+    }
+
+    @Override
+    public void setMemberAliveTime(long memberAliveTime) {
+
+    }
+
+    @Override
     public boolean isReady() {
-        return false;
+        return SenderState.getSenderState(this).isReady();
+    }
+
+    @Override
+    public boolean isSuspect() {
+        return SenderState.getSenderState(this).isSuspect();
+    }
+
+    @Override
+    public boolean isFailing() {
+        return SenderState.getSenderState(this).isFailing();
+    }
+
+    @Override
+    public byte[] getUniqueId() {
+        return new byte[0];
+    }
+
+    @Override
+    public byte[] getPayload() {
+        return new byte[0];
+    }
+
+    @Override
+    public void setPayload(byte[] payload) {
+
+    }
+
+    @Override
+    public byte[] getCommand() {
+        return new byte[0];
+    }
+
+    @Override
+    public void setCommand(byte[] command) {
+
+    }
+
+    @Override
+    public byte[] getDomain() {
+        return new byte[0];
+    }
+
+    /**
+     * Increment the message count
+     */
+    protected void inc() {
+        msgCount.incrementAndGet();
+    }
+
+    /**
+     * Create a data package to sen over the wire representing this member
+     * This is faster than serialization
+     * @return - the bytes for this member deserialized
+     */
+    public byte[] getData() {
+        return getData(true);
+    }
+
+    @Override
+    public byte[] getData(boolean getalive) {
+        return getData(getalive, false);
+    }
+
+    @Override
+    public synchronized int getDataLength() {
+        return TRIBES_MBR_BEGIN.length + // start pkg
+                4 + //data length
+                8 + // alive time
+                4 + // port
+                4 + // secure port
+                4 + // udp port
+                1 + // host length
+                host.length + // host
+                4 + // domain length
+                domain.length + // domain
+                16 + // unique id
+                4 + // payload length
+                payload.length + // payload
+                TRIBES_MBR_END.length // end pkg
+                ;
+    }
+
+    @Override
+    public synchronized byte[] getData(boolean getalive, boolean reset) {
+        if(reset){
+            dataPkg = null;
+        }
+
+        // Look in cache first
+        if(dataPkg != null){
+            if(getalive){
+                // You's be surprised, but System.currentTimeMillis
+                // shows up on the profiler
+                long alive = System.currentTimeMillis() - getServiceStartTime();
+            }
+        }
+
+        return new byte[0];
+    }
+
+
+    public long getServiceStartTime(){
+        return serviceStartTime;
     }
 
     public void setHostname(String host) throws IOException{
+
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 
     }
 }
