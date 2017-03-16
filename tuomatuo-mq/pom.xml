@@ -423,17 +423,13 @@
             <artifactId>jackson-mapper-asl</artifactId>
             <version>1.8.5</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.zookeeper/zookeeper -->
         <dependency>
             <groupId>org.apache.zookeeper</groupId>
             <artifactId>zookeeper</artifactId>
-            <version>3.3.3</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>jline</artifactId>
-                    <groupId>jline</groupId>
-                </exclusion>
-            </exclusions>
+            <version>3.4.6</version>
         </dependency>
+
         <dependency>
             <groupId>mx4j</groupId>
             <artifactId>mx4j-tools</artifactId>
@@ -459,7 +455,6 @@
             <artifactId>mina-core</artifactId>
             <version>2.0.16</version>
         </dependency>
-
 
     </dependencies>
 
