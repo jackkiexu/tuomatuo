@@ -475,9 +475,9 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
      * changing synchronously with respect to other actions
      */
     /**
-     * Factory for new theads. All threads are created using this factory
+     * Factory for new threads. All threads are created using this factory
      * (via method addWorker). All callers must be prepared
-     * for addWorker to fail, which may refect a system or user's
+     * for addWorker to fail, which may reflect a system or user's
      * policy limiting the number of threads. Even though it is not
      * treated as an Error, failure to create threads may result in
      * new tasks being rejected or existing ones remaining stuck in the queue
@@ -497,7 +497,8 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
 
     /**
      * Timeout in nanoseconds for idle threads waiting for work
-     * Threads use this timeout when there are more than corePoolSize present or if allowCoreThreadTimeOut. Otherwise they wait
+     * Threads use this timeout when there are more than corePoolSize
+     * present or if allowCoreThreadTimeOut. Otherwise they wait
      * forever for new work
      */
     private volatile long keepAliveTime;
@@ -530,7 +531,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
     /**
      * Permission required for callers of shutdown and shutdownNow
      * We additionally require (checkShutdownAccess) that callers
-     * have permission to actually interrupt threads in the woker set
+     * have permission to actually interrupt threads in the worker set
      * (as governed by Thread.interrupt, which relies on
      * ThreadGroup.checkAccess, which in turn relies on
      * SecurityManager,checkAccess). Shutdowns are attempted only if
@@ -553,13 +554,17 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
     /**
      * Class Worker mainly maintains interrupt control state for
      * threads running tasks, along with other minor bookkeeping.
-     * This class opportunistically extends AbstractQueueSynchronizer
+     * This class opportunistically extends AbstractQueuedSynchronizer
      * to simplify acquiring and releasing a lock surrounding each
      * task execution. This protects against interrupts that are
      * intended to wake up a worker thread waiting for a task from
      * instead interrupting a task being run. We implement a simple
      * non-reentrant mutual exclusion lock rather than use
-     *
+     * ReentrantLock because we do not want worker tasks to be able to
+     * reacquire the lock when they invoke pool control method like
+     * setCorePoolSize. Additionally, to suppress interrupts until
+     * the thread actually starts running tasks, we initialize lock
+     * state to a negative value, and clear it upon start (in runWorker)
      */
     private final class Worker extends AbstractQueuedSynchronizer implements Runnable{
         /**
@@ -748,7 +753,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
      *                enabled but there are still other workers. In this case, at
      *                most one waiting worker is interrupted to propagate shutdown
      *                signals in case all threads are currently waiting.
-     *                Interrupting any arbitrary threadensures that newly arriving
+     *                Interrupting any arbitrary thread ensures that newly arriving
      *                workers since shutdown began will also eventually exit
      *                To guarantee eventual termination. it suffices to always
      *                interrupt only one idle worker, but shutdown() interrupts all
@@ -813,11 +818,11 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
 
     /**
      * State check needed by ScheduledThreadPoolExecutor to
-     * enable runnng tasks during shutdown
+     * enable running tasks during shutdown
      * @param shutdownOK
      * @return
      */
-    boolean isRunnableOrShutdown(boolean shutdownOK){
+    boolean isRunningOrShutdown(boolean shutdownOK){
         int rs = runStateOf(ctl.get());
         return rs == RUNNING || (rs == SHUTDOWN && shutdownOK);
     }
@@ -825,7 +830,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
     /**
      * Drains the task queue into a new list, normally using
      * drainTo. But if the queue is a DelayQueue or any other kind of
-     * queue for which poll or drainTo may fail to rmove some
+     * queue for which poll or drainTo may fail to remove some
      * elements. it deletes them one by one
      *
      * @return
@@ -850,7 +855,7 @@ public class KThreadPoolExecutor extends AbstractExecutorService {
 
     /**
      * Checks if a new worker can be added with respect to current
-     * pol state and the given bound (either core or maximum). if so,
+     * pool state and the given bound (either core or maximum). if so,
      * the worker count is adjusted accordingly, and, if possible, a
      * new worker is created and started, running firstTask as its
      * first task. This method returns false if the poll is stopped or
