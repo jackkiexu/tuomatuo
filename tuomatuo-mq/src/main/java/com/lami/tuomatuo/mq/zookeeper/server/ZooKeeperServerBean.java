@@ -2,11 +2,24 @@ package com.lami.tuomatuo.mq.zookeeper.server;
 
 import com.lami.tuomatuo.mq.zookeeper.jmx.ZKMBeanInfo;
 
+import java.util.Date;
+
 /**
  * This class implements the ZooKeeper server MBean interface
  * Created by xjk on 3/18/17.
  */
 public class ZooKeeperServerBean implements ZooKeeperServerMXBean, ZKMBeanInfo{
+
+    private final Date startTime;
+    private final String name;
+    protected final ZooKeeperServer zks;
+
+    public ZooKeeperServerBean(ZooKeeperServer zks) {
+        startTime = new Date();
+        this.zks = zks;
+        name = "StandaloneServer_port" + zks.getClientPort();
+    }
+
     @Override
     public String getClientPort() {
         return null;

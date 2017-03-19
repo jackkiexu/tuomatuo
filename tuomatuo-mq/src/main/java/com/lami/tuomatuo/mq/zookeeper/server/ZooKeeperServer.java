@@ -1,5 +1,8 @@
 package com.lami.tuomatuo.mq.zookeeper.server;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * This class implements a simple standalone ZooKeeperServer. It sets up the
  * following chain of RequestProcessors to process request:
@@ -7,6 +10,22 @@ package com.lami.tuomatuo.mq.zookeeper.server;
  * Created by xjk on 3/18/17.
  */
 public class ZooKeeperServer implements SessionTracker.SessionExpirer, ServerStats.Provider {
+
+    protected static final Logger LOG;
+
+    static {
+        LOG = LoggerFactory.getLogger(ZooKeeperServer.class);
+    }
+
+
+    public static final int DEFAULT_TICK_TIME = 3000;
+
+
+
+    public int getClientPort(){
+        return 0;
+    }
+
 
     @Override
     public long getOutstandingRequests() {
