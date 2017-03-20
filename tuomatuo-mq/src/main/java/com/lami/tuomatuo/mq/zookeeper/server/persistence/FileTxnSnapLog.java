@@ -11,21 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+
+import com.lami.tuomatuo.mq.zookeeper.server.DataTree;
 import org.apache.jute.Record;
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.KeeperException.Code;
-import org.apache.zookeeper.ZooDefs.OpCode;
-import org.apache.zookeeper.server.DataTree;
-import org.apache.zookeeper.server.DataTree.ProcessTxnResult;
-import org.apache.zookeeper.server.Request;
-import org.apache.zookeeper.server.ZooTrace;
-import org.apache.zookeeper.server.persistence.*;
-import org.apache.zookeeper.server.persistence.FileSnap;
-import org.apache.zookeeper.server.persistence.FileTxnLog;
-import org.apache.zookeeper.server.persistence.SnapShot;
-import org.apache.zookeeper.server.persistence.TxnLog.TxnIterator;
-import org.apache.zookeeper.server.persistence.Util;
-import org.apache.zookeeper.txn.CreateSessionTxn;
 import org.apache.zookeeper.txn.TxnHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,8 +115,8 @@ public class FileTxnSnapLog {
             throw new DatadirException("Cannot write to snap directory " + this.snapDir);
         }
 
-        txnLog = new org.apache.zookeeper.server.persistence.FileTxnLog(this.dataDir);
-        snapLog = new org.apache.zookeeper.server.persistence.FileSnap(this.snapDir);
+        txnLog = new FileTxnLog(this.dataDir);
+        snapLog = new FileSnap(this.snapDir);
 
         autoCreateDB = Boolean.parseBoolean(System.getProperty(ZOOKEEPER_DB_AUTOCREATE,
                 ZOOKEEPER_DB_AUTOCREATE_DEFAULT));
@@ -164,7 +152,7 @@ public class FileTxnSnapLog {
      * @throws IOException
      */
     public long restore(DataTree dt, Map<Long, Integer> sessions,
-                        org.apache.zookeeper.server.persistence.FileTxnSnapLog.PlayBackListener listener) throws IOException {
+                        PlayBackListener listener) throws IOException {
         long deserializeResult = snapLog.deserialize(dt, sessions);
         org.apache.zookeeper.server.persistence.FileTxnLog txnLog = new org.apache.zookeeper.server.persistence.FileTxnLog(dataDir);
         boolean trustEmptyDB;
@@ -258,7 +246,7 @@ public class FileTxnSnapLog {
      */
     public TxnIterator readTxnLog(long zxid, boolean fastForward)
             throws IOException {
-        org.apache.zookeeper.server.persistence.FileTxnLog txnLog = new org.apache.zookeeper.server.persistence.FileTxnLog(dataDir);
+        FileTxnLog txnLog = new FileTxnLog(dataDir);
         return txnLog.read(zxid, fastForward);
     }
 
@@ -307,9 +295,7 @@ public class FileTxnSnapLog {
          * errors could occur. It should be safe to ignore these.
          */
         if (rc.err != Code.OK.intValue()) {
-            LOG.debug(
-                    "Ignoring processTxn failure hdr: {}, error: {}, path: {}",
-                    hdr.getType(), rc.err, rc.path);
+
         }
     }
 

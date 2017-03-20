@@ -18,9 +18,9 @@
 
 package com.lami.tuomatuo.mq.zookeeper.common;
 
+import com.lami.tuomatuo.mq.zookeeper.server.quorum.QuorumPeerConfig;
+import com.lami.tuomatuo.mq.zookeeper.server.util.VerifyingFileFactory;
 import org.apache.zookeeper.Environment;
-import org.apache.zookeeper.server.quorum.QuorumPeerConfig.ConfigException;
-import org.apache.zookeeper.server.util.VerifyingFileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,11 +73,9 @@ public class ZKConfig {
     /**
      * @param configPath
      *            Configuration file path
-     * @throws ConfigException
-     *             if failed to load configuration properties
      */
 
-    public ZKConfig(String configPath) throws ConfigException {
+    public ZKConfig(String configPath) throws QuorumPeerConfig.ConfigException {
         this(new File(configPath));
     }
 
@@ -85,10 +83,8 @@ public class ZKConfig {
      *
      * @param configFile
      *            Configuration file
-     * @throws ConfigException
-     *             if failed to load configuration properties
      */
-    public ZKConfig(File configFile) throws ConfigException {
+    public ZKConfig(File configFile) throws QuorumPeerConfig.ConfigException {
         this();
         addConfiguration(configFile);
     }
@@ -163,11 +159,7 @@ public class ZKConfig {
             throw new IllegalArgumentException("property key is null.");
         }
         String oldValue = properties.put(key, value);
-        if (LOG.isDebugEnabled()) {
-            if (null != oldValue && !oldValue.equals(value)) {
-                LOG.debug("key {}'s value {} is replaced with new value {}", key, oldValue, value);
-            }
-        }
+
     }
 
     /**
@@ -177,7 +169,7 @@ public class ZKConfig {
      * @param configFile
      *            Configuration file.
      */
-    public void addConfiguration(File configFile) throws ConfigException {
+    public void addConfiguration(File configFile) throws QuorumPeerConfig.ConfigException {
         LOG.info("Reading configuration from: {}", configFile.getAbsolutePath());
         try {
             configFile = (new VerifyingFileFactory.Builder(LOG).warnForRelativePath().failForNonExistingPath().build())
@@ -192,7 +184,7 @@ public class ZKConfig {
             parseProperties(cfg);
         } catch (IOException | IllegalArgumentException e) {
             LOG.error("Error while configuration from: {}", configFile.getAbsolutePath(), e);
-            throw new ConfigException("Error while processing " + configFile.getAbsolutePath(), e);
+            throw new QuorumPeerConfig.ConfigException("Error while processing " + configFile.getAbsolutePath(), e);
         }
     }
 
@@ -203,7 +195,7 @@ public class ZKConfig {
      * @param configPath
      *            Configuration file path.
      */
-    public void addConfiguration(String configPath) throws ConfigException {
+    public void addConfiguration(String configPath) throws QuorumPeerConfig.ConfigException {
         addConfiguration(new File(configPath));
     }
 

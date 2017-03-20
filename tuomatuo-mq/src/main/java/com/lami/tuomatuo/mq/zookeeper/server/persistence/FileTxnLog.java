@@ -370,7 +370,7 @@ public class FileTxnLog implements org.apache.zookeeper.server.persistence.TxnLo
      * @return returns an iterator to iterate through the transaction logs
      */
     public TxnIterator read(long zxid, boolean fastForward) throws IOException {
-        return new org.apache.zookeeper.server.persistence.FileTxnLog.FileTxnIterator(logDir, zxid, fastForward);
+        return new FileTxnLog.FileTxnIterator(logDir, zxid, fastForward);
     }
 
     /**
@@ -379,10 +379,10 @@ public class FileTxnLog implements org.apache.zookeeper.server.persistence.TxnLo
      * @return true if successful false if not
      */
     public boolean truncate(long zxid) throws IOException {
-        org.apache.zookeeper.server.persistence.FileTxnLog.FileTxnIterator itr = null;
+        FileTxnLog.FileTxnIterator itr = null;
         try {
-            itr = new org.apache.zookeeper.server.persistence.FileTxnLog.FileTxnIterator(this.logDir, zxid);
-            org.apache.zookeeper.server.persistence.FileTxnLog.PositionInputStream input = itr.inputStream;
+            itr = new FileTxnIterator(this.logDir, zxid);
+           FileTxnLog.PositionInputStream input = itr.inputStream;
             if(input == null) {
                 throw new IOException("No log files found to truncate! This could " +
                         "happen if you still have snapshots from an old setup or " +
@@ -432,7 +432,7 @@ public class FileTxnLog implements org.apache.zookeeper.server.persistence.TxnLo
      * @return the dbid of this database
      */
     public long getDbId() throws IOException {
-        org.apache.zookeeper.server.persistence.FileTxnLog.FileTxnIterator itr = new org.apache.zookeeper.server.persistence.FileTxnLog.FileTxnIterator(logDir, 0);
+        FileTxnLog.FileTxnIterator itr = new FileTxnLog.FileTxnIterator(logDir, 0);
         FileHeader fh=readHeader(itr.logFile);
         itr.close();
         if(fh==null)
@@ -529,7 +529,7 @@ public class FileTxnLog implements org.apache.zookeeper.server.persistence.TxnLo
         InputArchive ia;
         static final String CRC_ERROR="CRC check failed";
 
-        org.apache.zookeeper.server.persistence.FileTxnLog.PositionInputStream inputStream=null;
+        FileTxnLog.PositionInputStream inputStream=null;
         //stored files is the list of files greater than
         //the zxid we are looking for.
         private ArrayList<File> storedFiles;
@@ -636,13 +636,11 @@ public class FileTxnLog implements org.apache.zookeeper.server.persistence.TxnLo
 
         /**
          * Invoked to indicate that the input stream has been created.
-         * @param ia input archive
-         * @param is file input stream associated with the input archive.
          * @throws IOException
          **/
         protected InputArchive createInputArchive(File logFile) throws IOException {
             if(inputStream==null){
-                inputStream= new org.apache.zookeeper.server.persistence.FileTxnLog.PositionInputStream(new BufferedInputStream(new FileInputStream(logFile)));
+                inputStream= new FileTxnLog.PositionInputStream(new BufferedInputStream(new FileInputStream(logFile)));
                 LOG.debug("Created new input stream " + logFile);
                 ia  = BinaryInputArchive.getArchive(inputStream);
                 inStreamCreated(ia,inputStream);
