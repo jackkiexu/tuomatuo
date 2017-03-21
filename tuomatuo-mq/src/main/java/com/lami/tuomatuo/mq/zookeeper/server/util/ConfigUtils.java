@@ -18,8 +18,9 @@
 
 package com.lami.tuomatuo.mq.zookeeper.server.util;
 
+
+import com.lami.tuomatuo.mq.zookeeper.server.quorum.QuorumPeerConfig;
 import org.apache.zookeeper.server.quorum.QuorumPeer;
-import org.apache.zookeeper.server.quorum.QuorumPeerConfig.ConfigException;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -45,18 +46,7 @@ public class ConfigUtils {
              if (key.equals("version")) version = value;
              if (!key.startsWith("server.")) continue;           
              QuorumPeer.QuorumServer qs;
-             try {
-               qs = new QuorumPeer.QuorumServer(-1, value);
-             } catch (ConfigException e) {
-                    e.printStackTrace();
-                    continue;
-             }
-             if (!first) sb.append(",");
-             else first = false;
-             if (null != qs.clientAddr) {
-                 sb.append(qs.clientAddr.getHostString()
-                         + ":" + qs.clientAddr.getPort());
-             }
+
         }
         return version + " " + sb.toString();
     }

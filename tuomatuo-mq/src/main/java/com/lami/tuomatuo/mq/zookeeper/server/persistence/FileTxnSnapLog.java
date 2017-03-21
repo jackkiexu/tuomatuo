@@ -12,8 +12,15 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 
+import com.lami.tuomatuo.mq.zookeeper.KeeperException;
+import com.lami.tuomatuo.mq.zookeeper.ZooDefs;
 import com.lami.tuomatuo.mq.zookeeper.server.DataTree;
+import com.lami.tuomatuo.mq.zookeeper.server.Request;
 import org.apache.jute.Record;
+import org.apache.zookeeper.server.ZooTrace;
+import org.apache.zookeeper.server.persistence.*;
+import org.apache.zookeeper.server.persistence.TxnLog;
+import org.apache.zookeeper.txn.CreateSessionTxn;
 import org.apache.zookeeper.txn.TxnHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,7 +193,7 @@ public class FileTxnSnapLog {
                 return -1L;
             }
         }
-        TxnIterator itr = txnLog.read(dt.lastProcessedZxid+1);
+        TxnLog.TxnIterator itr = txnLog.read(dt.lastProcessedZxid+1);
         long highestZxid = dt.lastProcessedZxid;
         TxnHeader hdr;
         try {
@@ -230,7 +237,7 @@ public class FileTxnSnapLog {
      * @return TxnIterator
      * @throws IOException
      */
-    public TxnIterator readTxnLog(long zxid) throws IOException {
+    public TxnLog.TxnIterator readTxnLog(long zxid) throws IOException {
         return readTxnLog(zxid, true);
     }
 
@@ -244,7 +251,7 @@ public class FileTxnSnapLog {
      * @return TxnIterator
      * @throws IOException
      */
-    public TxnIterator readTxnLog(long zxid, boolean fastForward)
+    public TxnLog.TxnIterator readTxnLog(long zxid, boolean fastForward)
             throws IOException {
         FileTxnLog txnLog = new FileTxnLog(dataDir);
         return txnLog.read(zxid, fastForward);
@@ -260,9 +267,9 @@ public class FileTxnSnapLog {
     public void processTransaction(TxnHeader hdr,DataTree dt,
                                    Map<Long, Integer> sessions, Record txn)
             throws KeeperException.NoNodeException {
-        ProcessTxnResult rc;
+        org.apache.zookeeper.server.DataTree.ProcessTxnResult rc;
         switch (hdr.getType()) {
-            case OpCode.createSession:
+            case ZooDefs.OpCode.createSession:
                 sessions.put(hdr.getClientId(),
                         ((CreateSessionTxn) txn).getTimeOut());
                 if (LOG.isTraceEnabled()) {
@@ -275,7 +282,7 @@ public class FileTxnSnapLog {
                 // give dataTree a chance to sync its lastProcessedZxid
                 rc = dt.processTxn(hdr, txn);
                 break;
-            case OpCode.closeSession:
+            case ZooDefs.OpCode.closeSession:
                 sessions.remove(hdr.getClientId());
                 if (LOG.isTraceEnabled()) {
                     ZooTrace.logTraceMessage(LOG,ZooTrace.SESSION_TRACE_MASK,
@@ -294,7 +301,7 @@ public class FileTxnSnapLog {
          * snapshot. Then when the snapshot is restored, NONODE/NODEEXISTS
          * errors could occur. It should be safe to ignore these.
          */
-        if (rc.err != Code.OK.intValue()) {
+        if (rc.err != KeeperException.Code.OK.intValue()) {
 
         }
     }
@@ -346,8 +353,8 @@ public class FileTxnSnapLog {
         // I'd rather just close/reopen this object itself, however that
         // would have a big impact outside ZKDatabase as there are other
         // objects holding a reference to this object.
-        txnLog = new org.apache.zookeeper.server.persistence.FileTxnLog(dataDir);
-        snapLog = new org.apache.zookeeper.server.persistence.FileSnap(snapDir);
+        txnLog = new FileTxnLog(dataDir);
+        snapLog = new FileSnap(snapDir);
 
         return truncated;
     }
@@ -372,7 +379,7 @@ public class FileTxnSnapLog {
      * @throws IOException
      */
     public List<File> findNRecentSnapshots(int n) throws IOException {
-        org.apache.zookeeper.server.persistence.FileSnap snaplog = new FileSnap(snapDir);
+        FileSnap snaplog = new FileSnap(snapDir);
         return snaplog.findNRecentSnapshots(n);
     }
 

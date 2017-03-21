@@ -49,7 +49,6 @@ public class FileSnap implements SnapShot {
      * @return the zxid of the snapshot
      * @throws IOException
      */
-    @Override
     public long deserialize(DataTree dt, Map<Long, Integer> sessions) throws IOException {
 
         // we run through 100 snapshots (not all of them)
@@ -110,6 +109,16 @@ public class FileSnap implements SnapShot {
         SerializeUtils.deserializeSnapshot(dt, ia, sessions);
     }
 
+
+    @Override
+    public long deserialize(com.lami.tuomatuo.mq.zookeeper.server.DataTree dt, Map<Long, Integer> sessions) throws IOException {
+        return 0;
+    }
+
+    @Override
+    public void serialize(com.lami.tuomatuo.mq.zookeeper.server.DataTree dt, Map<Long, Integer> sessions, File name) throws IOException {
+
+    }
 
     /**
      * find the most recent snapshot in the database
@@ -215,7 +224,6 @@ public class FileSnap implements SnapShot {
      * @param name the file to store snapshot into
      * @throws IOException
      */
-    @Override
     public void serialize(DataTree dt, Map<Long, Integer> sessions, File snapShot) throws IOException {
         if(!close){
             OutputStream sessOS = new BufferedOutputStream(new FileOutputStream(snapShot));

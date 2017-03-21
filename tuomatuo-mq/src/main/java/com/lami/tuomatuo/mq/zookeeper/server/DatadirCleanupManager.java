@@ -85,8 +85,43 @@ public class DatadirCleanupManager {
 
 
     /**
-     * Returns the number of snapshots to be retained after purge
+     * Returns the status of the purge task
+     * @return the status of the purge task
+     */
+    public PurgeTaskStatus getPurgeTaskStatus(){
+        return purgeTaskStatus;
+    }
+
+
+
+    /**
+     * Returns the snapshot firectory
      * @return
+     */
+    public File getSnapDir(){
+        return snapDir;
+    }
+
+
+    /**
+     * Returns transaction log directory
+     * @return the transaction log directory
+     */
+    public File getDataLogDir(){
+        return dataLogDir;
+    }
+
+    /**
+     * Returns purge interval in hours
+     * @return the purge interval in hours
+     */
+    public int getPurgeInterval(){
+        return purgeInterval;
+    }
+
+    /**
+     * Returns the number of snapshots to be retained after purge
+     * @return the number of snapshots to retained after purge
      */
     public int getSnapRetainCount(){
         return snapRetainCount;

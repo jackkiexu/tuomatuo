@@ -3,8 +3,13 @@ package com.lami.tuomatuo.mq.zookeeper.server;
 import org.apache.jute.InputArchive;
 import org.apache.jute.OutputArchive;
 import org.apache.jute.Record;
+import org.apache.zookeeper.data.Stat;
+import org.apache.zookeeper.data.StatPersisted;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * This class contains the data for a node in the data tree
@@ -14,14 +19,151 @@ import java.io.IOException;
  * Created by xujiankang on 2017/3/19.
  */
 public class DataNode implements Record {
+    /** the data for this datanode */
+    public byte data[];
 
-    @Override
-    public void serialize(OutputArchive archive, String tag) throws IOException {
+    /** the acl map long for this datanode. the datatree has the map */
+    Long acl;
 
+    /** the stat for this node that is persisted to disk */
+    public StatPersisted stat;
+
+
+    /**
+     * the list of children for this node. Note that the list of children string
+     * does not contain the parent path -- just the last part of the path. This
+     * should be synchronized except deserializing (for speed up issuses)
+     */
+    private Set<String> children = null;
+
+    private static final Set<String> EMPTY_SET = Collections.emptySet();
+
+    // defualt container for the datanode
+    public DataNode() {
     }
 
-    @Override
-    public void deserialize(InputArchive archive, String tag) throws IOException {
 
+    /**
+     * create a DataNode with parent, data, acls and stat
+     * @param data the data to be set
+     * @param acl the acls for this node
+     * @param stat the stat for this node
+     */
+    public DataNode(byte[] data, Long acl, StatPersisted stat) {
+        this.data = data;
+        this.acl = acl;
+        this.stat = stat;
     }
+
+
+    /**
+     * Method that inserts a child into the children set
+     *
+     * @param child to be inserted
+     * @return true if this set did not already contain the specified element
+     */
+    public synchronized boolean addChild(String child){
+        if(children == null){
+            // let's be conservative on the typical number of children
+            children = new HashSet<String>(8);
+        }
+        return children.add(child);
+    }
+
+    /**
+     * Method that removes a child from the children set
+     *
+     * @param child
+     * @return true if this set contained the specified element
+     */
+    public synchronized boolean removeChild(String child) {
+        if (children == null) {
+            return false;
+        }
+        return children.remove(child);
+    }
+
+    /**
+     * convenience method for setting the children for this datanode
+     *
+     * @param children
+     */
+    public synchronized void setChildren(HashSet<String> children) {
+        this.children = children;
+    }
+
+
+    /**
+     * convenience methods to get the children
+     *
+     * @return the children of this datanode. If the datanode has no children, empty
+     *         set is returned
+     */
+    public synchronized Set<String> getChildren() {
+        if (children == null) {
+            return EMPTY_SET;
+        }
+
+        return Collections.unmodifiableSet(children);
+    }
+
+
+    public synchronized long getApproximateDataSize(){
+        if(data == null) return 0;
+        return data.length;
+    }
+
+
+
+    synchronized public void copyStat(Stat to) {
+        to.setAversion(stat.getAversion());
+        to.setCtime(stat.getCtime());
+        to.setCzxid(stat.getCzxid());
+        to.setMtime(stat.getMtime());
+        to.setMzxid(stat.getMzxid());
+        to.setPzxid(stat.getPzxid());
+        to.setVersion(stat.getVersion());
+        to.setEphemeralOwner(getClientEphemeralOwner(stat));
+        to.setDataLength(data == null ? 0 : data.length);
+        int numChildren = 0;
+        if (this.children != null) {
+            numChildren = children.size();
+        }
+        // when we do the Cversion we need to translate from the count of the creates
+        // to the count of the changes (v3 semantics)
+        // for every create there is a delete except for the children still present
+        to.setCversion(stat.getCversion()*2 - numChildren);
+        to.setNumChildren(numChildren);
+    }
+
+    private static long getClientEphemeralOwner(StatPersisted stat){
+        EphemeralType ephemeralType = EphemeralType.get(stat.getEphemeralOwner());
+        if(ephemeralType != EphemeralType.NORMAL){
+            return 0;
+        }
+        return stat.getEphemeralOwner();
+    }
+
+
+    @Override
+    public synchronized void deserialize(InputArchive archive, String tag) throws IOException {
+        archive.startRecord("node");
+        data = archive.readBuffer("data");
+        acl = archive.readLong("acl");
+        stat = new StatPersisted();
+        stat.deserialize(archive, "statpersisted");
+        archive.endRecord("node");
+    }
+
+
+
+    @Override
+    public synchronized void serialize(OutputArchive archive, String tag) throws IOException {
+        archive.startRecord(this, "node");
+        archive.writeBuffer(data, "data");
+        archive.writeLong(acl, "acl");
+        stat.serialize(archive, "statpersisted");
+        archive.endRecord(this, "node");
+    }
+
 }

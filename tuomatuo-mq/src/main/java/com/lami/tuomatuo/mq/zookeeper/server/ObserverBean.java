@@ -8,6 +8,10 @@ import com.lami.tuomatuo.mq.zookeeper.server.quorum.ObserverMXBean;
  */
 public class ObserverBean extends ZooKeeperServerBean implements ObserverMXBean {
 
+    public ObserverBean(ZooKeeperServer zks) {
+        super(zks);
+    }
+
     @Override
     public int getPendingRevalidationCount() {
         return 0;
