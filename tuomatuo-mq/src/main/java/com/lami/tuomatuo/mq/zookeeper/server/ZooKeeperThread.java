@@ -25,6 +25,11 @@ public class ZooKeeperThread extends Thread {
         setUncaughtExceptionHandler(uncaughtExceptionHandler);
     }
 
+    public ZooKeeperThread(ThreadGroup group, String name, UncaughtExceptionHandler uncaughtExceptionHandler) {
+        super(group, name);
+        this.uncaughtExceptionHandler = uncaughtExceptionHandler;
+    }
+
     /**
      * This will be used by the uncaught exception andler and just log a
      * warning message and return
