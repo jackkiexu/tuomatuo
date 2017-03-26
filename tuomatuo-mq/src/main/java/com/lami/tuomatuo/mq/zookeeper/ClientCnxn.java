@@ -2,15 +2,21 @@ package com.lami.tuomatuo.mq.zookeeper;
 
 import com.lami.tuomatuo.mq.zookeeper.client.HostProvider;
 import com.lami.tuomatuo.mq.zookeeper.client.ZooKeeperSaslClient;
+import com.lami.tuomatuo.mq.zookeeper.server.ByteBufferInputStream;
 import com.lami.tuomatuo.mq.zookeeper.server.ZooKeeperServer;
 import com.lami.tuomatuo.mq.zookeeper.server.ZooKeeperThread;
+import org.apache.jute.BinaryInputArchive;
+import org.apache.jute.BinaryOutputArchive;
 import org.apache.jute.Record;
-import org.apache.zookeeper.proto.ReplyHeader;
-import org.apache.zookeeper.proto.RequestHeader;
+import org.apache.zookeeper.proto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
@@ -28,9 +34,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class ClientCnxn {
 
     private static final Logger LOG = LoggerFactory.getLogger(ClientCnxn.class);
-
-
-
 
     private volatile long lastZxid;
 
@@ -153,6 +156,32 @@ public class ClientCnxn {
                 clientCnxnSocket, 0, new byte[16], canBeReadOnly);
     }
 
+    /**
+     * Creates a connection object. The actual network connect doesn't get
+     * established until needed. The start() instance method must be called
+     * subsequent to construction
+     *
+     * @param chrootPath
+     *      the chroot of this client. Should be removed from this Class
+     * @param hostProvider
+     *      the list of ZooKeeper servers to connect to
+     * @param sessionTimeout
+     *      the timeout for connection
+     * @param zooKeeper
+     *      the zookeeper object that this connection is related to
+     * @param watcher
+     *      watcher for this connection
+     * @param clientCnxnSocket
+     *      the socket implementation used
+     * @param sessionId
+     *      session id if re-establishing session
+     * @param sessionPasswd
+     *      session passwd if re-establishing session
+     * @param canBeReadOnly
+     *      whether the connection is allowed to go to read-only
+     *      mode in case of partitioning
+     * @throws IOException
+     */
     public ClientCnxn(String chrootPath, HostProvider hostProvider, int sessionTimeout, ZooKeeper zooKeeper,
                       ClientWatchManager watcher, ClientCnxnSocket clientCnxnSocket,
                       long sessionId, byte[] sessionPasswd, boolean canBeReadOnly)throws IOException{
@@ -173,6 +202,24 @@ public class ClientCnxn {
 
     }
 
+    /**
+     * tests use this to check on reset of watches
+     * @return
+     */
+    public static boolean getDisableAutoResetWatch(){
+        return disableAutoWatchReset;
+    }
+
+    public static void setDisableAutoWatchReset(boolean b) {
+        disableAutoWatchReset = b;
+    }
+
+    public void start(){
+        sendThread.start();
+        eventThread.start();
+    }
+
+    private Object eventOfDeath = new Object();
 
     private final static Thread.UncaughtExceptionHandler uncaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
         @Override
@@ -180,17 +227,6 @@ public class ClientCnxn {
             LOG.error("from" + t.getName(), e);
         }
     };
-
-
-
-
-
-
-    public void start(){
-        sendThread.start();
-        eventThread.start();
-    }
-
 
     private static class WatcherSetEventPair {
         private final Set<Watcher> watchers;
@@ -201,6 +237,20 @@ public class ClientCnxn {
             this.event = event;
         }
     }
+
+    /**
+     * Guard against creating "-EventThread-EventThread-EventThread-..." thread
+     * names when ZooKeeper object is being created from within a watcher
+     * See ZooKeeper-795 for detals
+     * @param suffix
+     * @return
+     */
+    private static String makeThreadName(String suffix){
+        String name = Thread.currentThread().getName().replaceAll("-EventThread", "");
+        return name + suffix;
+    }
+
+
 
 
     static class EndOfStreamException extends IOException{
@@ -268,8 +318,165 @@ public class ClientCnxn {
         }
 
         void readResponse(ByteBuffer incomingBuffer) throws IOException{
+            ByteBufferInputStream bbis = new ByteBufferInputStream(incomingBuffer);
+            BinaryInputArchive bbia = BinaryInputArchive.getArchive(bbis);
+            ReplyHeader replyHeader = new ReplyHeader();
 
+            replyHeader.deserialize(bbia, "header");
+            if(replyHeader.getXid() == -2){
+                // -2 is the xid for pings
+                LOG.info("Got ping response for sessionId: 0x"
+                        + Long.toHexString(sessionId)
+                        + " after "
+                        + (System.nanoTime() - lastPingSentNs) / 1000000
+                        + " ms ");
+                return;
+            }
+
+            if(replyHeader.getXid() == -4){
+                // -4 is the xid for AuthPacket
+                if(replyHeader.getErr() == KeeperException.Code.AUTHFAILED.intValue()){
+                    state = ZooKeeper.States.AUTH_FAILED;
+                    eventThread.queueEvent(new WatchedEvent(Watcher.Event.EventType.None,
+                            Watcher.Event.KeeperState.AuthFailed, null));
+                }
+            }
         }
+
+        private void pingRWServer() throws RWServerFoundException{
+            String result = null;
+            InetSocketAddress addr = hostProvider.next(0);
+            LOG.info("Checking server " + addr + " for being r/w " + " Timeout " + pingRWTineout);
+
+            Socket sock = null;
+            BufferedReader br = null;
+            try{
+
+
+            }catch (Exception e){
+
+            }finally {
+                if(sock != null){
+                    try {
+                        sock.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if(br != null){
+                    try {
+                        br.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            if("rw".equals(result)){
+                pingTimeout = minPingRwTimeout;
+                // save the found address so that it's used during the next
+                // connection attempt
+                rwServerAddress = addr;
+                throw new RWServerFoundException("Majority server found at " + addr.getHostName() +
+                        " : " + addr.getPort());
+            }
+        }
+
+        private void cleanup(){
+            clientCnxnSocket.cleanup();
+            synchronized (pendingQueue){
+                for(Packet p : pendingQueue){
+                    conLossPacket(p);
+                }
+                pendingQueue.clear();
+            }
+
+            synchronized (outgoingQueue){
+                for(Packet p : outgoingQueue){
+                    conLossPacket(p);
+                }
+                outgoingQueue.clear();
+            }
+        }
+
+
+
+        void onConnected(int _negotiatedSessionTimeout, long _sessionId,
+                         byte[] _sessionPasswd, boolean isRO) throws IOException{
+            negotiatedSessionTimeout = negotiatedSessionTimeout;
+            if(negotiatedSessionTimeout <= 0){
+                state = ZooKeeper.States.CLOSED;
+                eventThread.queueEvent(new WatchedEvent(
+                        Watcher.Event.EventType.None,
+                        Watcher.Event.KeeperState.Expired, null
+                ));
+                eventThread.queueEventOfDeath();
+                throw new SessionExpiredException("" +
+                        "Unable to reconnect to ZooKeeper service, session 0x"
+                        + Long.toHexString(sessionId) + " has expired");
+            }
+
+            if(!readOnly && isRO){
+                LOG.info("Read/write client got connected to read-only server");
+            }
+
+            readTimeout = negotiatedSessionTimeout * 2 / 3;
+            connectTimeout = negotiatedSessionTimeout / hostProvider.size();
+            hostProvider.onConnected();
+            sessionId = _sessionId;
+            sessionPasswd = _sessionPasswd;
+            state = (isRO)?
+                    ZooKeeper.States.CONNECTEDREADONLY : ZooKeeper.States.CONNECTED;
+            seenRWServerBefore |= !isRO;
+            LOG.info("Session establishment complete on server "
+                    + clientCnxnSocket.getRemoteSocketAddress()
+                    + ", sessionId = 0x " + Long.toHexString(sessionId)
+                    + ", negotiated timeout = " + negotiatedSessionTimeout
+                    + (isRO ? " (READ-ONLY mode)" : ""));
+            Watcher.Event.KeeperState eventState = (isRO)?
+                    Watcher.Event.KeeperState.ConnectedReadOnly: Watcher.Event.KeeperState.SyncConnected;
+            eventThread.queueEvent(new WatchedEvent(
+                    Watcher.Event.EventType.None,
+                    eventState, null
+            ));
+        }
+
+        void close(){
+            state = ZooKeeper.States.CLOSED;
+            clientCnxnSocket.wakeupCnxn();
+        }
+
+
+        void testableCloseSocket() throws IOException{
+            clientCnxnSocket.testableCloseSocket();
+        }
+
+
+        public boolean clientTunneledAuthenticationInProcess(){
+            // 1. SASL client is disabled
+            if(!ZooKeeperSaslClient.isEnabled()){
+                return false;
+            }
+
+            // 2. SASL login failed
+            if(saslLoginFailed = true){
+                return false;
+            }
+
+            // 3. SendThread has not created the authenticating object yet
+            // therefore authentication is (at the earliest stage of being) in progress
+            if(zooKeeperSaslClient == null){
+                return true;
+            }
+
+            // 4. authenticating object exists, so ask it for its progress
+            return zooKeeperSaslClient.clientTunneledAuthenticationInProgress();
+        }
+
+        public void sendPacket(Packet p) throws IOException{
+            clientCnxnSocket.sendPacket(p);
+        }
+
     }
 
 
@@ -292,7 +499,208 @@ public class ClientCnxn {
             setUncaughtExceptionHandler(uncaughtExceptionHandler);
             setDaemon(true);
         }
+
+
+        public void queueEvent(WatchedEvent event){
+            if(event.getType() == Watcher.Event.EventType.None
+                    && sessionState == event.getState()){
+                return;
+            }
+            sessionState = event.getState();
+
+            // materialize the watchers based on the event
+            WatcherSetEventPair pair = new WatcherSetEventPair(watcher.materialize(event.getState(),
+                    event.getType(), event.getPath()), event);
+            // queue the pair (watch set & event) for later processing
+            waitingEvents.add(pair);
+        }
+
+        public void queuePacket(Packet packet){
+            if(wasKilled){
+                synchronized (waitingEvents){
+                    if(isRunning){
+                        waitingEvents.add(packet);
+                    }else{
+                        processEvent(packet);
+                    }
+                }
+            }else{
+                waitingEvents.add(packet);
+            }
+        }
+
+        public void queueEventOfDeath(){
+            waitingEvents.add(eventOfDeath);
+        }
+
+
+        @Override
+        public void run() {
+            try{
+                isRunning = true;
+                while(true){
+                    Object event = waitingEvents.take();
+                    if(event == eventOfDeath){
+                        wasKilled = true;
+                    }else{
+                        processEvent(event);
+                    }
+                    if(wasKilled){
+                        synchronized (waitingEvents){
+                            if(waitingEvents.isEmpty()){
+                                isRunning = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }catch (InterruptedException e){
+                LOG.info("Event thread exiting due to interruption", e);
+            }
+
+            LOG.info("EventThread shut down");
+        }
+
+
+
+        private void processEvent(Object event){
+            try{
+                if(event instanceof WatcherSetEventPair){
+                    // each watcher will process the event
+                    WatcherSetEventPair pair = (WatcherSetEventPair)event;
+                    for(Watcher watcher : pair.watchers){
+                        try{
+                            watcher.process(pair.event);
+                        }catch (Throwable t){
+                            LOG.info("Error while calling watcher", t);
+                        }
+                    }
+                }
+                else{
+                    Packet p = (Packet)event;
+                    int rc = 0;
+                    String clientPath = p.clientPath;
+                    if(p.replyHeader.getErr() != 0){
+                        rc = p.replyHeader.getErr();
+                    }
+
+                    if(p.cb == null){
+                        LOG.info("Somehow a null cb got to EventThread");
+                    }
+                    else if(p.response instanceof ExistsResponse
+                            || p.response instanceof SetDataResponse
+                            || p.response instanceof SetACLResponse
+                            ){
+                        AsyncCallback.StatCallback cb = (AsyncCallback.StatCallback)p.cb;
+                        if(rc == 0){
+                            if(p.response instanceof ExistsResponse){
+                                cb.processResult(rc, clientPath, p.ctx,
+                                        ((ExistsResponse)p.response).getStat());
+                            } else if (p.response instanceof SetDataResponse) {
+                                cb.processResult(rc, clientPath, p.ctx,
+                                        ((SetDataResponse) p.response)
+                                                .getStat());
+                            }
+                            else if(p.response instanceof SetACLResponse){
+                                cb.processResult(rc, clientPath, p.ctx, ((SetACLResponse)p.response).getStat());
+                            }
+                        } else{
+                            cb.processResult(rc, clientPath, p.ctx, null);
+                        }
+                    }
+                    else if(p.response instanceof GetDataResponse){
+                        AsyncCallback.DataCallback cb = (AsyncCallback.DataCallback)p.cb;
+                        GetDataResponse rsp = (GetDataResponse)p.response;
+                        if(rc == 0){
+                            cb.processResult(rc, clientPath, p.ctx, rsp.getData(), rsp.getStat());
+                        }else{
+                            cb.processResult(rc, clientPath, p.ctx, null, null);
+                        }
+                    }
+                    else if(p.response instanceof GetACLResponse){
+                        AsyncCallback.ACLCallback cb = (AsyncCallback.ACLCallback)p.cb;
+                        GetACLResponse rsp = (GetACLResponse)p.response;
+                        if(rc == 0){
+                            cb.processResult(rc, clientPath, p.ctx, rsp.getAcl(), rsp.getStat());
+                        }else{
+                            cb.processResult(rc, clientPath, p.ctx, null, null);
+                        }
+                    }
+                    else if(p.response instanceof GetChildrenResponse){
+                        AsyncCallback.ChildrenCallback cb = (AsyncCallback.ChildrenCallback)p.cb;
+                        GetChildrenResponse rsp = (GetChildrenResponse)p.response;
+                        if(rc == 0){
+                            cb.processResult(rc, clientPath, p.ctx, rsp.getChildren());
+                        }else{
+                            cb.processResult(rc, clientPath, p.ctx, null);
+                        }
+                    }
+                    else if(p.response instanceof GetChildren2Response){
+                        AsyncCallback.Children2Callback cb = (AsyncCallback.Children2Callback)p.cb;
+                        GetChildren2Response rsp = (GetChildren2Response)p.response;
+                        if(rc == 0){
+                            cb.processResult(rc, clientPath, p.ctx, rsp.getChildren(), rsp.getStat());
+                        }else{
+                            cb.processResult(rc, clientPath, p.ctx, null, null);
+                        }
+                    }
+                    else if(p.response instanceof CreateResponse){
+                        AsyncCallback.StringCallback cb = (AsyncCallback.StringCallback)p.cb;
+                        CreateResponse rsp = (CreateResponse)p.response;
+                        if(rc == 0){
+                            cb.processResult(rc, clientPath, p.ctx,
+                                    (chrootPath == null
+                                            ? rsp.getPath()
+                                            : rsp.getPath()
+                                            .substring(chrootPath.length())));
+                        }else{
+                            cb.processResult(rc, clientPath, p.ctx, null);
+                        }
+                    }
+                    else if(p.cb instanceof AsyncCallback.VoidCallback){
+                        AsyncCallback.VoidCallback cb = (AsyncCallback.VoidCallback)p.cb;
+                        cb.processResult(rc, clientPath, p.ctx);
+                    }
+                }
+
+            }catch (Throwable t){
+                LOG.info("Caught unexpected throwable", t);
+            }
+        }
     }
+
+    private void finishPacket(Packet p){
+        if(p.watchRegistration != null){
+            p.watchRegistration.register(p.replyHeader.getErr());
+        }
+
+        if(p.cb == null){
+            synchronized (p){
+                p.finished = true;
+                p.notifyAll();
+            }
+        }else{
+            p.finished = true;
+            eventThread.queuePacket(p);
+        }
+    }
+
+
+    private void conLossPacket(Packet p){
+        if(p.replyHeader == null){
+            return;
+        }
+        switch (state){
+            case AUTH_FAILED:
+                p.replyHeader.setErr(KeeperException.Code.AUTHFAILED.intValue());
+            case CLOSED:
+                p.replyHeader.setErr(KeeperException.Code.SESSIONEXPIRED.intValue());
+            default:
+                p.replyHeader.setErr(KeeperException.Code.CONNECTIONLOSS.intValue());
+        }
+        finishPacket(p);
+    }
+
 
     static class AuthData {
         AuthData(String scheme, byte data[]){
@@ -330,22 +738,80 @@ public class ClientCnxn {
 
         Object ctx;
 
+        ZooKeeper.WatchRegistration watchRegistration;
 
+        public boolean readOnly;
+
+        public Packet(RequestHeader requestHeader, ReplyHeader replyHeader, Record request, Record response, ZooKeeper.WatchRegistration watchRegistration) {
+            this.requestHeader = requestHeader;
+            this.replyHeader = replyHeader;
+            this.request = request;
+            this.response = response;
+            this.watchRegistration = watchRegistration;
+            this.readOnly = false;
+        }
+
+        public Packet(RequestHeader requestHeader, ReplyHeader replyHeader,
+                      Record request, Record response,
+                      ZooKeeper.WatchRegistration watchRegistration, boolean readOnly) {
+            this.requestHeader = requestHeader;
+            this.replyHeader = replyHeader;
+            this.request = request;
+            this.response = response;
+            this.watchRegistration = watchRegistration;
+            this.readOnly = readOnly;
+        }
+
+        public void createBB(){
+            try{
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                BinaryOutputArchive boa = BinaryOutputArchive.getArchive(baos);
+                boa.writeInt(-1, "len"); // We'll fill this in later
+
+                if(requestHeader != null){
+                    requestHeader.serialize(boa, "header");
+                }
+                if (request instanceof ConnectRequest) {
+                    request.serialize(boa, "connect");
+                    // append "am I allowed to be readonly" flag
+                    boa.writeBool(readOnly, "readOnly");
+                }
+                else if(request != null){
+                    request.serialize(boa, "request");
+                }
+
+                baos.close();
+                this.bb = ByteBuffer.wrap(baos.toByteArray());
+                this.bb.putInt(this.bb.capacity() - 4);
+                this.bb.rewind();
+            }catch (IOException e){
+                LOG.info("Ignoring unexpected exception", e);
+            }
+        }
+
+
+        @Override
+        public String toString() {
+            return "Packet{" +
+                    "requestHeader=" + requestHeader +
+                    ", replyHeader=" + replyHeader +
+                    ", request=" + request +
+                    ", response=" + response +
+                    ", bb=" + bb +
+                    ", clientPath='" + clientPath + '\'' +
+                    ", serverPath='" + serverPath + '\'' +
+                    ", finished=" + finished +
+                    ", cb=" + cb +
+                    ", ctx=" + ctx +
+                    ", watchRegistration=" + watchRegistration +
+                    ", readOnly=" + readOnly +
+                    '}';
+        }
     }
 
 
 
-    /**
-     * Guard against creating "-EventThread-EventThread-EventThread-..." thread
-     * names when ZooKeeper object is being created from within a watcher
-     * See ZooKeeper-795 for detals
-     * @param suffix
-     * @return
-     */
-    private static String makeThreadName(String suffix){
-        String name = Thread.currentThread().getName().replaceAll("-EventThread", "");
-        return name + suffix;
-    }
+
 
 
     @Override
@@ -367,5 +833,127 @@ public class ClientCnxn {
                 .append(" queuedevents:").append(eventThread.waitingEvents.size());
 
         return sb.toString();
+    }
+
+
+    /**
+     * Shutdown the send/event threads
+     */
+    public void disconnect(){
+        LOG.info("Disconnecting client for session:0x", Long.toHexString(getSessionId()));
+
+        sendThread.close();
+        eventThread.queueEventOfDeath();
+    }
+
+    /**
+     * Close the connection, which includes; send session disconnect to the
+     * server, shutdown the send/event threads
+     * @throws IOException
+     */
+    public void close() throws IOException{
+        LOG.info("Closing client for session: 0x", Long.toHexString(getSessionId()));
+
+        try{
+            RequestHeader h = new RequestHeader();
+            h.setType(ZooDefs.OpCode.closeSession);
+
+            submitRequest(h, null, null, null);
+        }catch (Exception e){
+
+        }finally {
+            disconnect();
+        }
+    }
+
+
+
+    private int xid = 1;
+
+    private volatile ZooKeeper.States state = ZooKeeper.States.NOT_CONNECTED;
+
+    synchronized public int getXid(){
+        return xid++;
+    }
+
+    public ReplyHeader submitRequest(RequestHeader h, Record request,
+                                     Record response, ZooKeeper.WatchRegistration watchRegistration)
+        throws InterruptedException{
+        ReplyHeader r = new ReplyHeader();
+        Packet packet = queuePacket(h, r, request, response, null, null, null,
+                                null, watchRegistration);
+        synchronized (packet){
+            while (!packet.finished){
+                packet.wait();
+            }
+        }
+        return r;
+    }
+
+
+    public void enableWrite(){
+        sendThread.getClientCnxnSocket().enableWrite();
+    }
+
+    public void sendPacket(Record request, Record response, AsyncCallback cb, int opCode)
+        throws IOException{
+        // Generate XId now because it will be sent immediately
+        // by call to sendThread.sendPacket() below
+        int xid = getXid();
+        RequestHeader h = new RequestHeader();
+        h.setXid(xid);
+        h.setType(opCode);
+
+        ReplyHeader r = new ReplyHeader();
+        r.setXid(xid);
+
+        Packet p = new Packet(h, r, request, response, null, false);
+        p.cb = cb;
+        sendThread.sendPacket(p);
+    }
+
+    Packet queuePacket(RequestHeader h, ReplyHeader r, Record request,
+                       Record respose, AsyncCallback cb, String clientPath,
+                       String serverPath, Object ctx, ZooKeeper.WatchRegistration watchRegistration){
+        Packet packet = null;
+
+        // Note that we do not generate the Xid for the packet yet. It is
+        // generated later at send-time, by an implementation of ClientCnxnSocket::doIO()
+        // where the packet is actually sent
+        synchronized (outgoingQueue){
+            packet = new Packet(h, r, request, respose, watchRegistration);
+            packet.cb = cb;
+            packet.ctx = ctx;
+            packet.clientPath = clientPath;
+            packet.serverPath = serverPath;
+            if(!state.isAlive() || closing){
+                conLossPacket(packet);
+            }else{
+                // If the client is asking to close the session then
+                // mark as closing
+                if(h.getType() == ZooDefs.OpCode.closeSession){
+                    closing = true;
+                }
+                outgoingQueue.add(packet);
+            }
+        }
+
+        sendThread.getClientCnxnSocket().wakeupCnxn();
+        return packet;
+    }
+
+
+    public void addAuthInfo(String scheme, byte auth[]){
+        if(!state.isAlive()){
+            return;
+        }
+        authInfo.add(new AuthData(scheme, auth));
+        queuePacket(new RequestHeader(-4, ZooDefs.OpCode.auth), null,
+                new AuthPacket(0, scheme, auth), null, null, null, null,
+                null, null);
+    }
+
+    ZooKeeper.States getState(){
+        return state;
     }
 }

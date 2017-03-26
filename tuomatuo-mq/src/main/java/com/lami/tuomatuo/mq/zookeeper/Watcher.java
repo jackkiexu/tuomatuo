@@ -1,6 +1,5 @@
 package com.lami.tuomatuo.mq.zookeeper;
 
-import org.apache.zookeeper.WatchedEvent;
 
 /**
  * This interface specifies the public interface an event handler class must
@@ -117,6 +116,10 @@ public interface Watcher {
 
             EventType(int intValue) {
                 this.intValue = intValue;
+            }
+
+            public int getIntValue(){
+                return intValue;
             }
 
             public static EventType fromInt(int intValue){
