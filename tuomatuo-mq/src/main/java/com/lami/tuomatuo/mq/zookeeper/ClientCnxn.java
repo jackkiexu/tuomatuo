@@ -116,6 +116,23 @@ public class ClientCnxn {
 
     public ZooKeeperSaslClient zooKeeperSaslClient;
 
+
+    /**
+     * This controls whether automatic watch resetting is enabled.
+     * Clients automatically reset watches during session reconnect, this
+     * option allows the client to turn off this behavior by setting
+     * the environment variable "zookeeper.disableAutoWatchReset" to true
+     */
+    private static boolean disableAutoWatchReset;
+
+    static {
+        // this var should not be public, but otw there is no wasy way
+        // to test
+        disableAutoWatchReset = Boolean.getBoolean("zookeeper.disableAutoWatchReset");
+        LOG.info("zookeeper.disableAu");
+    }
+
+
     public long getSessionId() {
         return sessionId;
     }
@@ -248,6 +265,10 @@ public class ClientCnxn {
             this.clientCnxnSocket = clientCnxnSocket;
             setUncaughtExceptionHandler(uncaughtExceptionHandler);
             setDaemon(true);
+        }
+
+        void readResponse(ByteBuffer incomingBuffer) throws IOException{
+
         }
     }
 
