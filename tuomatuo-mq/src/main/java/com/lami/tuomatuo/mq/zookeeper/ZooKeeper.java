@@ -98,6 +98,28 @@ public class ZooKeeper {
     }
 
 
+    /**
+     * Handle the special case of exist watches - they add a watcher
+     * even in the case where NONODe result code is returned
+     */
+    class ExistsWatchRegistration extends WatchRegistration{
+        public ExistsWatchRegistration(Watcher watcher, String clientPath) {
+            super(watcher, clientPath);
+        }
+
+        @Override
+        protected Map<String, Set<Watcher>> getWatches(int rc) {
+            return rc == 0? watchManager.dataWatches : watchManager.existWatches;
+        }
+
+        @Override
+        protected boolean shouldAddWatch(int rc) {
+            return rc == 0 || rc == KeeperException.Code.NONODE.intValue();
+        }
+    }
+
+
+
     public enum States {
         CONNECTING, ASSOCIATING, CONNECTED, CONNECTEDREADONLY,
         CLOSED, AUTH_FAILED, NOT_CONNECTED;
