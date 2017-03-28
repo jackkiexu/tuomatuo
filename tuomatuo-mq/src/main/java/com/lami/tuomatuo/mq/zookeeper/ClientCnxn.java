@@ -157,12 +157,14 @@ public class ClientCnxn {
         return sessionPasswd;
     }
 
+
+    public int getSessionTimeout(){
+        return sessionTimeout;
+    }
+
     public int getNegotiatedSessionTimeout() {
         return negotiatedSessionTimeout;
     }
-
-
-
 
     public ClientCnxn(String chrootPath, HostProvider hostProvider, int sessionTimeout,
                       ZooKeeper zooKeeper, ClientWatchManager watcher, ClientCnxnSocket clientCnxnSocket,

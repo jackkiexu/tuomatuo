@@ -4,14 +4,14 @@ import com.lami.tuomatuo.mq.zookeeper.client.ConnectStringParser;
 import com.lami.tuomatuo.mq.zookeeper.client.HostProvider;
 import com.lami.tuomatuo.mq.zookeeper.client.StaticHostProvider;
 import com.lami.tuomatuo.mq.zookeeper.client.ZooKeeperSaslClient;
+import com.lami.tuomatuo.mq.zookeeper.common.PathUtils;
+import org.apache.zookeeper.data.ACL;
+import org.apache.zookeeper.proto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by xujiankang on 2017/3/19.
@@ -35,19 +35,6 @@ public class ZooKeeper {
 
     private final ZKWatchManager watchManager = new ZKWatchManager();
 
-
-    public ZooKeeper(String connectString, int sessionTimeout, Watcher watcher, boolean canBeReadOnly) throws IOException{
-        LOG.info("Initiating client connection, connecString = " + connectString
-                + " sessionTimeout = " + sessionTimeout + " watcher = " + watcher);
-        watchManager.defaultWatcher = watcher;
-
-        ConnectStringParser connectStringParser = new ConnectStringParser(connectString);
-        HostProvider hostProvider = new StaticHostProvider(connectStringParser.getServerAddresses());
-        cnxn = new ClientCnxn(connectStringParser.getChrootPath(),
-                    hostProvider, sessionTimeout, this, watchManager,
-                getClientCnxnSocket(), canBeReadOnly);
-        cnxn.start();
-    }
 
 
 
@@ -118,6 +105,27 @@ public class ZooKeeper {
         }
     }
 
+    class DataWatchRegistration extends WatchRegistration{
+        public DataWatchRegistration(Watcher watcher, String clientPath) {
+            super(watcher, clientPath);
+        }
+
+        @Override
+        protected Map<String, Set<Watcher>> getWatches(int rc) {
+            return watchManager.dataWatches;
+        }
+    }
+
+    class ChildWatchRegistration extends WatchRegistration{
+        public ChildWatchRegistration(Watcher watcher, String clientPath) {
+            super(watcher, clientPath);
+        }
+
+        @Override
+        protected Map<String, Set<Watcher>> getWatches(int rc) {
+            return watchManager.childWatches;
+        }
+    }
 
 
     public enum States {
@@ -160,6 +168,271 @@ public class ZooKeeper {
             return null;
         }
     }
+
+    public ZooKeeper(String connectString, int sessionTimeout, Watcher watcher)throws IOException{
+        this(connectString, sessionTimeout, watcher, false);
+    }
+
+    public ZooKeeper(String connectString, int sessionTimeout, Watcher watcher, boolean canBeReadOnly) throws IOException{
+        LOG.info("Initiating client connection, connecString = " + connectString
+                + " sessionTimeout = " + sessionTimeout + " watcher = " + watcher);
+        watchManager.defaultWatcher = watcher;
+
+        ConnectStringParser connectStringParser = new ConnectStringParser(connectString);
+        HostProvider hostProvider = new StaticHostProvider(connectStringParser.getServerAddresses());
+        cnxn = new ClientCnxn(connectStringParser.getChrootPath(),
+                hostProvider, sessionTimeout, this, watchManager,
+                getClientCnxnSocket(), canBeReadOnly);
+        cnxn.start();
+    }
+
+    public ZooKeeper(String connectString, int sessionTimeout, Watcher watcher,
+                     long sessionId, byte[] sessionPasswd, boolean canBeReadOnly)
+            throws IOException
+    {
+        LOG.info("Initiating client connection, connectString=" + connectString
+                + " sessionTimeout=" + sessionTimeout
+                + " watcher=" + watcher
+                + " sessionId=" + Long.toHexString(sessionId)
+                + " sessionPasswd="
+                + (sessionPasswd == null ? "<null>" : "<hidden>"));
+
+        watchManager.defaultWatcher = watcher;
+
+        ConnectStringParser connectStringParser = new ConnectStringParser(
+                connectString);
+        HostProvider hostProvider = new StaticHostProvider(
+                connectStringParser.getServerAddresses());
+        cnxn = new ClientCnxn(connectStringParser.getChrootPath(),
+                hostProvider, sessionTimeout, this, watchManager,
+                getClientCnxnSocket(), sessionId, sessionPasswd, canBeReadOnly);
+        cnxn.seenRwServerBefore = true; // since user has provided sessionId
+        cnxn.start();
+    }
+
+    public ZooKeeper(String connectString, int sessionTimeout, Watcher watcher, long sessionId, byte[] sessionPasswd) throws IOException{
+        this(connectString, sessionTimeout, watcher, sessionId, sessionPasswd, false);
+    }
+
+    /**
+     * The session id for this ZooKeeper client instance. The value returned is
+     * not valid until the client connects to a server and may change after a
+     * re-connect
+     * @return
+     */
+    public long getSessionId(){
+        return cnxn.getSessionId();
+    }
+
+    /**
+     * The session password for this ZooKeeper client instance. The value
+     * returned is not valid until the client connects to a server and may
+     * change after a re-connect
+     *
+     * This method is NOT thread safe
+     *
+     * @return
+     */
+    public byte[] getSessionPasswd(){
+        return cnxn.getSessionPasswd();
+    }
+
+    /**
+     * The negotiated session timeout for this ZooKeeper client instance. The
+     * value returned is not valid until the client connects to a server and
+     * may change after a re-connect
+     *
+     * @return current session timeout
+     */
+    public int getSessionTimeout(){
+        return cnxn.getSessionTimeout();
+    }
+
+    /**
+     * Add the specified scheme:auth information to this connection
+     * This method is NOT thread safe
+     *
+     * @param scheme
+     * @param auth
+     */
+    public void addAuthInfo(String scheme, byte auth[]){
+        cnxn.addAuthInfo(scheme, auth);
+    }
+
+    /**
+     * Specify the default watcher for the connection (overrides the one
+     * specified during construction)
+     * @param watcher
+     */
+    public synchronized void register(Watcher watcher){
+        watchManager.defaultWatcher = watcher;
+    }
+
+
+    public synchronized void close() throws InterruptedException{
+        if(!cnxn.getState().isAlive()){
+            LOG.info("Close called on already closed client");
+            return;
+        }
+
+        try {
+            cnxn.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            LOG.info("Ignoring unexpected exception during close", e);
+        }
+
+        LOG.info("Session: 0x : " + Long.toHexString(getSessionId()) + " closed");
+    }
+
+    /**
+     * Prepend the chroot to the client path (if present). The expectation of
+     * this function is that the client path has been validated before this
+     * function is called
+     *
+     * @param clientPath path to the node
+     * @return server view of the path (chroot prepended to client path)
+     */
+    private String prependChroot(String clientPath){
+        if(cnxn.chrootPath != null){
+            // handle clientPath = '/'
+            if(clientPath.length() == 1){
+                return cnxn.chrootPath;
+            }
+            return cnxn.chrootPath + clientPath;
+        }else{
+            return clientPath;
+        }
+    }
+
+
+
+    public String create(final String path, byte data[], List<ACL> acl, CreateMode createMode) throws KeeperException, InterruptedException{
+        final String clientPath = path;
+        PathUtils.validatePath(clientPath, createMode.isSequential());
+        final String serverPath = prependChroot(clientPath);
+
+        RequestHeader h = new RequestHeader();
+        h.setType(ZooDefs.OpCode.create);
+        CreateRequest request = new CreateRequest();
+        CreateResponse response = new CreateResponse();
+        request.setData(data);
+        request.setFlags(createMode.toFlag());
+        request.setPath(serverPath);
+
+        if(acl != null && acl.size() == 0){
+            throw new KeeperException.InvalidACLException();
+        }
+        request.setAcl(acl);
+        ReplyHeader r = cnxn.submitRequest(h, request, response, null);
+        if(r.getErr() != 0){
+            throw KeeperException.create(KeeperException.Code.get(r.getErr()), clientPath);
+        }
+
+        if(cnxn.chrootPath == null){
+            return response.getPath();
+        }else{
+            return response.getPath().substring(cnxn.chrootPath.length());
+        }
+    }
+
+    public void create(final String path, byte data[], List<ACL> acl, CreateMode createMode,
+                       AsyncCallback.StringCallback cb, Object ctx){
+        final String clientPath = path;
+        PathUtils.validatePath(clientPath, createMode.isSequential());
+
+        final String serverPath = prependChroot(clientPath);
+
+        RequestHeader h = new RequestHeader();
+        h.setType(ZooDefs.OpCode.create);
+
+        CreateRequest request = new CreateRequest();
+        CreateResponse response = new CreateResponse();
+        ReplyHeader r = new ReplyHeader();
+        request.setData(data);
+        request.setFlags(createMode.toFlag());
+        request.setPath(serverPath);
+        request.setAcl(acl);
+        cnxn.queuePacket(h, r, request, response, cb, clientPath, serverPath, ctx, null);
+    }
+
+
+    public void delete(final String path, int version)throws InterruptedException, KeeperException{
+        final String clientPath = path;
+        PathUtils.validatePath(clientPath);
+
+        final String serverPath;
+
+        /**
+         * maintain semantics even in chroot case
+         * specifically - root cannot deleted
+         * I think this makes sense even in chroot case
+         */
+
+        if(clientPath.equals("/")){
+            /**
+             * a bit of a hack, but delete(/) will never succeed and ensures
+             * that the same semantics are maintained
+             */
+            serverPath = clientPath;
+        }else {
+            serverPath = prependChroot(clientPath);
+        }
+
+        RequestHeader h = new RequestHeader();
+        h.setType(ZooDefs.OpCode.delete);
+        DeleteRequest request = new DeleteRequest();
+        request.setPath(serverPath);
+        request.setVersion(version);
+        ReplyHeader r = cnxn.submitRequest(h, request, null, null);
+        if(r.getErr() != 0){
+            throw KeeperException.create(KeeperException.Code.get(r.getErr()), clientPath);
+        }
+
+    }
+
+
+    public List<OpResult> multi(Iterable<Op> ops) throws InterruptedException, KeeperException{
+        for(Op op : ops){
+            op.validate();
+        }
+
+        // reconstructing transaction with the chroot prefix
+        List<Op> transaction = new ArrayList<Op>();
+        for(Op op : ops){
+            transaction.add(withRootPrefix(op));
+        }
+        return multiInternal(new MultiTransactionRecord(transaction));
+    }
+
+
+    public Op withRootPrefix(Op op){
+        if(null != op.getPath()){
+            final String serverPath = prependChroot(op.getPath());
+            if(!op.getPath().equals(serverPath)){
+                return op.withChroot(serverPath);
+            }
+        }
+        return op;
+    }
+
+
+    protected List<OpResult> multiInternal(MultiTransactionRecord request)throws
+        InterruptedException, KeeperException{
+        RequestHeader h = new RequestHeader();
+        h.setType(ZooDefs.OpCode.multi);
+        MultiResponse response = new MultiResponse();
+        ReplyHeader r = cnxn.submitRequest(h, request, response, null);
+        if(r.getErr() != 0){
+            throw KeeperException.create(KeeperException.Code.get(r.getErr()));
+        }
+
+        List<OpResult> results = response.getResultList();
+
+        OpResult.ErrorResult fataError = null;
+
+    }
+
 
     private static ClientCnxnSocket getClientCnxnSocket() throws IOException{
         String clientCnxnSocketName = System.getProperty(ZOOKEEPER_CLIENT_CNXN_SOCKET);

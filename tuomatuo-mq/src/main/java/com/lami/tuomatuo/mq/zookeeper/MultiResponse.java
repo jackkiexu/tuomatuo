@@ -5,7 +5,9 @@ import org.apache.jute.OutputArchive;
 import org.apache.jute.Record;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Handles the response from a multi request. Such a response consist of
@@ -16,7 +18,14 @@ import java.util.Iterator;
  *
  * Created by xujiankang on 2017/3/19.
  */
-public class Multiresponse implements Record, Iterable<OpResult> {
+public class MultiResponse implements Record, Iterable<OpResult> {
+
+    private List<OpResult> results = new ArrayList<>();
+
+    public List<OpResult> getResultList() {
+        return results;
+    }
+
     @Override
     public Iterator<OpResult> iterator() {
         return null;

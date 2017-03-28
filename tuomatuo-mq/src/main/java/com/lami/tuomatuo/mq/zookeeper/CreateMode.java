@@ -85,7 +85,7 @@ public enum CreateMode {
         return isContainer;
     }
 
-    public int getFlag() {
+    public int toFlag() {
         return flag;
     }
 
