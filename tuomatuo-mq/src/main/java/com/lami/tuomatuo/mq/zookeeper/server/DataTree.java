@@ -4,17 +4,24 @@ import com.lami.tuomatuo.mq.zookeeper.*;
 import com.lami.tuomatuo.mq.zookeeper.KeeperException;
 import com.lami.tuomatuo.mq.zookeeper.Quotas;
 import com.lami.tuomatuo.mq.zookeeper.StatsTrack;
+import com.lami.tuomatuo.mq.zookeeper.WatchedEvent;
 import com.lami.tuomatuo.mq.zookeeper.Watcher;
 import com.lami.tuomatuo.mq.zookeeper.ZooDefs;
 import com.lami.tuomatuo.mq.zookeeper.common.PathTrie;
+import org.apache.jute.Index;
+import org.apache.jute.InputArchive;
+import org.apache.jute.OutputArchive;
 import org.apache.jute.Record;
 import org.apache.zookeeper.*;
+import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Stat;
 import org.apache.zookeeper.txn.TxnHeader;
 import org.jboss.netty.util.internal.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
 
 /**
@@ -358,14 +365,322 @@ public class DataTree {
         }
     }
 
-    /**
-     * a encapultaing class for return value
-     */
-    private static class Counts{
-        long bytes;
-        int count;
+    private void updateQuotaForPath(String path){
+        
     }
 
+    private void traverseNode(String path){
+        DataNode node = getNode(path);
+        String children[] = null;
+        synchronized (node){
+            Set<String> childs = node.getChildren();
+            if(childs != null){
+                children = childs.toArray(new String[childs.size()]);
+            }
+        }
+
+        if(children == null || children.length == 0){
+            // this node does not have a child
+            // is the leaf node
+            // check if its the leaf node
+            String endString = "/" + Quotas.limitNode;
+            if(path.endsWith(endString)){
+                // OK this is the limit node
+                // get the real node and update
+                // the count and the bytes
+                String realPath = path.substring(Quotas.quotaZookeeper.length(),
+                        path.indexOf(endString));
+                updateQuotaForPath(realPath);
+                this.pTrie.addPath(realPath);
+            }
+            return;
+        }
+
+        for(String child : children){
+            traverseNode(path + "/" + child);
+        }
+    }
+
+    /**
+     * this method  sets up the path trie and sets up stats for quota nodes
+     */
+    private void setupQuota(){
+        String quotaPath = Quotas.quotaZookeeper;
+        DataNode node = getNode(quotaPath);
+        if(node == null){
+            return;
+        }
+        traverseNode(quotaPath);
+    }
+
+
+    /**
+     * This method uses a stringbuilder to create a new path for children. This is fater than string appends
+     * @param oa
+     * @param path
+     * @throws IOException
+     */
+    void serializeNode(OutputArchive oa, StringBuilder path) throws IOException{
+        String pathString = path.toString();
+        DataNode node = getNode(pathString);
+        if(node == null){
+            return;
+        }
+
+        String children[] = null;
+        synchronized (node){
+            scount++;
+            oa.writeString(pathString, "path");
+            oa.writeRecord(node, "node");
+            Set<String> childs = node.getChildren();
+            if(childs != null){
+                children = childs.toArray(new String[childs.size()]);
+            }
+        }
+
+        path.append('/');
+        int off = path.length();
+        if(children != null){
+            for(String child : children){
+                /**
+                 * Since this is single buffer being resused
+                 * we need
+                 * to truncate the previous bytes of string
+                 */
+                path.delete(off, Integer.MAX_VALUE);
+                path.append(child);
+                serializeNode(oa, path);
+            }
+        }
+    }
+
+
+    int scount ;
+
+    public boolean initialized = false;
+
+    private void deserializeList(Map<Long, List<ACL>> longKeyMap, InputArchive ia)
+            throws IOException{
+        int i = ia.readInt("map");
+        while(i > 0){
+            Long val = ia.readLong("long");
+            if(aclIndex < val){
+                aclIndex = val;
+            }
+            List<ACL> aclList = new ArrayList<>();
+            Index j = ia.startVector("acls");
+            while(!j.done()){
+                ACL acl = new ACL();
+                acl.deserialize(ia, "acl");
+                aclList.add(acl);
+                j.incr();
+            }
+
+            longKeyMap.put(val, aclList);
+            aclKeyMap.put(aclList, val);
+            i--;
+        }
+    }
+
+    private synchronized void serializeList(Map<Long, List<ACL>> longKeyMap,
+                                            OutputArchive oa) throws IOException{
+        oa.writeInt(longKeyMap.size(), "map");
+        Set<Map.Entry<Long, List<ACL>>> set = longKeyMap.entrySet();
+        for(Map.Entry<Long, List<ACL>> val : set){
+            oa.writeLong(val.getKey(), "long");
+            List<ACL> aclList = val.getValue();
+            oa.startVector(aclList, "acls");
+            for(ACL acl : aclList){
+                acl.serialize(oa, "acl");
+            }
+            oa.endVector(aclList, "acls");
+        }
+    }
+
+
+    public void serialize(OutputArchive oa, String tag) throws IOException{
+        scount = 0;
+        serializeNode(oa, new StringBuilder(""));
+        // mark and of stream
+        // we need to check if clear and been called in between the snapshot
+        if(root != null){
+            oa.writeString("/", "path");
+        }
+
+    }
+
+    public void deserialize(InputArchive ia, String tag) throws IOException{
+        deserializeList(longKeyMap, ia);
+        nodes.clear();
+        pTrie.clear();
+        String path = ia.readString("path");
+        while(!path.equals("/")){
+            DataNode node = new DataNode();
+            ia.readRecord(node, "node");
+            nodes.put(path, node);
+            int lastSlash = path.lastIndexOf('/');
+            if(lastSlash == -1){
+
+            }
+            else{
+                String parentPath = path.substring(0, lastSlash);
+                node.parent = nodes.get(parentPath);
+                if(node.parent == null){
+                    throw new IOException("Invalid Datatree, unable to find " +
+                    " parent " + parentPath + " of path " + path);
+                }
+
+                node.parent.addChild(path.substring(lastSlash + 1));
+                long eowner = node.stat.getEphemeralOwner();
+                if(eowner != 0){
+                    HashSet<String> list = ephemerals.get(eowner);
+                    if(list == null){
+                        list = new HashSet<String>();
+                        ephemerals.put(eowner, list);
+                    }
+                    list.add(path);
+                }
+            }
+            path = ia.readString("path");
+        }
+
+        nodes.put("/", root);
+        /**
+         * we are done with deserializing the
+         * the datatree
+         * update the quotas - create path tire
+         * and also update the stat nodes
+         */
+        setupQuota();
+    }
+
+
+    /**
+     * Summary of the watches on the datatree
+     * @param printWriter
+     */
+    public synchronized void dumpWatchesSummary(PrintWriter printWriter){
+        printWriter.print(dataWatches.toString());
+    }
+
+    /**
+     * Write a text dump of all the watches on the datatree
+     * Warning. this is expensive, use sparingly
+     * @param printWriter
+     * @param byPath
+     */
+    public synchronized void dumpWatches(PrintWriter printWriter, boolean byPath){
+        dataWatches.dumpWatches(printWriter, byPath);
+    }
+
+
+    /**
+     * Write a text dump of all the ephemerals in the datatree
+     * @param pwriter
+     */
+    public void dumpEphemerals(PrintWriter pwriter){
+        Set<Long> keys = ephemerals.keySet();
+        pwriter.println("Session with Ephemerals ("
+                + keys.size() + " )");
+        for(long k : keys){
+            pwriter.print("0x" + Long.toHexString(k));
+            pwriter.print(":");
+            HashSet<String> tmp = ephemerals.get(k);
+            if(tmp != null){
+                synchronized (tmp){
+                    for(String path : tmp){
+                        pwriter.println("\t" + path);
+                    }
+                }
+            }
+        }
+    }
+
+    public void removeCnxn(Watcher watcher){
+        dataWatches.removeWatcher(watcher);
+        childWatches.removeWatcher(watcher);
+    }
+
+    public void clear(){
+        root = null;
+        nodes.clear();
+        ephemerals.clear();
+    }
+
+    public void setWatches(long relativeZxid, List<String> dataWatches,
+                           List<String> existWatches, List<String> childWatches,
+                           Watcher watcher){
+        for(String path : dataWatches){
+            DataNode node = getNode(path);
+            if(node == null){
+                watcher.process(new WatchedEvent(Watcher.Event.EventType.NodeDeleted,
+                        Watcher.Event.KeeperState.SyncConnected, path));
+            }
+            else if(node.stat.getMzxid() > relativeZxid){
+                watcher.process(new WatchedEvent(Watcher.Event.EventType.NodeDataChanged,
+                        Watcher.Event.KeeperState.SyncConnected, path));
+            }
+            else{
+                this.dataWatches.addWatch(path, watcher);
+            }
+        }
+
+        for(String path : existWatches){
+            DataNode node = getNode(path);
+            if(node != null){
+                watcher.process(new WatchedEvent(Watcher.Event.EventType.NodeCreated,
+                        Watcher.Event.KeeperState.SyncConnected, path));
+            }
+            else{
+                this.dataWatches.addWatch(path, watcher);
+            }
+        }
+
+        for(String path : childWatches){
+            DataNode node = getNode(path);
+            if(node == null){
+                watcher.process(new WatchedEvent(Watcher.Event.EventType.NodeDeleted,
+                        Watcher.Event.KeeperState.SyncConnected, path));
+            }
+            else if(node.stat.getPzxid() > relativeZxid){
+                watcher.process(new WatchedEvent(Watcher.Event.EventType.NodeChildrenChanged,
+                        Watcher.Event.KeeperState.SyncConnected, path));
+            }
+            else{
+                this.childWatches.addWatch(path, watcher);
+            }
+        }
+    }
+
+
+    /**
+     * This method sets he Cversion and Pzxid fot the specified node to the
+     * values passed as arguments. The values are modified only if newCversion
+     * is greater than the current Cversion. A NoNodeException is thrown if
+     * a znode for the specified path is not found
+     * @param path
+     * @param newCversion
+     * @param zxid
+     */
+    public void setCversionPzxid(String path, int newCversion, long zxid)
+    throws KeeperException.NoNodeException{
+        if(path.endsWith("/")){
+            path = path.substring(0, path.length() - 1);
+        }
+        DataNode node = nodes.get(path);
+        if(node == null){
+            throw new KeeperException.NoNodeException(path);
+        }
+        synchronized (node){
+            if(newCversion == -1){
+                newCversion = node.stat.getCversion() + 1;
+            }
+            if(newCversion > node.stat.getCversion()){
+                node.stat.setCversion(newCversion);
+                node.stat.setPzxid(zxid);
+            }
+        }
+    }
 
 
 
