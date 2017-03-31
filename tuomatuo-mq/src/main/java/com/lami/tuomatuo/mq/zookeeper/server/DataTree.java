@@ -358,5 +358,15 @@ public class DataTree {
         }
     }
 
+    /**
+     * a encapultaing class for return value
+     */
+    private static class Counts{
+        long bytes;
+        int count;
+    }
+
+    
+
 
 }
