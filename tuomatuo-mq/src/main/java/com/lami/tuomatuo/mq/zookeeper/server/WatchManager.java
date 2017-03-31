@@ -33,7 +33,36 @@ public class WatchManager {
         HashSet<Watcher> list = watchTable.get(path);
 
         if(list == null){
-            //
+            // don't waste memory if there are few watches on a node
+            // rehash when the 4th entry is added, doubling size thereafter
+            // seems like a good compromise
+            list = new HashSet<Watcher>(4);
+            watchTable.put(path, list);
+        }
+        list.add(watcher);
+
+        HashSet<String> paths = watch2Paths.get(watcher);
+        if(paths == null ){
+            // cnxn typically have many watches, so use default cap here
+            paths = new HashSet<String>();
+            watch2Paths.put(watcher, paths);
+        }
+        paths.add(path);
+    }
+
+    public synchronized void removeWatcher(Watcher watcher){
+        HashSet<String> paths = watch2Paths.remove(watcher);
+        if(paths == null){
+            return;
+        }
+        for(String p : paths){
+            HashSet<Watcher> list = watchTable.get(p);
+            if(list != null){
+                list.remove(watcher);
+                if(list.size() == 0){
+                    watchTable.remove(p);
+                }
+            }
         }
     }
 

@@ -19,6 +19,9 @@ import java.util.Set;
  * Created by xujiankang on 2017/3/19.
  */
 public class DataNode implements Record {
+    /** the parent of this datanode */
+    DataNode parent;
+
     /** the data for this datanode */
     public byte data[];
 
