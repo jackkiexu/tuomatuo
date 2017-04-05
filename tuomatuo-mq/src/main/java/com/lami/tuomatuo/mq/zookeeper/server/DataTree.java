@@ -2,6 +2,7 @@ package com.lami.tuomatuo.mq.zookeeper.server;
 
 import com.lami.tuomatuo.mq.zookeeper.*;
 import com.lami.tuomatuo.mq.zookeeper.KeeperException;
+import com.lami.tuomatuo.mq.zookeeper.Op;
 import com.lami.tuomatuo.mq.zookeeper.Quotas;
 import com.lami.tuomatuo.mq.zookeeper.StatsTrack;
 import com.lami.tuomatuo.mq.zookeeper.WatchedEvent;
@@ -15,6 +16,8 @@ import org.apache.jute.Record;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Stat;
+import org.apache.zookeeper.data.StatPersisted;
+import org.apache.zookeeper.txn.*;
 import org.apache.zookeeper.txn.TxnHeader;
 import org.jboss.netty.util.internal.ConcurrentHashMap;
 import org.slf4j.Logger;
@@ -81,22 +84,25 @@ public class DataTree {
     /** the hashtable lists the paths of the ephemeral nodes of a session */
     private final Map<Long, HashSet<String>> ephemerals = new ConcurrentHashMap<>();
 
-    /** this set contains the paths of all container nodes */
-    // 这里使用了桥接模式
-    private final Set<String> containers = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+    /**
+     * This is map from longs to acl's It saves acl's being stored for each
+     * datanode
+     */
+    public final Map<Long, List<ACL>> longKeyMap = new HashMap<>();
 
-    /** This set contains tha path of all ttl nodes */
-    private final Set<String> ttls = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+    // this is a map from acls to long
+    public final Map<List<ACL>, Long> aclKeyMap = new HashMap<>();
 
-    private final ReferenceCountedACLCache aclCache = new ReferenceCountedACLCache();
+    /**
+     * these are number of acls that we have in the datatree
+     */
+    protected long aclIndex = 0;
 
-
-    public Set<String> getEphemerals(long sessionId){
+    public HashSet<String> getEphemerals(long sessionId){
         HashSet<String> retv = ephemerals.get(sessionId);
         if(retv == null){
-            return new HashSet<>();
+            return new HashSet<String>();
         }
-
         HashSet<String> cloned = null;
         synchronized (retv){
             cloned = (HashSet<String>)retv.clone();
@@ -104,17 +110,79 @@ public class DataTree {
         return cloned;
     }
 
-
-    public Set<String> getContainers(){
-        return new HashSet<String>(containers);
+    public Map<Long, HashSet<String>> getEphemeralsMap(){
+        return ephemerals;
     }
 
-    public Set<String> getTtls(){
-        return new HashSet<>(ttls);
+    /**
+     * compare two list of acls. if there elements are in the same order and the
+     * same size then return true else return false
+     *
+     * @param lista
+     *            the list to be compared
+     * @param listb
+     *            the list to be compared
+     * @return true if and only if the lists are of the same size and the
+     *         elements are in the same order in lista and listb
+     */
+    private boolean listACLEquals(List<ACL> lista, List<ACL> listb) {
+        if (lista.size() != listb.size()) {
+            return false;
+        }
+        for (int i = 0; i < lista.size(); i++) {
+            ACL a = lista.get(i);
+            ACL b = listb.get(i);
+            if (!a.equals(b)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public synchronized Long convertAcls(List<ACL> acls){
+        if(acls == null){
+            return -1L;
+        }
+        // get the value from the map
+        Long ret = aclKeyMap.get(acls);
+        // counld not find the map
+        if(ret != null){
+            return ret;
+        }
+        long val = incrementIndex();
+        longKeyMap.put(val, acls);
+        aclKeyMap.put(acls, val);
+        return val;
+    }
+
+
+    public synchronized List<ACL> convertLong(Long longVal){
+        if(longVal == null){
+            return null;
+        }
+        if(longVal == -1L){
+            return ZooDefs.Ids.OPEN_ACL_UNSAFE;
+        }
+        List<ACL> acls = longKeyMap.get(longVal);
+        if(acls == null){
+            LOG.error("ERROR: ACL not available for long " + longVal);
+            throw new RuntimeException("Failed to fetch acls for " + longVal);
+        }
+        return acls;
+
     }
 
     public Collection<Long> getSessions(){
         return ephemerals.keySet();
+    }
+
+    /**
+     * Just ac accessor method to allow raw creation of datatree's from a bunch
+     * @param path the path of the datanode
+     * @param node the data node corresponding to this path
+     */
+    public void addDataNode(String path, DataNode node){
+        nodes.put(path, node);
     }
 
     public DataNode getNode(String path){
@@ -124,33 +192,101 @@ public class DataTree {
     public int getNodeCount(){
         return nodes.size();
     }
-
-
     public int getWatchCount(){
         return dataWatches.size() + childWatches.size();
     }
 
-
+    public int getEphemeralsCount(){
+        Map<Long, HashSet<String>> map = this.getEphemeralsMap();
+        int result = 0;
+        for(HashSet<String> set : map.values()){
+            result += set.size();
+        }
+        return result;
+    }
 
     /**
-     * If there is a quota set, return the appropriate prefix for that quota
-     * Else return null
-     * @param path
+     * 获取 大概的 节点数据大小
+     * Get the size of the nodes based on path and data length
      * @return
      */
-    public String getMaxPrefixWithQuota(String path){
-        /**
-         * do nothing for the root
-         * we are not keeping a quota on the zookeeper
-         * root node for now
-         */
-        String lastPrefix = pTrie.findMaxPrefix(path);
-        if(!rootZookeeper.equals(lastPrefix) && !("".equals(lastPrefix))){
-            return lastPrefix;
-        }else{
-            return null;
+    public long approximateDataSize(){
+        long result = 0;
+        for(Map.Entry<String, DataNode> entry : nodes.entrySet()){
+            DataNode value = entry.getValue();
+            synchronized (value){
+                result += entry.getKey().length();
+                result += (value.data == null ? 0 : value.data.length);
+            }
         }
+        return result;
     }
+
+    /**
+     * This is a pointer to the root of the DataTree. It is the source of truth
+     * but we usually use the nodes hashmap to find nodes in the trees
+     */
+    private DataNode root = new DataNode(null, new byte[0], -1L, new StatPersisted());
+    /**
+     * create a / zookeeper filesystem that is the proc filesystem of zookeeper
+     */
+    public DataNode procDataNode = new DataNode(root, new byte[0], -1L, new StatPersisted());
+
+    /** create a /zookeeper/quota node for maintaining quota properties for zookeeper */
+    private DataNode quotaDataNode = new DataNode(procDataNode, new byte[0], -1L, new StatPersisted());
+
+    public DataTree() {
+        /** Rather than fight it, let root have an alias */
+        nodes.put("", root);
+        nodes.put(rootZookeeper, root);
+
+        /** add the proc node and quota node */
+        root.addChild(procChildZooKeeper);
+        nodes.put(procZookeeper, procDataNode);
+
+        procDataNode.addChild(quotaChildZooKeeper);
+        nodes.put(quotaZooKeeper, quotaDataNode);
+    }
+
+    /**
+     * is the path one of the special paths owned by zookeeper
+     * @param path the path to be
+     * @return
+     */
+    boolean isSpecialPath(String path){
+        if(rootZookeeper.equals(path) || procZookeeper.equals(path)
+                || quotaZooKeeper.equals(path)){
+            return true;
+        }
+        return false;
+    }
+
+    static public void copyStatPersisted(StatPersisted from, StatPersisted to) {
+        to.setAversion(from.getAversion());
+        to.setCtime(from.getCtime());
+        to.setCversion(from.getCversion());
+        to.setCzxid(from.getCzxid());
+        to.setMtime(from.getMtime());
+        to.setMzxid(from.getMzxid());
+        to.setPzxid(from.getPzxid());
+        to.setVersion(from.getVersion());
+        to.setEphemeralOwner(from.getEphemeralOwner());
+    }
+
+    static public void copyStat(Stat from, Stat to) {
+        to.setAversion(from.getAversion());
+        to.setCtime(from.getCtime());
+        to.setCversion(from.getCversion());
+        to.setCzxid(from.getCzxid());
+        to.setMtime(from.getMtime());
+        to.setMzxid(from.getMzxid());
+        to.setPzxid(from.getPzxid());
+        to.setVersion(from.getVersion());
+        to.setEphemeralOwner(from.getEphemeralOwner());
+        to.setDataLength(from.getDataLength());
+        to.setNumChildren(from.getNumChildren());
+    }
+
 
     /**
      * Update the count of this stat datanode
@@ -184,6 +320,8 @@ public class DataTree {
             thisStats = new StatsTrack(new String(node.data));
         }
     }
+
+
 
     /**
      * Update the count of bytes of this stat datanode
@@ -219,8 +357,87 @@ public class DataTree {
         synchronized (node){
             thisStats = new StatsTrack(new String(node.data));
         }
-
     }
+
+    public String createNode(String path, byte data[], List<ACL> acl,
+                             long ephemeralOwner, int parentCVersion, long zxid, long time) throws KeeperException.NoNodeException, KeeperException.NodeExistsException{
+        int lastSlash = path.lastIndexOf("/");
+        String parentName = path.substring(0, lastSlash);
+        String childName = path.substring(lastSlash + 1);
+        StatPersisted stat = new StatPersisted();
+        stat.setCtime(time);
+        stat.setMtime(time);
+        stat.setCzxid(zxid);
+        stat.setMzxid(zxid);
+        stat.setPzxid(zxid);
+        stat.setVersion(0);
+        stat.setAversion(0);
+        stat.setEphemeralOwner(ephemeralOwner);
+        // 获取 parent 的 DataNode
+        DataNode parent = nodes.get(parentName);
+        if(parent == null){
+            throw new KeeperException.NoNodeException();
+        }
+        synchronized (parent){
+            Set<String> children = parent.getChildren();
+            if(children != null){
+                if(children.contains(childName)){
+                    throw new KeeperException.NodeExistsException();
+                }
+            }
+            // parentde CVersion ++;
+            if(parentCVersion == -1){ // 若没有传 parentCVersion
+                parentCVersion = parent.stat.getCversion();
+                parentCVersion++;
+            }
+
+            parent.stat.setCversion(parentCVersion);
+            parent.stat.setPzxid(zxid);
+            Long longval = convertAcls(acl);
+            DataNode child = new DataNode(parent, data, longval, stat);
+            parent.addChild(childName);
+            nodes.put(path, child);
+            if(ephemeralOwner != 0){
+                HashSet<String> list = ephemerals.get(ephemeralOwner);
+                if(list == null){
+                    list = new HashSet<String>();
+                    ephemerals.put(ephemeralOwner, list);
+                }
+                synchronized (list){
+                    list.add(path);
+                }
+            }
+        }
+
+        // 若涉及 quota 则会加入 trie (前缀树)
+        // now check if its one of the zookeeper node child
+        if(parentName.startsWith(quotaZooKeeper)){
+            // now check if its the limit node
+            if(Quotas.limitNode.equals(childName)){
+                // this is the limit node
+                // get the parent and add it to the trie
+                pTrie.addPath(parentName.substring(quotaZooKeeper.length()));
+            }
+            if(Quotas.statNode.equals(childName)){
+                updateQuotaForPath(parentName.substring(quotaZooKeeper.length()));
+            }
+        }
+
+        // also check to update the quotas for this node
+        String lastPrefix;
+        // 若是 quota 的, 则更新对应的 count, bytes
+        if((lastPrefix = getMaxPrefixWithQuota(path)) != null){
+            // ok we have some match and need to update
+            updateCount(lastPrefix, 1);
+            updateBytes(lastPrefix, data == null ? 0 : data.length);
+        }
+
+        // 触发 watch 事件
+        dataWatches.triggerWatch(path, Watcher.Event.EventType.NodeCreated);
+        childWatches.triggerWatch(parentName.equals("") ? "/" : parentName, Watcher.Event.EventType.NodeChildrenChanged);
+        return path;
+    }
+
 
     /**
      * Remove the path from the datatree
@@ -285,46 +502,133 @@ public class DataTree {
         childWatches.triggerWatch(parentName.equals("")? "/" : parentName, Watcher.Event.EventType.NodeChildrenChanged);
     }
 
-    void killSession(long session, long zxid){
+
+    public Stat setData(String path, byte data[], int version, long zxid, long time) throws KeeperException.NoNodeException{
+        Stat stat = new Stat();
+        DataNode node = nodes.get(path);
+        if(node == null){
+            throw new KeeperException.NoNodeException();
+        }
+
+        byte lastdata[] = null;
+        synchronized (node){
+            lastdata = node.data;
+            node.data = data;
+            node.stat.setMtime(time);
+            node.stat.setMzxid(zxid);
+            node.stat.setVersion(version);
+            node.copyStat(stat);
+        }
+
+        // now update if the path is in a quota subtree
+        String lastPrefix;
+        if((lastPrefix = getMaxPrefixWithQuota(path)) != null){
+            this.updateBytes(lastPrefix, (data == null ? 0 : data.length) - (lastdata == null ? 0 : lastdata.length));
+        }
+
+        dataWatches.triggerWatch(path, Watcher.Event.EventType.NodeDataChanged);
+        return stat;
+    }
+
+    /**
+     * If there is a quota set, return the appropriate prefix for that quota
+     * Else return null
+     * @param path
+     * @return
+     */
+    public String getMaxPrefixWithQuota(String path){
         /**
-         * the list is already removed from the ephemerals
-         * so we do not have to worry about synchronizing on
-         * the list. This is only called from FinalRequestProcessor
-         * so there is no need for synchronization The list is not
-         * changed here. Only create and delete change the list which
-         * are agein called from FinalRequestProcessor in sequence
+         * do nothing for the root
+         * we are not keeping a quota on the zookeeper
+         * root node for now
          */
-        HashSet<String> list = ephemerals.remove(session);
-        if(list != null){
-            for(String path : list){
-                try{
-                    deleteNode(path, zxid);
-                    LOG.info("Deleting ephemeral node " + path
-                                + " for session 0X"
-                                + Long.toHexString(session));
-                }catch (KeeperException.NoNodeException e){
-                    LOG.warn("Ignoring NoNodeException for path " + path
-                            + " while removing ephemeral for dead session 0x"
-                            + Long.toHexString(session));
-                }
-            }
+        String lastPrefix = pTrie.findMaxPrefix(path);
+        if(!rootZookeeper.equals(lastPrefix) && !("".equals(lastPrefix))){
+            return lastPrefix;
+        }else{
+            return null;
         }
     }
 
 
-
-    public volatile long lastProcessedZxid = 0;
-
-    public org.apache.zookeeper.server.DataTree.ProcessTxnResult processTxn(TxnHeader header, Record txn) {
-        return null;
+    public byte[] getData(String path, Stat stat, Watcher watcher) throws KeeperException.NoNodeException{
+        DataNode node = nodes.get(path);
+        if(node == null){
+            throw new KeeperException.NoNodeException();
+        }
+        synchronized (node){
+            node.copyStat(stat);
+            if(watcher != null){
+                dataWatches.addWatch(path, watcher);
+            }
+            return node.data;
+        }
     }
 
-    /**
-     * a encapsultaing class for return value
-     */
-    private static class Counts {
-        long bytes;
-        int count;
+
+    public Stat statNode(String path, Watcher watcher) throws KeeperException.NoNodeException{
+        Stat stat = new Stat();
+        DataNode n = nodes.get(path);
+        if(watcher != null){
+            dataWatches.addWatch(path, watcher);
+        }
+        if(n == null){
+            throw new KeeperException.NoNodeException();
+        }
+        synchronized (n){
+            n.copyStat(stat);
+            return stat;
+        }
+    }
+
+    public List<String> getChildren(String path, Stat stat, Watcher watcher) throws KeeperException.NoNodeException{
+        DataNode n = nodes.get(path);
+        if(n == null){
+            throw new KeeperException.NoNodeException();
+        }
+        synchronized (n){
+            if(stat != null){
+                n.copyStat(stat);
+            }
+            ArrayList<String> children;
+            Set<String> childs = n.getChildren();
+            if(childs != null){
+                children = new ArrayList<>(childs.size());
+                children.addAll(childs);
+            }else {
+                children = new ArrayList<>();
+            }
+
+            if(watcher != null){
+                childWatches.addWatch(path, watcher);
+            }
+            return children;
+        }
+    }
+
+    public Stat setACL(String path, List<ACL> acl, int version) throws KeeperException.NoNodeException{
+        Stat stat = new Stat();
+        DataNode n = nodes.get(path);
+        if(n == null){
+            throw new KeeperException.NoNodeException();
+        }
+        synchronized (n){
+            n.stat.setVersion(version);
+            n.acl = convertAcls(acl);
+            n.copyStat(stat);
+            return stat;
+        }
+    }
+
+    public List<ACL> getACL(String path, Stat stat) throws KeeperException.NoNodeException{
+        DataNode n = nodes.get(path);
+        if(n == null){
+            throw new KeeperException.NoNodeException();
+        }
+        synchronized (n){
+            n.copyStat(stat);
+            return new ArrayList<ACL>(convertLong(n.acl));
+        }
     }
 
     static public class ProcessTxnResult{
@@ -364,6 +668,195 @@ public class DataTree {
             return (int) ((clientId ^ cxid) % Integer.MAX_VALUE);
         }
     }
+
+    public volatile long lastProcessedZxid = 0;
+
+    /**
+     * 根据客户端的请求, 根据事件类型来进行处理
+     */
+    public ProcessTxnResult processTxn(TxnHeader header, Record txn) {
+        ProcessTxnResult rc = new ProcessTxnResult();
+
+        try{
+            rc.clientId = header.getClientId();
+            rc.cxid = header.getCxid(); // 创建时的zxid
+            rc.zxid = header.getZxid(); // 服务端处理的最新的 zxid
+            rc.type = header.getType();
+            rc.err = 0;
+            rc.multiResult = null;
+
+            switch (header.getType()){
+                case ZooDefs.OpCode.create:
+                    CreateTxn createTxn = (CreateTxn) txn;
+                    rc.path = createTxn.getPath();
+                    createNode(createTxn.getPath(),
+                            createTxn.getData(),
+                            createTxn.getAcl(),
+                            createTxn.getEphemeral() ? header.getClientId() : 0,
+                            createTxn.getParentCVersion(),
+                            header.getZxid(), header.getTime());
+                    break;
+                case ZooDefs.OpCode.delete:
+                    DeleteTxn deleteTxn = (DeleteTxn)txn;
+                    rc.path = deleteTxn.getPath();
+                    deleteNode(deleteTxn.getPath(), header.getZxid());
+                    break;
+                case ZooDefs.OpCode.setData:
+                    SetDataTxn setDataTxn = (SetDataTxn)txn;
+                    rc.path = setDataTxn.getPath();
+                    rc.stat = setData(setDataTxn.getPath(), setDataTxn.getData(),
+                            setDataTxn.getVersion(), header.getZxid(), header.getTime());
+                    break;
+                case ZooDefs.OpCode.setACL:
+                    SetACLTxn setACLTxn = (SetACLTxn)txn;
+                    rc.path = setACLTxn.getPath();
+                    rc.stat = setACL(setACLTxn.getPath(), setACLTxn.getAcl(), setACLTxn.getVersion());
+                    break;
+                case ZooDefs.OpCode.closeSession:
+                    killSession(header.getClientId(), header.getZxid());
+                    break;
+                case ZooDefs.OpCode.error:
+                    ErrorTxn errorTxn = (ErrorTxn)txn;
+                    rc.err = errorTxn.getErr();
+                    break;
+                case ZooDefs.OpCode.check:
+                    CheckVersionTxn checkVersionTxn = (CheckVersionTxn)txn;
+                    rc.path = checkVersionTxn.getPath();
+                    break;
+                case ZooDefs.OpCode.multi:
+                    MultiTxn multiTxn = (MultiTxn)txn;
+                    List<Txn> txns = multiTxn.getTxns();
+                    rc.multiResult = new ArrayList<>();
+            }
+
+        }catch (KeeperException e){
+            LOG.info("Failed :" + header + " : " + txn, e);
+            rc.err = e.code().intValue();
+        }catch (Exception e){
+            LOG.info("Failed :" + header + " : " + txn, e);
+        }
+
+        /**
+         *A snpashot might be in process while we are modifying the data
+         * tree. If we set lastProcessedZxid prior to making corresponding
+         * change to the tree, then the zxid associated with the snapshot
+         * file will be ahead of its contents, Thus, while restoring from
+         * the snapshot, the restore method will not apply the transaction
+         * for zxid assocaited with the snapshot file, since the restore
+         * method assumes that transaction to be present in the snapshot
+         *
+         * To avoid this, we first apply the transaction and then modify
+         * lastProcessedZxid, During restore we correctly handle the
+         * case where the snapshot contains data ahead of the zxid associated
+         * with the file
+         */
+        if(rc.zxid > lastProcessedZxid){
+            lastProcessedZxid = rc.zxid;
+        }
+
+        /**
+         * Snapshots are taken lazily It can happen that child
+         * znodes of a parent are created after the parent
+         * is serialized Therefore, which replaying logs during restore, a
+         * create might fail because the nodes was already
+         * created
+         *
+         * After seeing this failure, we should increment
+         * the cversion of the parent znode since parent was serialzied
+         * before its children
+         *
+         * Note, such failure on DT should be seen only during restore
+         */
+        if(header.getType() == ZooDefs.OpCode.create &&
+                rc.err == KeeperException.Code.NODEEXISTS.intValue()){
+            LOG.debug("Adjusting parent cversion for Txn :" + header.getType() +
+            " path:" + rc.path + " error "+ rc.err);
+
+            int lastSlash = rc.path.lastIndexOf("/");
+            String parentName = rc.path.substring(0, lastSlash);
+            CreateTxn cTxn = (CreateTxn)txn;
+
+            try{
+                setCversionPzxid(parentName, cTxn.getParentCVersion(), header.getZxid());
+            }catch (KeeperException.NoNodeException e){
+                LOG.error("Failed to set parent cversion for:" + parentName, e);
+                rc.err = e.code().intValue();
+            }
+        }else if(rc.err != KeeperException.Code.OK.intValue()){
+            LOG.info("Ignoring processTxn failure hdr : " + header.getType());
+        }
+
+
+        return rc;
+    }
+
+    /** this set contains the paths of all container nodes */
+    // 这里使用了桥接模式
+    private final Set<String> containers = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+
+    /** This set contains tha path of all ttl nodes */
+    private final Set<String> ttls = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+
+    private final ReferenceCountedACLCache aclCache = new ReferenceCountedACLCache();
+
+
+
+
+    public Set<String> getContainers(){
+        return new HashSet<String>(containers);
+    }
+
+    public Set<String> getTtls(){
+        return new HashSet<>(ttls);
+    }
+
+
+
+
+
+
+
+
+
+
+
+    void killSession(long session, long zxid){
+        /**
+         * the list is already removed from the ephemerals
+         * so we do not have to worry about synchronizing on
+         * the list. This is only called from FinalRequestProcessor
+         * so there is no need for synchronization The list is not
+         * changed here. Only create and delete change the list which
+         * are agein called from FinalRequestProcessor in sequence
+         */
+        HashSet<String> list = ephemerals.remove(session);
+        if(list != null){
+            for(String path : list){
+                try{
+                    deleteNode(path, zxid);
+                    LOG.info("Deleting ephemeral node " + path
+                                + " for session 0X"
+                                + Long.toHexString(session));
+                }catch (KeeperException.NoNodeException e){
+                    LOG.warn("Ignoring NoNodeException for path " + path
+                            + " while removing ephemeral for dead session 0x"
+                            + Long.toHexString(session));
+                }
+            }
+        }
+    }
+
+
+
+    /**
+     * a encapsultaing class for return value
+     */
+    private static class Counts {
+        long bytes;
+        int count;
+    }
+
+
 
     private void updateQuotaForPath(String path){
         

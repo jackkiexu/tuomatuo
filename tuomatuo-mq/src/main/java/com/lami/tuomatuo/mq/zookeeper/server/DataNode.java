@@ -58,6 +58,13 @@ public class DataNode implements Record {
         this.stat = stat;
     }
 
+    public DataNode(DataNode parent, byte data[], long acl, StatPersisted stat){
+        this.parent = parent;
+        this.data = data;
+        this.acl = acl;
+        this.stat = stat;
+    }
+
 
     /**
      * Method that inserts a child into the children set

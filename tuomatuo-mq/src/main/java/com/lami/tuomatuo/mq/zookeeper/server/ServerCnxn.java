@@ -1,14 +1,12 @@
 package com.lami.tuomatuo.mq.zookeeper.server;
 
+import com.lami.tuomatuo.mq.zookeeper.WatchedEvent;
 import com.lami.tuomatuo.mq.zookeeper.Watcher;
 
 import org.apache.jute.Record;
-import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.proto.ReplyHeader;
 import org.apache.zookeeper.proto.RequestHeader;
-import org.apache.zookeeper.server.ServerStats;
-import org.apache.zookeeper.server.ZooKeeperSaslServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,9 +31,10 @@ public abstract class ServerCnxn implements Stats, Watcher{
     // This is just an arbitrary object to represent requests issued by
     // (aka owned by) this class
     final public static Object me = new Object();
+
+    protected ArrayList<Id> authInfo = new ArrayList<>();
     private static final Logger LOG = LoggerFactory.getLogger(ServerCnxn.class);
 
-    private Set<Id> authInfo = Collections.newSetFromMap(new ConcurrentHashMap<Id, Boolean>());
 
     /**
      * If the client is of old version, we don't send r-o mode info to it.
@@ -65,7 +64,9 @@ public abstract class ServerCnxn implements Stats, Watcher{
     }
 
     public void addAuthInfo(Id id){
-        authInfo.add(id);
+        if(authInfo.contains(id) == false){
+            authInfo.add(id);
+        }
     }
 
     public boolean removeAuthInfo(Id id){
@@ -106,6 +107,60 @@ public abstract class ServerCnxn implements Stats, Watcher{
         }
     }
 
+    protected final static int confCmd = ByteBuffer.wrap("conf".getBytes()).getInt();
+    protected final static int consCmd = ByteBuffer.wrap("cons".getBytes()).getInt();
+    protected final static int crstCmd = ByteBuffer.wrap("crst".getBytes()).getInt();
+    protected final static int dumpCmd = ByteBuffer.wrap("dump".getBytes()).getInt();
+    protected final static int enviCmd = ByteBuffer.wrap("envi".getBytes()).getInt();
+    protected final static int getTraceMaskCmd = ByteBuffer.wrap("gtmk".getBytes()).getInt();
+    protected final static int ruokCmd = ByteBuffer.wrap("ruok".getBytes()).getInt();
+    protected final static int setTraceMaskCmd = ByteBuffer.wrap("stmk".getBytes()).getInt();
+    protected final static int srvrCmd = ByteBuffer.wrap("srvr".getBytes()).getInt();
+    protected final static int srstCmd = ByteBuffer.wrap("srst".getBytes()).getInt();
+    protected final static int statCmd = ByteBuffer.wrap("stat".getBytes()).getInt();
+    protected final static int wchcCmd = ByteBuffer.wrap("wchc".getBytes()).getInt();
+    protected final static int wchpCmd = ByteBuffer.wrap("wchp".getBytes()).getInt();
+    protected final static int wchsCmd = ByteBuffer.wrap("wchs".getBytes()).getInt();
+    protected final static int mntrCmd = ByteBuffer.wrap("mntr".getBytes()).getInt();
+    protected final static int isroCmd = ByteBuffer.wrap("isro".getBytes()).getInt();
+
+    protected final static HashMap<Integer, String> cmd2String = new HashMap<>();
+
+    // specify all of the commands that are available
+    static {
+        cmd2String.put(confCmd, "conf");
+        cmd2String.put(consCmd, "cons");
+        cmd2String.put(crstCmd, "crst");
+        cmd2String.put(dumpCmd, "dump");
+        cmd2String.put(enviCmd, "envi");
+        cmd2String.put(getTraceMaskCmd, "gtmk");
+        cmd2String.put(ruokCmd, "ruok");
+        cmd2String.put(setTraceMaskCmd, "stmk");
+        cmd2String.put(srstCmd, "srst");
+        cmd2String.put(srvrCmd, "srvr");
+        cmd2String.put(wchcCmd, "wchc");
+        cmd2String.put(wchpCmd, "wchp");
+        cmd2String.put(wchsCmd, "wchs");
+        cmd2String.put(mntrCmd, "mntr");
+        cmd2String.put(isroCmd, "isro");
+    }
+
+    protected void packetReceived(){
+        incrPacketsReceived();
+        ServerStats serverStats = serverStats();
+        if(serverStats != null){
+            serverStats().incrementPacketsReceived();
+        }
+    }
+
+    protected void packetSent(){
+        incrPacketsSent();
+        ServerStats serverStats = serverStats();
+        if(serverStats != null){
+            serverStats().incrementPacketsSent();
+        }
+    }
+
     protected abstract ServerStats serverStats();
     protected final Date established = new Date();
 
@@ -143,9 +198,7 @@ public abstract class ServerCnxn implements Stats, Watcher{
         return packetsReceived.incrementAndGet();
     }
 
-    protected void incrOutstandingRequests(RequestHeader h){
-
-    }
+    protected void incrOutstandingRequests(RequestHeader h){}
 
     protected long incrPacketsSent(){
         return packetsSent.incrementAndGet();
