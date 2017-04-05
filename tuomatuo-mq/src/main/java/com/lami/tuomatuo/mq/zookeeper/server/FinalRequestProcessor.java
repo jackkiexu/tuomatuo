@@ -1,6 +1,7 @@
 package com.lami.tuomatuo.mq.zookeeper.server;
 
 
+import com.lami.tuomatuo.mq.zookeeper.ZooDefs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +29,17 @@ public class FinalRequestProcessor implements RequestProcessor {
     @Override
     public void processRequest(Request request) throws RequestProcessorException {
         LOG.info("Processing request :" + request);
+        long traceMask = ZooTrace.CLIENT_REQUEST_TRACE_MASK;
+        if(request.type == ZooDefs.OpCode.ping){
+            traceMask = ZooTrace.SERVER_PING_TRACE_MASK;
+        }
+        ZooTrace.logRequest(LOG, traceMask, 'E', request, "");
+        DataTree.ProcessTxnResult rc = null;
 
+
+        synchronized (zks.outstandingChanges){
+
+        }
     }
 
     @Override
