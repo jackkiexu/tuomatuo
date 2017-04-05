@@ -17,6 +17,7 @@ import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Stat;
 import org.apache.zookeeper.data.StatPersisted;
+import org.apache.zookeeper.proto.DeleteRequest;
 import org.apache.zookeeper.txn.*;
 import org.apache.zookeeper.txn.TxnHeader;
 import org.jboss.netty.util.internal.ConcurrentHashMap;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.ByteBuffer;
 import java.util.*;
 
 /**
@@ -112,6 +114,10 @@ public class DataTree {
 
     public Map<Long, HashSet<String>> getEphemeralsMap(){
         return ephemerals;
+    }
+
+    private long incrementIndex(){
+        return ++aclIndex;
     }
 
     /**
@@ -498,6 +504,7 @@ public class DataTree {
             updateBytes(lastPrefix, bytes);
         }
 
+        Set<Watcher> processed = dataWatches.triggerWatch(path, Watcher.Event.EventType.NodeDeleted);
         childWatches.triggerWatch(path, Watcher.Event.EventType.NodeDeleted, processed);
         childWatches.triggerWatch(parentName.equals("")? "/" : parentName, Watcher.Event.EventType.NodeChildrenChanged);
     }
@@ -727,6 +734,64 @@ public class DataTree {
                     MultiTxn multiTxn = (MultiTxn)txn;
                     List<Txn> txns = multiTxn.getTxns();
                     rc.multiResult = new ArrayList<>();
+                    boolean failed = false;
+
+                    for(Txn subtxn : txns){
+                        if(subtxn.getType() == ZooDefs.OpCode.error){
+                            failed = true;
+                            break;
+                        }
+                    }
+
+                    boolean post_failed = failed;
+                    for(Txn subtxn : txns){
+                        ByteBuffer bb = ByteBuffer.wrap(subtxn.getData());
+                        Record record = null;
+                        switch (subtxn.getType()){
+                            case ZooDefs.OpCode.create:
+                                record = new CreateTxn();
+                                break;
+                            case ZooDefs.OpCode.delete:
+                                record = new DeleteTxn();
+                                break;
+                            case ZooDefs.OpCode.setData:
+                                record = new SetDataTxn();
+                                break;
+                            case ZooDefs.OpCode.error:
+                                record = new ErrorTxn();
+                                post_failed = true;
+                                break;
+                            case ZooDefs.OpCode.check:
+                                record = new CheckVersionTxn();
+                                break;
+                            default:
+                                throw new IOException("Invalid type of op:" + subtxn.getType());
+                        }
+
+                        assert (record != null);
+                        ByteBufferInputStream.byteBuffer2Record(bb, record);
+
+                        if(failed && subtxn.getType() != ZooDefs.OpCode.error){
+                            int ec = post_failed ? KeeperException.Code.RUNTIMEINCONSISTENCY.intValue() : KeeperException.Code.OK.intValue();
+                            subtxn.setType(ZooDefs.OpCode.error);
+                            record = new ErrorTxn();
+                        }
+
+                        if(failed){
+                            assert (subtxn.getType() == ZooDefs.OpCode.error);
+                        }
+
+                        TxnHeader subHdr = new TxnHeader(header.getClientId(), header.getCxid(),
+                                                    header.getZxid(), header.getTime(),
+                                subtxn.getType());
+
+                        ProcessTxnResult subRc = processTxn(subHdr, record);
+                        rc.multiResult.add(subRc);
+                        if(subRc.err != 0 && rc.err == 0){
+                            rc.err = subRc.err;
+                        }
+                    }
+                    break;
             }
 
         }catch (KeeperException e){
@@ -790,35 +855,6 @@ public class DataTree {
         return rc;
     }
 
-    /** this set contains the paths of all container nodes */
-    // 这里使用了桥接模式
-    private final Set<String> containers = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
-
-    /** This set contains tha path of all ttl nodes */
-    private final Set<String> ttls = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
-
-    private final ReferenceCountedACLCache aclCache = new ReferenceCountedACLCache();
-
-
-
-
-    public Set<String> getContainers(){
-        return new HashSet<String>(containers);
-    }
-
-    public Set<String> getTtls(){
-        return new HashSet<>(ttls);
-    }
-
-
-
-
-
-
-
-
-
-
 
     void killSession(long session, long zxid){
         /**
@@ -835,8 +871,8 @@ public class DataTree {
                 try{
                     deleteNode(path, zxid);
                     LOG.info("Deleting ephemeral node " + path
-                                + " for session 0X"
-                                + Long.toHexString(session));
+                            + " for session 0X"
+                            + Long.toHexString(session));
                 }catch (KeeperException.NoNodeException e){
                     LOG.warn("Ignoring NoNodeException for path " + path
                             + " while removing ephemeral for dead session 0x"
@@ -846,8 +882,6 @@ public class DataTree {
         }
     }
 
-
-
     /**
      * a encapsultaing class for return value
      */
@@ -856,11 +890,55 @@ public class DataTree {
         int count;
     }
 
+    /**
+     * this method gets the count of nodes and the bytes under a subtree
+     */
+    private void getCounts(String path, Counts counts){
+        DataNode node = getNode(path);
+        if(node == null){
+            return;
+        }
 
+        String[] children = null;
+        int len = 0;
+        synchronized (node){
+            Set<String> childs = node.getChildren();
+            if(childs != null){
+                children = childs.toArray(new String[childs.size()]);
+            }
+            len = (node.data == null ? 0 : node.data.length);
+        }
+
+        counts.count += 1;
+        counts.bytes += len;
+        if(children == null || children.length == 0){
+            return;
+        }
+
+        for(String child : children){
+            getCounts(path + "/" + child, counts);
+        }
+    }
 
     private void updateQuotaForPath(String path){
-        
+        Counts c = new Counts();
+        getCounts(path, c);
+        StatsTrack stack = new StatsTrack();
+        stack.setBytes(c.bytes);
+        stack.setCount(c.count);
+        String statPath = Quotas.quotaZookeeper + path + "/" + Quotas.statNode;
+        DataNode node = getNode(statPath);
+        // it should exist
+        if(node == null){
+            LOG.info("Missing quota stat node " + statPath);
+            return;
+        }
+
+        synchronized (node){
+            node.data = stack.toString().getBytes();
+        }
     }
+
 
     private void traverseNode(String path){
         DataNode node = getNode(path);
@@ -947,7 +1025,6 @@ public class DataTree {
         }
     }
 
-
     int scount ;
 
     public boolean initialized = false;
@@ -1020,7 +1097,7 @@ public class DataTree {
                 node.parent = nodes.get(parentPath);
                 if(node.parent == null){
                     throw new IOException("Invalid Datatree, unable to find " +
-                    " parent " + parentPath + " of path " + path);
+                            " parent " + parentPath + " of path " + path);
                 }
 
                 node.parent.addChild(path.substring(lastSlash + 1));
@@ -1047,6 +1124,22 @@ public class DataTree {
         setupQuota();
     }
 
+    /** this set contains the paths of all container nodes */
+    // 这里使用了桥接模式
+    private final Set<String> containers = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+
+    /** This set contains tha path of all ttl nodes */
+    private final Set<String> ttls = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+
+    private final ReferenceCountedACLCache aclCache = new ReferenceCountedACLCache();
+
+    public Set<String> getContainers(){
+        return new HashSet<String>(containers);
+    }
+
+    public Set<String> getTtls(){
+        return new HashSet<>(ttls);
+    }
 
     /**
      * Summary of the watches on the datatree
