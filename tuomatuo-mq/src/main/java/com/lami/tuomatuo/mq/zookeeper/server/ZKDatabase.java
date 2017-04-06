@@ -1,6 +1,7 @@
 package com.lami.tuomatuo.mq.zookeeper.server;
 
 import com.lami.tuomatuo.mq.zookeeper.server.persistence.FileTxnSnapLog;
+import com.lami.tuomatuo.mq.zookeeper.server.quorum.Leader;
 import org.jboss.netty.util.internal.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ public class ZKDatabase {
     public static final int commitLogCount = 500;
     public static int commitLogBuffer = 700;
 
-    protected LinkedList<Proposal> committedLog = new LinkedList<Proposal>();
+    protected LinkedList<Leader.Proposal> committedLog = new LinkedList<Leader.Proposal>();
     protected ReentrantReadWriteLock logLock = new ReentrantReadWriteLock();
     volatile private boolean initialized = false;
 }

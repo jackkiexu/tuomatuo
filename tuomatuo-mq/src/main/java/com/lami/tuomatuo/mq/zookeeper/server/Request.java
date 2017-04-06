@@ -55,9 +55,9 @@ public class Request {
 
     public final ServerCnxn cnxn;
 
-    private TxnHeader hdr;
+    public TxnHeader hdr;
 
-    private Record txn;
+    public Record txn;
 
     public long zxid = -1;
 

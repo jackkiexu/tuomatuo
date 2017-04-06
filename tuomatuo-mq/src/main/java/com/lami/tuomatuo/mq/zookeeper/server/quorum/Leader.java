@@ -6,9 +6,16 @@ import org.apache.zookeeper.server.quorum.QuorumPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.BindException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * This class has the control logic for the leader
@@ -41,13 +48,118 @@ public class Leader {
         }
     }
 
-    final LeaderZooKeeperServer zk;
+    LeaderZooKeeperServer zk;
 
-    final QuorumPeer self;
+    QuorumPeer self;
 
     private boolean quorumFormed = false;
 
     public LearnerCnxnAcceptor cnxnAcceptor;
+    // list of all the followers
+    private final HashSet<LearnerHandler> learners = new HashSet<>();
+
+
+    public List<LearnerHandler> getLearners(){
+        synchronized (learners){
+            return new ArrayList<LearnerHandler>(learners);
+        }
+    }
+
+    // list of followers are already to follow (i.e synced with the leader)
+    private final HashSet<LearnerHandler> forwardingFollowers = new HashSet<>();
+
+    public List<LearnerHandler> getForwardingFolllowers(){
+        synchronized (forwardingFollowers){
+            return new ArrayList<LearnerHandler>(forwardingFollowers);
+        }
+    }
+
+    private void addForwardingFollower(LearnerHandler lh){
+        synchronized (forwardingFollowers){
+            forwardingFollowers.add(lh);
+        }
+    }
+
+    private final HashSet<LearnerHandler> observingLearners = new HashSet<>();
+
+    public List<LearnerHandler> getObservingLearners(){
+        synchronized (observingLearners){
+            return new ArrayList<LearnerHandler>(observingLearners);
+        }
+    }
+
+    public void addObserverLearnerHandler(LearnerHandler lh){
+        synchronized (observingLearners){
+            observingLearners.add(lh);
+        }
+    }
+
+    // Pending sync requests. Must access under this lock
+    public final HashMap<Long, List<LearnerSyncRequest>> pendingSyncs = new HashMap<>();
+
+    synchronized public int getNumPendingSyncs(){
+        return pendingSyncs.size();
+    }
+
+    synchronized public int getNumPendingSync(){
+        return pendingSyncs.size();
+    }
+
+    // Follower counter
+    final AtomicLong followerCounter = new AtomicLong(-1);
+
+
+    void addLearnerHandler(LearnerHandler learnerHandler){
+        synchronized (learners){
+            learners.add(learnerHandler);
+        }
+    }
+
+    /**
+     * Remove the learner from the learner list
+     */
+    void removeLearnerHandler(LearnerHandler peer){
+       synchronized (forwardingFollowers){
+           forwardingFollowers.remove(peer);
+       }
+        synchronized (learners){
+            learners.remove(peer);
+        }
+
+        synchronized (observingLearners){
+            observingLearners.remove(peer);
+        }
+    }
+
+    boolean isLearnerSynced(LearnerHandler peer){
+        synchronized (forwardingFollowers){
+            return forwardingFollowers.contains(peer);
+        }
+    }
+
+    ServerSocket ss;
+
+    Leader(QuorumPeer self, LeaderZooKeeperServer zk) throws IOException{
+        this.self = self;
+        try{
+            if(self.getQuorumListenOnAllIPs()){
+
+            }
+        }catch (BindException e){
+            if(self.getQuorumListOnAllIPs()){
+                LOG.info("Couldn't bind to port " + self.getQuorumAddress().getPort(), e);
+            }else{
+                LOG.info("Couldn't bind to " + self.getQuorumAddress(), e);
+            }
+            throw e;
+        }
+        this.zk = zk;
+    }
+
+
+
+
+
 
 
     class LearnerCnxnAcceptor extends Thread{

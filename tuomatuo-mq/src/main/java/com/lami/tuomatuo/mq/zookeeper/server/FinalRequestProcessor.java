@@ -2,6 +2,8 @@ package com.lami.tuomatuo.mq.zookeeper.server;
 
 
 import com.lami.tuomatuo.mq.zookeeper.ZooDefs;
+import org.apache.jute.Record;
+import org.apache.zookeeper.txn.TxnHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +40,24 @@ public class FinalRequestProcessor implements RequestProcessor {
 
 
         synchronized (zks.outstandingChanges){
+            while(!zks.outstandingChanges.isEmpty()
+                    && zks.outstandingChanges.get(0).zxid <= request.zxid){
+                ZooKeeperServer.ChangeRecord  cr = zks.outstandingChanges.remove(0);
+                if(cr.zxid < request.zxid){
+                    LOG.info("Zxid outstanding" + cr.zxid
+                                + " is less than current " + request.zxid);
+                }
+                if(zks.outstandingChangesForPath.get(cr.path) == cr){
+                    zks.outstandingChangesForPath.remove(cr.path);
+                }
+            }
 
+            if(request.hdr != null){
+                TxnHeader hdr = request.hdr;
+                Record txn = request.txn;
+
+                rc = zks.processTxn(hdr, txn);
+            }
         }
     }
 

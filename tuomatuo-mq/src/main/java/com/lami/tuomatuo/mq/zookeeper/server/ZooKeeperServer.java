@@ -1,9 +1,13 @@
 package com.lami.tuomatuo.mq.zookeeper.server;
 
 import com.lami.tuomatuo.mq.zookeeper.Environment;
+import com.lami.tuomatuo.mq.zookeeper.ZooDefs;
 import com.lami.tuomatuo.mq.zookeeper.server.persistence.FileTxnSnapLog;
+import org.apache.jute.Record;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.StatPersisted;
+import org.apache.zookeeper.txn.CreateSessionTxn;
+import org.apache.zookeeper.txn.TxnHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +75,7 @@ public class ZooKeeperServer implements SessionTracker.SessionExpirer, ServerSta
 
     private ServerCnxnFactory serverCnxnFactory;
 
-    private final ServerStats serverStats;
+    private  ServerStats serverStats;
 
     void removeCnxn(ServerCnxn cnxn){
         zkDb.removeCnxn(cnxn);
@@ -157,11 +161,29 @@ public class ZooKeeperServer implements SessionTracker.SessionExpirer, ServerSta
                 DataTree.copyStatPersisted(this.stat, stat);
             }
             return new ChangeRecord(zxid, path, stat, childCount,
-                    acl == null? new ArrayList<ACL>(), new ArrayList<>(acl));
+                    acl == null? new ArrayList<ACL>() : new ArrayList<>(acl));
         }
 
     }
 
+
+    public DataTree.ProcessTxnResult processTxn(TxnHeader hdr, Record txn){
+        DataTree.ProcessTxnResult rc;
+        int opCode = hdr.getType();
+        long sessionId = hdr.getClientId();
+        rc = getZKDatabase().processTxn(hdr, txn);
+        if(opCode == ZooDefs.OpCode.createSession){
+            if(txn instanceof CreateSessionTxn){
+                CreateSessionTxn cst = (CreateSessionTxn)txn;
+                sessionTracker.addSession(sessionId, cst.getTimeOut());
+            }else{
+                LOG.info(" Got " + txn.getClass() + " " + txn.toString());
+            }
+        }
+        else if(opCode == ZooDefs.OpCode.closeSession){
+            sessionTracker.removeSession(sessionId);
+        }
+    }
 
 
 }
