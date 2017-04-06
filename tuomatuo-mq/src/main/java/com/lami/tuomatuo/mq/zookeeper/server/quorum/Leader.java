@@ -2,6 +2,7 @@ package com.lami.tuomatuo.mq.zookeeper.server.quorum;
 
 
 import com.lami.tuomatuo.mq.zookeeper.server.Request;
+import com.lami.tuomatuo.mq.zookeeper.server.util.ZxidUtils;
 import org.apache.zookeeper.server.quorum.QuorumPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -137,7 +141,143 @@ public class Leader {
         }
     }
 
+
+
+
     ServerSocket ss;
+
+    /**
+     * this message type is sent by a leader to propose a mutation
+     */
+    public final static int PROPOSAL = 2;
+
+    /**
+     * This message type is sent by a follower after it has synced a proposal
+     */
+    final static int ACK = 3;
+
+    /**
+     * This message type is sent by a leader to commit a proposal and cause
+     * followers to start serving the corresponding data
+     */
+    final static int COMMIT = 4;
+
+    /**
+     * This message type is enchanged bwtween follower and leader (initiated by
+     * follower) to determine liveliness
+     */
+    final static int PING = 5;
+
+    /**
+     * This message type is to validate a session that should be active
+     */
+    final static int REVALIDATE = 6;
+
+    /**
+     * This message is a reply to a synchronize command flushing the pipe
+     * between the leader and the follower
+     */
+    final static int SYNC = 7;
+
+    /**
+     * This message type informs observers of a committed proposal
+     */
+    final static int INFORM = 8;
+
+    ConcurrentMap<Long, Proposal> outstandingProposals = new ConcurrentHashMap<>();
+
+    ConcurrentLinkedQueue<Proposal> toBeApplied = new ConcurrentLinkedQueue<>();
+
+    Proposal newLeaderProposal = new Proposal();
+
+
+
+    class LearnerCnxnAcceptor extends Thread{
+
+        private volatile boolean stop = false;
+
+        @Override
+        public void run() {
+            try{
+                Socket s = ss.accept();
+                // start with the initLimit, once the ack is processed
+                // in LearnerHandler switch to the syncLimit
+                s.setSoTimeout(self.tickTime * self.initLimit);
+                s.setTcpNoDelay(nodelay);
+                LearnerHandler fh = new LearnerHandler(s, Leader.this);
+                fh.start();
+            }catch (Exception e){
+                if(stop){
+                    LOG.info("exception while shutting down acceptor:" + e);
+                    // When Leader.shutdown() calls ss.close()
+                    // the call to accept throwns an exception
+                    // we catch and set stop to true
+                    stop = true;
+                }
+            }
+        }
+
+        public void halt(){
+            stop = true;
+        }
+    }
+
+    StateSummary leaderStateSummary;
+
+    long epoch = -1;
+    boolean waitingForNewEpoch = true;
+    volatile boolean readyToStart = false;
+
+    /**
+     * This method is main function that is called to lead
+     * @throws Exception
+     */
+    void lead() throws Exception{
+        self.end_fle = System.currentTimeMillis();
+        LOG.info("LEADING - LEADER ELECTION TOOK - " + (self.end_fle - self.start_fle));
+
+        self.start_fle = 0;
+        self.end_fle = 0;
+
+        zk.registerJMX(new LeaderBean(this, zk), self.jmxLocakPeerbean);
+
+        try{
+            self.tick = 0;
+            zk.loadData();
+
+            leaderStateSummary = new StateSummary(self.getCurrentEpoch(), zk.getLastProcessedZxid());
+
+            // Start thread that waits for connection request request from new followers
+            cnxnAcceptor = new LearnerCnxnAcceptor();
+            cnxnAcceptor.start();
+
+            readyToStart = true;
+            long epoch = getEpochToPropose(self.getId(), self.getAcceptedEpoch());
+
+            zk.setZxid(ZxidUtils.makeZxid(epoch, 0));
+
+            synchronized (this){
+                lastProposed = zk.getZxid();
+            }
+
+            newLeaderProposal.packet = new QuorumPacket(NEWLEADER, zk.getZxid(), null, null);
+            if ((newLeaderProposal.packet.getZxid() & 0xffffffffL) != 0) {
+                LOG.info("NEWLEADER proposal has Zxid of "
+                        + Long.toHexString(newLeaderProposal.packet.getZxid()));
+            }
+
+            waitForEpochAck(self.getId(), leaderStateSummary);
+            self.setCurrentEpoch(epoch);
+
+
+
+        }finally {
+            zk.unregisterJMX(this);
+        }
+    }
+
+    boolean isShutdown;
+
 
     Leader(QuorumPeer self, LeaderZooKeeperServer zk) throws IOException{
         this.self = self;
@@ -162,34 +302,5 @@ public class Leader {
 
 
 
-    class LearnerCnxnAcceptor extends Thread{
-
-        private volatile boolean stop = false;
-
-        @Override
-        public void run() {
-            try{
-                Socket s = ss.accept();
-                // start with the initLimit, once the ack is processed
-                // in LearnerHandler switch to the syncLimit
-                s.setSoTimeout(self.tickTime * self.initLimit);
-                s.setTcpNoDelay(nodelay);
-                LearnerHandler fh = new LearnerHandler(s, Leader.this);
-                fh.start();
-            }catch (SocketException e){
-                if(stop){
-                    LOG.info("exception while shutting down acceptor:" + e);
-                    // When Leader.shutdown() calls ss.close()
-                    // the call to accept throwns an exception
-                    // we catch and set stop to true
-                    stop = true;
-                }
-            }
-        }
-
-        public void halt(){
-            stop = true;
-        }
-    }
 
 }
