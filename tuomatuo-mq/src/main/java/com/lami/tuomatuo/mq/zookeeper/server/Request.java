@@ -116,30 +116,24 @@ public class Request {
         }
     }
 
-    public boolean isQuorum() {
-        switch (this.type) {
+    static boolean isQuorum(int type) {
+        switch (type) {
             case ZooDefs.OpCode.exists:
             case ZooDefs.OpCode.getACL:
             case ZooDefs.OpCode.getChildren:
             case ZooDefs.OpCode.getChildren2:
             case ZooDefs.OpCode.getData:
                 return false;
-            case ZooDefs.OpCode.create:
-            case ZooDefs.OpCode.create2:
-            case ZooDefs.OpCode.createTTL:
-            case ZooDefs.OpCode.createContainer:
             case ZooDefs.OpCode.error:
+            case ZooDefs.OpCode.closeSession:
+            case ZooDefs.OpCode.create:
+            case ZooDefs.OpCode.createSession:
             case ZooDefs.OpCode.delete:
-            case ZooDefs.OpCode.deleteContainer:
             case ZooDefs.OpCode.setACL:
             case ZooDefs.OpCode.setData:
             case ZooDefs.OpCode.check:
             case ZooDefs.OpCode.multi:
-            case ZooDefs.OpCode.reconfig:
                 return true;
-            case ZooDefs.OpCode.closeSession:
-            case ZooDefs.OpCode.createSession:
-                return !this.isLocalSession;
             default:
                 return false;
         }
