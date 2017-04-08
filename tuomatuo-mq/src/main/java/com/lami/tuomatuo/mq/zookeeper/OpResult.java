@@ -9,7 +9,7 @@ import org.apache.zookeeper.data.Stat;
  */
 public abstract class OpResult {
 
-    private int type;
+    public int type;
 
     public OpResult(int type) {
         this.type = type;

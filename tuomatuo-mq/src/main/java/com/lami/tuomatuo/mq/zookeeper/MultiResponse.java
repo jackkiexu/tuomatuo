@@ -26,6 +26,10 @@ public class MultiResponse implements Record, Iterable<OpResult> {
         return results;
     }
 
+    public void add(OpResult x) {
+        results.add(x);
+    }
+
     @Override
     public Iterator<OpResult> iterator() {
         return null;
