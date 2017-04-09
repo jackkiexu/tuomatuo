@@ -13,7 +13,6 @@ import org.apache.zookeeper.txn.TxnHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -323,8 +322,8 @@ public class ZooKeeperServer implements SessionTracker.SessionExpirer, ServerSta
         RequestProcessor finalProcessor = new FinalRequestProcessor(this);
         RequestProcessor syncProcessor = new SyncRequestProcessor(this, finalProcessor);
         ((SyncRequestProcessor)syncProcessor).start();
-        firstProcessor = new PreRequestProcessor(this, syncProcessor);
-        ((PreRequestProcessor)firstProcessor).start();
+        firstProcessor = new PrepRequestProcessor(this, syncProcessor);
+        ((PrepRequestProcessor)firstProcessor).start();
     }
 
 

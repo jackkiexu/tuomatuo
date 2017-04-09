@@ -9,7 +9,6 @@ import org.apache.jute.Record;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Stat;
 import org.apache.zookeeper.proto.*;
-import org.apache.zookeeper.server.PrepRequestProcessor;
 import org.apache.zookeeper.txn.ErrorTxn;
 import org.apache.zookeeper.txn.TxnHeader;
 import org.slf4j.Logger;
@@ -236,7 +235,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                         aclL = n.acl;
                     }
 
-                    PreRequestProcessor.checkACL(zks, zks.getZKDatabase().convertLong(aclL),
+                    PrepRequestProcessor.checkACL(zks, zks.getZKDatabase().convertLong(aclL),
                             ZooDefs.Perms.READ,
                             request.authInfo
                             );
@@ -280,7 +279,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                     synchronized (n){
                         aclG = n.acl;
                     }
-                    PreRequestProcessor.checkACL(zks, zks.getZKDatabase().convertLong(aclG),
+                    PrepRequestProcessor.checkACL(zks, zks.getZKDatabase().convertLong(aclG),
                             ZooDefs.Perms.READ,
                             request.authInfo
                             );
@@ -302,7 +301,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                     synchronized (n){
                         aclG = n.acl;
                     }
-                    PrepRequestProcessor.checkACL(zks, zks.getZKDatabase().convertLong(aclG),
+                    org.apache.zookeeper.server.PrepRequestProcessor.checkACL(zks, zks.getZKDatabase().convertLong(aclG),
                             ZooDefs.Perms.READ,
                             request.authInfo
                             );
