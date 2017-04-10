@@ -1,8 +1,8 @@
 package com.lami.tuomatuo.mq.zookeeper.server.quorum;
 
+import com.lami.tuomatuo.mq.zookeeper.server.Request;
+import com.lami.tuomatuo.mq.zookeeper.server.ServerCnxn;
 import org.apache.zookeeper.data.Id;
-import org.apache.zookeeper.server.Request;
-import org.apache.zookeeper.server.ServerCnxn;
 
 import java.nio.ByteBuffer;
 import java.util.List;

@@ -2,6 +2,7 @@ package com.lami.tuomatuo.mq.zookeeper.server.quorum;
 
 
 import com.lami.tuomatuo.mq.zookeeper.server.Request;
+import com.lami.tuomatuo.mq.zookeeper.server.quorum.flexible.QuorumVerifier;
 import com.lami.tuomatuo.mq.zookeeper.server.util.ZxidUtils;
 import org.apache.zookeeper.server.quorum.QuorumPacket;
 import org.slf4j.Logger;
@@ -12,10 +13,7 @@ import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -52,9 +50,9 @@ public class Leader {
         }
     }
 
-    LeaderZooKeeperServer zk;
+    public LeaderZooKeeperServer zk;
 
-    QuorumPeer self;
+    public QuorumPeer self;
 
     private boolean quorumFormed = false;
 
@@ -141,10 +139,66 @@ public class Leader {
         }
     }
 
-
-
-
     ServerSocket ss;
+
+
+    Leader(QuorumPeer self, LeaderZooKeeperServer zk) throws IOException{
+        this.self = self;
+        try{
+            if(self.getQuorumListenOnAllIPs()){
+
+            }
+        }catch (BindException e){
+            if(self.getQuorumListOnAllIPs()){
+                LOG.info("Couldn't bind to port " + self.getQuorumAddress().getPort(), e);
+            }else{
+                LOG.info("Couldn't bind to " + self.getQuorumAddress(), e);
+            }
+            throw e;
+        }
+        this.zk = zk;
+    }
+
+    // This message is for follower to expect diff
+    public final static int DIFF = 13;
+
+    // This is for follower to truncate its logs
+    public final static int TRUNC = 14;
+
+    // This is for follower to download the snapshots
+    public final static int SNAP = 15;
+
+    // This tells the leader that the connecting peer is actually an observer
+    public final static int OBSERVERINFO = 16;
+
+    // This message type is sent by the leader to indicate it's zxid and if
+    // needed, its database
+    public final static int NEWLEADER = 10;
+
+    // This message type is sent by the leader to indicate it's zxid and if
+    // needed, its database
+    public final static int FOLLOWERINFO = 11;
+
+    /**
+     * This message type is sent by the leader to indicate that the follower is
+     * now uptodate and can start responding to client
+     */
+    public final static int UPTODATE = 12;
+
+    /**
+     * This message is the first that a follower receives from the leader
+     * It has the protocol version and the epoch of the leader
+     */
+    public final static int LEADERINFO = 17;
+
+    // This message is used by the follow to ack a proposed epoch
+    public final static int ACKEPOCH = 18;
+
+    /**
+     * This message type is sent to a leader to request and mutation operation
+     * The payload will consist of a request header followed by a request
+     */
+    public final static int REQUEST = 1;
 
     /**
      * this message type is sent by a leader to propose a mutation
@@ -222,11 +276,11 @@ public class Leader {
         }
     }
 
-    StateSummary leaderStateSummary;
+    public StateSummary leaderStateSummary;
 
-    long epoch = -1;
-    boolean waitingForNewEpoch = true;
-    volatile boolean readyToStart = false;
+    public long epoch = -1;
+    public boolean waitingForNewEpoch = true;
+    public volatile boolean readyToStart = false;
 
     /**
      * This method is main function that is called to lead
@@ -270,37 +324,350 @@ public class Leader {
             self.setCurrentEpoch(epoch);
 
 
+            /**
+             * We have to get at least a majority of servers in sync with
+             * us. We do this by waiting for the NEWLEADER packet to get
+             * acknowledged
+             */
+            try{
+                waitForNewLeaderAck(self.getId(), zk.getZxid(), QuorumPeer.LearnerType.PARRTICIPANT);
+            }catch (Exception e){
+
+                shutdown("Waiting for a quorum of followers, only synced with sids:["
+                        + getSidSetString(newLeaderProposal.ackSet) + " ]");
+                HashSet<Long> followerSet = new HashSet<>();
+                for(LearnerHandler f : learners){
+                    followerSet.add(f.getSid());
+                }
+
+                Thread.sleep(self.tickTime);
+                self.tick++;
+                return;
+            }
+
+            startZkServer();
+
+            String initialZxid = System.getProperty("zookeeper.testingonly.initialZxid");
+            if(initialZxid != null){
+                long zxid = Long.parseLong(initialZxid);
+                zk.setZxid((zk.getZxid() & 0xffffffff00000000L) | zxid);
+            }
+
+            if(!System.getProperty("zookeeper.leaderServes", "yes").equals("no")){
+                self.cnxnFactory.setZooKeeperServer(zk);
+            }
+
+            boolean tickSkip = true;
+
+            while(true){
+                Thread.sleep(self.tickTime / 2);
+                if(!tickSkip){
+                    self.tick++;
+                }
+
+                HashSet<Long> syncedSet = new HashSet<>();
+
+                // lock on the followers when we use it
+
+                syncedSet.add(self.getId());
+
+                for(LearnerHandler f : getLearners()){
+                    if(f.synced() && f.getLearnerType() == QuorumPeer.LearnerType.PARRTICIPANT){
+                        syncedSet.add(f.getSid());
+                    }
+                    f.ping();
+                }
+
+                if(!tickSkip && !self.getQuorumVerifier().containsQuorum(syncedSet)){
+                    shutdown("Not sufficient followers synced, only synced with sids: [ "
+                            + getSidSetString(syncedSet) + " ]");
+                    // make sure the order is the same!
+                    // the leader goes to looking
+                    return;
+                }
+
+                tickSkip = !tickSkip;
+            }
+
 
         }finally {
             zk.unregisterJMX(this);
         }
     }
 
-    boolean isShutdown;
+    public boolean isShutdown;
+
+    public long lastCommitted = -1;
+
+    public long lastProposed;
 
 
-    Leader(QuorumPeer self, LeaderZooKeeperServer zk) throws IOException{
-        this.self = self;
-        try{
-            if(self.getQuorumListenOnAllIPs()){
 
-            }
-        }catch (BindException e){
-            if(self.getQuorumListOnAllIPs()){
-                LOG.info("Couldn't bind to port " + self.getQuorumAddress().getPort(), e);
-            }else{
-                LOG.info("Couldn't bind to " + self.getQuorumAddress(), e);
-            }
-            throw e;
+    public Proposal propose(Request request) throws Exception{
+
+    }
+    
+    // Process sync requests
+    synchronized public void processSync(LearnerSyncRequest r){
+        if(outstandingProposals.isEmpty()){
+            sendSync(r);
         }
-        this.zk = zk;
+        else{
+            List<LearnerSyncRequest> l = pendingSyncs.get(lastProposed);
+            if(l == null){
+                l = new ArrayList<LearnerSyncRequest>();
+            }
+            l.add(r);
+            pendingSyncs.put(lastProposed, l);
+        }
     }
 
 
+    // send a sync message to the appropriate server
+    public void sendSync(LearnerSyncRequest r){
+        QuorumPacket qp = new QuorumPacket(Leader.SYNC, 0, null, null);
+        r.fh.queuePacket(qp);
+    }
+
+    /**
+     * Lets the leader know that a follower is capable of following and is done
+     * syncing
+     */
+    synchronized public long startForwarding(LearnerHandler handler, long lastSeenZxid){
+        // Queue up any outstanding requests enabling the receipt of
+        // new requests
+        if(lastProposed > lastSeenZxid){
+            for(Proposal p : toBeApplied){
+               if(p.packet.getZxid() <= lastSeenZxid){
+                   continue;
+               }
+               handler.queuePacket(p.packet);
+                // Since the proposal has been committed we need to send the
+                // commit message also
+                QuorumPacket qp = new QuorumPacket(Leader.COMMIT, p.packet.getZxid(),
+                         null, null);
+                handler.queuePacket(qp);
+            }
+
+            // only participant need to get outstanding proposals
+            if(handler.getLearnerType() == QuorumPeer.LearnerType.PARRTICIPANT){
+                List<Long> zxids = new ArrayList<>(outstandingProposals.keySet());
+                Collections.sort(zxids);
+                for(Long zxid : zxids){
+                    if(zxid <= lastSeenZxid){
+                        continue;
+                    }
+                    handler.queuePacket(outstandingProposals.get(zxid).packet);
+                }
+            }
+        }
+
+        if(handler.getLearnerType() == QuorumPeer.LearnerType.PARRTICIPANT){
+            addForwardingFollower(handler);
+
+        }else{
+            addObserverLearnerHandler(handler);
+        }
+        return lastProposed;
+    }
+
+    private HashSet<Long> connectingFollowers = new HashSet<>();
+    public long getEpochToPropose(long sid, long lastAcceptedEpoch) throws Exception{
+        synchronized (connectingFollowers){
+            if(!waitingForNewEpoch){
+                return epoch;
+            }
+
+            if(lastAcceptedEpoch >= epoch){
+                epoch = lastAcceptedEpoch + 1;
+            }
+
+            connectingFollowers.add(sid);
+            QuorumVerifier verifier = self.getQuorumVerifier();
+            if(connectingFollowers.contains(self.getId()) &&
+            verifier.containsQuorum(connectingFollowers)){
+                waitingForNewEpoch = false;
+                self.setAcceptedEpoch(epoch);
+                connectingFollowers.notifyAll();
+            }
+            else{
+                long start = System.currentTimeMillis();
+                long cur = start;
+                long end = start + self.getInitLimit() * self.getTickTime();
+                while(waitingForNewEpoch && cur < end){
+                    connectingFollowers.wait(end - cur);
+                    cur = System.currentTimeMillis();
+                }
+                if(waitingForNewEpoch){
+                    throw new Exception("Timeout while waiting for epoch from quorum");
+                }
+            }
+
+            return epoch;
+        }
+    }
 
 
+    private HashSet<Long> electionFollowers = new HashSet<>();
+    private boolean electionFinished = false;
+    public void waitForEpochAck(long id, StateSummary ss) throws Exception{
+        synchronized (electionFollowers){
+            if(electionFinished){
+                return;
+            }
+
+            if(ss.getCurrentEpoch() != -1){
+                if(ss.isMoreRecentThan(leaderStateSummary)){
+                    throw new IOException("Follower is ahead of the leader, leader summary:"
+                            + leaderStateSummary.getCurrentEpoch()
+                            + " (current epoch) "
+                            + leaderStateSummary.getLastZxid()
+                            + " (last zxid) "
+                    );
+                }
+
+                electionFollowers.add(id);
+            }
+
+            QuorumVerifier verifier = self.getQuorumVerifier();
+            if(electionFollowers.contains(self.getId()) && verifier.containsQuorum(electionFollowers)){
+                electionFinished = true;
+                electionFollowers.notifyAll();
+            }
+            else{
+                long start = System.currentTimeMillis();
+                long cur = start;
+                long end = start + self.getInitLimit() * self.getTickTime();
+                while(!electionFinished && cur < end){
+                    electionFollowers.wait(end - cur);
+                    cur = System.currentTimeMillis();
+                }
+
+                if(!electionFinished){
+                    throw new Exception("Timeout while waiting for epoch to be acked by quorum");
+                }
+            }
+        }
+    }
 
 
+    public String getSidSetString(Set<Long> sidSet){
+        StringBuilder sids = new StringBuilder();
+        Iterator<Long> iter = sidSet.iterator();
+        while(iter.hasNext()){
+            sids.append(iter.next());
+            if(!iter.hasNext()){
+                break;
+            }
+            sids.append(",");
+        }
+        return sids.toString();
+    }
 
+    // Start up leader ZooKeeper server and initialize zxid to the new epoch
+    private synchronized void startZkServer(){
+        // Update lastCommitted and Db's zxid to a value representing the new epoch
+        lastCommitted = zk.getZxid();
+
+        LOG.info("Have quorum of supporters, sids: [ "
+                        + getSidSetString(newLeaderProposal.ackSet)
+                        + " ]; starting up and setting last processed zxid: 0x{}",
+                Long.toHexString(zk.getZxid()));
+        zk.startup();
+
+        self.updateElectionVote(getEpoch());
+        zk.getZKDatabase().setlastProcessedZxid(zk.getZxid());
+    }
+
+
+    /**
+     * Process NEWLEADER ack of a given sid and wait until the leader receives
+     */
+    public void waitForNewLeaderAck(long sid, long zxid, QuorumPeer.LearnerType learnerType)throws Exception{
+        synchronized (newLeaderProposal.ackSet){
+            if(quorumFormed){
+                return;
+            }
+
+            long currentZxid = newLeaderProposal.packet.getZxid();
+            if(zxid != currentZxid){
+                LOG.info("NEWLEADER ACK from sid:" + sid
+                    + " is from a different epoch - current 0x"
+                        + Long.toHexString(currentZxid) + " received 0x"
+                        + Long.toHexString(zxid)
+                );
+                return;
+            }
+
+            if(learnerType == QuorumPeer.LearnerType.PARRTICIPANT){
+                newLeaderProposal.ackSet.add(sid);
+            }
+
+            if(self.getQuorumVerifier().containsQuorum(newLeaderProposal.ackSet)){
+                quorumFormed = true;
+                newLeaderProposal.ackSet.notifyAll();
+            }
+            else{
+                long start = System.currentTimeMillis();
+                long cur = start;
+                long end = start + self.getInitLimit() * self.getTickTime();
+                while(!quorumFormed && cur < end){
+                    newLeaderProposal.ackSet.wait(end - cur);
+                    cur = System.currentTimeMillis();
+                }
+                if(!quorumFormed){
+                    throw new InterruptedException(
+                            "Timeout while waiting for NEWLEADER to be acked by quorum"
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * Get string representation of a given packet type
+     * @param packetType
+     * @return
+     */
+    public static String getPacketType(int packetType){
+        switch (packetType){
+            case DIFF:
+                return "DIFF";
+            case TRUNC:
+                return "TRUNC";
+            case SNAP:
+                return "SNAP";
+            case OBSERVERINFO:
+                return "OBSERVERINFO";
+            case NEWLEADER:
+                return "NEWLEADER";
+            case FOLLOWERINFO:
+                return "FOLLOWERINFO";
+            case UPTODATE:
+                return "UPTODATE";
+            case LEADERINFO:
+                return "LEADERINFO";
+            case ACKEPOCH:
+                return "ACKEPOCH";
+            case REQUEST:
+                return "REQUEST";
+            case PROPOSAL:
+                return "PROPOSAL";
+            case ACK:
+                return "ACK";
+            case COMMIT:
+                return "COMMIT";
+            case PING:
+                return "PING";
+            case REVALIDATE:
+                return "REVALIDATE";
+            case SYNC:
+                return "SYNC";
+            case INFORM:
+                return "INFORM";
+            default:
+                return "UNKNOW";
+        }
+    }
 
 }
