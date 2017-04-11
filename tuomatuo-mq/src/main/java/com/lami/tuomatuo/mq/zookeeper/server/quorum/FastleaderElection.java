@@ -496,11 +496,12 @@ public class FastleaderElection implements Election {
     @Override
     public Vote lookForleader() throws InterruptedException {
         try{
-
+            self.jmxLeaderElectionBean = new LeaderElectionBean();
+            MBeanRegistry.getInstance().register(self.jmxLeaderElectionBean, self.jmxLocakPeerbean);
         }catch (Exception e){
-
+            LOG.info("Failed to register with JMX", e);
+            self.jmxLeaderElectionBean = null;
         }
-
 
         try{
             HashMap<Long, Vote> recvset = new HashMap<>();
@@ -549,11 +550,16 @@ public class FastleaderElection implements Election {
                             break;
                         }
                         case OBSERVING:{
+                            LOG.info("Notification from observer: " + n.sid);
                             break;
                         }
                         case FOLLOWING:
                         case LEADING:{
-
+                            // Consider all notification from the same epoch
+                            // together
+                            if(n.electionEpoch == logicalclock){
+                                recvset.put(n.sid, new Vote());
+                            }
                         }
                         default:{
                             LOG.warn("Notification state unrecognized:" + n.state+ ", " + n.sid);
