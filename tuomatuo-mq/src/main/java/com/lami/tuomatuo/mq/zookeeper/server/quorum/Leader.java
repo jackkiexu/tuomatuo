@@ -1,18 +1,20 @@
 package com.lami.tuomatuo.mq.zookeeper.server.quorum;
 
 
+import com.lami.tuomatuo.mq.zookeeper.server.FinalRequestProcessor;
 import com.lami.tuomatuo.mq.zookeeper.server.Request;
+import com.lami.tuomatuo.mq.zookeeper.server.RequestProcessor;
 import com.lami.tuomatuo.mq.zookeeper.server.quorum.flexible.QuorumVerifier;
 import com.lami.tuomatuo.mq.zookeeper.server.util.ZxidUtils;
+import org.apache.jute.BinaryInputArchive;
+import org.apache.jute.BinaryOutputArchive;
 import org.apache.zookeeper.server.quorum.QuorumPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.BindException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketException;
+import java.net.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -246,7 +248,7 @@ public class Leader {
 
 
 
-    class LearnerCnxnAcceptor extends Thread{
+    class LearnerCnxAcceptor extends Thread{
 
         private volatile boolean stop = false;
 
@@ -395,16 +397,240 @@ public class Leader {
         }
     }
 
-    public boolean isShutdown;
+    // Close down all the LearnerHandlers
+    void shutdown(String reason){
+        LOG.info("Shtting down");
+        if(isShutdown){
+            return;
+        }
 
+        LOG.info("Shutdown called", new Exception("shutdown Leader!reason:" + reason));
+        if(cnxnAcceptor != null){
+            cnxnAcceptor.halt();
+        }
+
+
+        // NIO should not accept connections
+        self.cnxnFactory.setZooKeeperServer(null);
+
+        try{
+            ss.close();
+        }catch (Exception e){
+            LOG.warn("Ignoring unexpected exception during close");
+        }
+
+        // clear all the connections
+        self.cnxnFactory.closeAll();
+
+        // shutdown the previous zk
+        if(zk != null){
+            zk.shutdown();
+        }
+
+        synchronized (learners){
+            for(Iterator<LearnerHandler>it = learners.iterator(); it.hasNext();){
+                LearnerHandler f = it.next();
+                it.remove();
+                f.shutdown();
+            }
+        }
+
+        isShutdown = true;
+    }
+
+    synchronized public void processAck(long sid, long zxid, SocketAddress followerAddr){
+        if ((zxid & 0xffffffffL) == 0) {
+            /**
+             * We no longer process NEWLEADER ack by this method. However,
+             * the learner sends ack back to the leader after it gets UPTODATE
+             * se we just ignore the message
+             */
+            return;
+        }
+
+        if(outstandingProposals.size() == 0){
+            return;
+        }
+
+        if(lastCommitted >= zxid){
+            // The proposal has already been committed
+            return;
+        }
+
+        Proposal p = outstandingProposals.get(zxid);
+        if(p == null){
+            LOG.warn("Trying to commit future proposal: zxid 0x{} from {}",
+                    Long.toHexString(zxid), followerAddr);
+            return;
+        }
+
+        p.ackSet.add(sid);
+
+        if(self.getQuorumVerifier().containsQuorum(p.ackSet)){
+            if(zxid != lastCommitted + 1){
+                LOG.warn("Commiting zxid 0x{} from {} not first!",
+                        Long.toHexString(zxid), followerAddr);
+                LOG.warn("First is 0x{}", Long.toHexString(lastCommitted + 1));
+            }
+
+            outstandingProposals.remove(zxid);
+            if(p.request != null){
+                toBeApplied.add(p);
+            }
+
+            if(p.request == null){
+                LOG.warn("Going to commit null request for proposal: {}", p);
+            }
+
+            commit(zxid);
+            inform(p);
+            zk.commitProcessor.commit(p.request);
+            if(pendingSyncs.containsKey(zxid)){
+                for(LearnerSyncRequest r ; pendingSyncs.remove(zxid)){
+                    sendSync(r);
+                }
+            }
+        }
+    }
+
+
+    static class ToBeAppliedRequestProcessor implements RequestProcessor{
+
+        private RequestProcessor next;
+
+        private ConcurrentLinkedQueue<Proposal> toBeApplied;
+
+        /**
+         * This request processor simply maintains the tobeApplied list. For
+         * this to work next must be a FinalRequestProcessor and
+         * FinalRequestProcessor.processRequest MUST process the request
+         * synchronously
+         */
+        public ToBeAppliedRequestProcessor(RequestProcessor next, ConcurrentLinkedQueue<Proposal> toBeApplied) {
+            if(!(next instanceof FinalRequestProcessor)){
+                throw new RuntimeException(ToBeAppliedRequestProcessor.class.getName()
+                        + " must be connected to "
+                        + FinalRequestProcessor.class.getName()
+                        + " not "
+                        + next.getClass().getName()
+                );
+            }
+
+            this.next = next;
+            this.toBeApplied = toBeApplied;
+        }
+
+        @Override
+        public void processRequest(Request request) throws RequestProcessorException {
+            next.processRequest(request);
+            Proposal p = toBeApplied.peek();
+            if(p != null && p.request != null
+                    && p.request.zxid == request.zxid){
+                toBeApplied.remove();
+            }
+        }
+
+        @Override
+        public void shutdown() {
+            LOG.info("Shutting down");
+            next.shutdown();
+        }
+    }
+
+
+    /**
+     * send a packet to all the follower ready to follow
+     * @param qp
+     */
+    void sendPacket(QuorumPacket qp){
+        synchronized (forwardingFollowers){
+            for(LearnerHandler f : forwardingFollowers){
+                f.queuePacket(qp);
+            }
+        }
+    }
+
+
+    void sendObserverpacket(QuorumPacket qp){
+        for(LearnerHandler f : getObservingLearners()){
+            f.queuePacket(qp);
+        }
+    }
     public long lastCommitted = -1;
 
+    public void commit(long zxid){
+        synchronized (this){
+            lastCommitted = zxid;
+        }
+
+        QuorumPacket qp = new QuorumPacket(Leader.COMMIT, zxid, null, null);
+        sendPacket(qp);
+    }
+
+    /**
+     * Create an inform packet and send it ti all observers
+     * @param proposal
+     */
+    public void inform(Proposal proposal){
+        QuorumPacket qp = new QuorumPacket(Leader.INFORM, proposal.request.zxid,
+                proposal.packet.getData(), null);
+        sendObserverpacket(qp);
+    }
+
+    public boolean isShutdown;
     public long lastProposed;
 
 
+    public long getEpoch(){
+        return ZxidUtils.getEpochFromZxid(lastProposed);
+    }
 
+    public static class XidRolloverException extends Exception{
+        public XidRolloverException(String message) {
+            super(message);
+        }
+    }
+
+    /**
+     * create a proposal and send it out to all the members
+     */
     public Proposal propose(Request request) throws Exception{
+        /**
+         * Address the rollover. All lower 32bits set indicate a new leader
+         * election
+         */
+        if ((request.zxid & 0xffffffffL) == 0xffffffffL) {
+            String msg = "zxid lower 32 bits have rolled over, forcing re-election, and therefore new epoch start";
+            shutdown(msg);
+            throw new XidRolloverException(msg);
+        }
 
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        BinaryOutputArchive boa = BinaryOutputArchive.getArchive(baos);
+        try{
+            request.hdr.serialize(boa, "hdr");
+            if(request.txn != null){
+                request.txn.serialize(boa, "txn");
+            }
+            baos.close();
+        }catch (Exception e){
+            LOG.warn("This really should be impossible", e);
+        }
+
+        QuorumPacket pp = new QuorumPacket(Leader.PROPOSAL, request.zxid,
+                baos.toByteArray(), null);
+
+        Proposal p = new Proposal();
+        p.packet = pp;
+        p.request = request;
+        synchronized (this){
+            LOG.info("Proposing:" + request);
+            lastProposed = p.packet.getZxid();
+            outstandingProposals.put(lastProposed, p);
+            sendPacket(pp);
+        }
+        return p;
     }
     
     // Process sync requests
