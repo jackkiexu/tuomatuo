@@ -1,13 +1,19 @@
 package com.lami.tuomatuo.mq.zookeeper.server;
 
 import com.lami.tuomatuo.mq.zookeeper.Environment;
+import com.lami.tuomatuo.mq.zookeeper.KeeperException;
 import com.lami.tuomatuo.mq.zookeeper.ZooDefs;
 import com.lami.tuomatuo.mq.zookeeper.jmx.MBeanRegistry;
+import com.lami.tuomatuo.mq.zookeeper.server.auth.AuthenticationProvider;
+import com.lami.tuomatuo.mq.zookeeper.server.auth.ProviderRegistry;
 import com.lami.tuomatuo.mq.zookeeper.server.persistence.FileTxnSnapLog;
+import com.lami.tuomatuo.mq.zookeeper.server.quorum.ReadOnlyZooKeeperServer;
+import org.apache.jute.BinaryInputArchive;
 import org.apache.jute.Record;
 import org.apache.zookeeper.data.ACL;
+import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.data.StatPersisted;
-import org.apache.zookeeper.proto.ConnectResponse;
+import org.apache.zookeeper.proto.*;
 import org.apache.zookeeper.txn.CreateSessionTxn;
 import org.apache.zookeeper.txn.TxnHeader;
 import org.slf4j.Logger;
@@ -15,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -497,30 +504,8 @@ public class ZooKeeperServer implements SessionTracker.SessionExpirer, ServerSta
 
 
 
-    public int getClientPort(){
-        return 0;
-    }
 
 
-    @Override
-    public long getOutstandingRequests() {
-        return 0;
-    }
-
-    @Override
-    public long getLastProcessedZxid() {
-        return 0;
-    }
-
-    @Override
-    public String getState() {
-        return null;
-    }
-
-    @Override
-    public int getNumAliveConnections() {
-        return 0;
-    }
 
     @Override
     public long getDataDirSize() {
@@ -546,6 +531,316 @@ public class ZooKeeperServer implements SessionTracker.SessionExpirer, ServerSta
 
 
 
+
+
+    /**
+     * get the zookeeper database for this server
+     */
+    public ZKDatabase getZKDatabase(){
+        return this.zkDb;
+    }
+
+
+
+    public void submitRequest(Request si){
+
+    }
+
+    public static int getSnapCount(){
+        String sc = System.getProperty("zookeeper.snapCount");
+        try{
+            int snapCount = Integer.parseInt(sc);
+            // snapCount must be 2 or more
+            if(snapCount < 2){
+                LOG.info("SnapCount should be 2 or more. Now snapCount is reset to 2");
+                snapCount = 2;
+            }
+        }catch (Exception e){
+            return 100000;
+        }
+    }
+
+    public int getGlobalOutstandingLimit(){
+        String sc= System.getProperty("zookeeper.globalOutstandingLimit");
+        int limit;
+        try{
+            limit = Integer.parseInt(sc);
+        }catch (Exception e){
+            limit = 1000;
+        }
+        return limit;
+    }
+
+    public void setServerCnxnFactory(ServerCnxnFactory factory){
+        serverCnxnFactory = factory;
+    }
+
+    public ServerCnxnFactory getServerCnxnFactory(){
+        return serverCnxnFactory;
+    }
+
+    // return the last processed id from the
+    // datatree
+    public long getLastProcessedZxid(){
+        return zkDb.getDataTreeLastProcessedZxid();
+    }
+
+    /**
+     * return the outstanding requests
+     * in the queue, which haven't been
+     * processed yet
+     */
+    public long getOutstandingRequests(){
+        return getInProcess();
+    }
+
+    /**
+     * truncate the log to get in sync with others
+     * if in a quorum
+     */
+    public void truncateLog(long zxid) throws Exception{
+        this.zkDb.truncateLog(zxid);
+    }
+
+    public int getTickTime(){
+        return tickTime;
+    }
+
+    public void setTickTime(int tickTime){
+        LOG.info("tickTime set to " + tickTime);
+        this.tickTime = tickTime;
+    }
+
+    public int getMinSessionTimeout(){
+        return minSessionTimeout == -1 ? tickTime * 2 : minSessionTimeout;
+    }
+
+    public void setMinSessionTimeout(int min){
+        LOG.info("minSessionTimeout set to " + min);
+        this.minSessionTimeout = min;
+    }
+
+    public int getMaxSessionTimeout(){
+        return maxSessionTimeout == -1 ? tickTime * 20 : maxSessionTimeout;
+    }
+
+    public void setMaxSessionTimeout(int max){
+        LOG.info("maxSessionTimeout set to " + max);
+        this.maxSessionTimeout = max;
+    }
+
+    public int getClientPort(){
+        return serverCnxnFactory != null ? serverCnxnFactory.getLocalPort() : -1;
+    }
+
+    public void setTxnLogFactory(FileTxnSnapLog txnLog){
+        this.txnLogFactory = txnLog;
+    }
+
+    public FileTxnSnapLog getTxnLogFactory(){
+        return this.txnLogFactory;
+    }
+
+    public String getState(){
+        return "standalone";
+    }
+
+    public void dumpEphemerals(PrintWriter pwriter){
+        zkDb.dumpEphemerals(pwriter);
+    }
+
+    /**
+     * return the total number of client connections that are alive
+     * to this server
+     */
+    public int getNumAliveConnections(){
+        return serverCnxnFactory.getNumAliveConnections();
+    }
+
+    public void processConnectRequest(ServerCnxn cnxn, ByteBuffer incomingBuffer) throws Exception{
+        BinaryInputArchive bia = BinaryInputArchive.getArchive(new ByteBufferInputStream(incomingBuffer));
+        ConnectRequest connReq = new ConnectRequest();
+        connReq.deserialize(bia, "connect");
+        LOG.info("Session establishment request from client"
+                    + cnxn.getRemoteSocketAddress()
+                    + " client's lastZxid is 0x"
+                    + Long.toHexString(connReq.getLastZxidSeen()));
+        boolean readOnly = false;
+        try{
+            readOnly = bia.readBool("readOnly");
+            cnxn.isOldClient = false;
+        }catch (Exception e){
+            LOG.info("Connection request from old client "
+                        + cnxn.getRemoteSocketAddress()
+                        + ", will be dropped if server is in r-o mode");
+
+        }
+
+        if(readOnly == false && this instanceof ReadOnlyZooKeeperServer){
+            String msg = "Refusing session request for not-ready-only client "
+                    + cnxn.getRemoteSocketAddress();
+            LOG.info(msg);
+            throw new ServerCnxn.CloseRequestException(msg);
+        }
+
+        if(connReq.getLastZxidSeen() > zkDb.dataTree.lastProcessedZxid){
+            String msg = "Refusing session request for client "
+                            + cnxn.getRemoteSocketAddress()
+                    + " as it has seen zxid 0x"
+                    + Long.toHexString(connReq.getLastZxidSeen())
+                    + " our last zxid is 0x"
+                    + Long.toHexString(getZkDatabase().getDataTreeLastProcessedZxid())
+                    + " client must try another server";
+            LOG.info(msg);
+            throw new ServerCnxn.CloseRequestException(msg);
+        }
+
+        int sessionTimeout = connReq.getTimeOut();
+        byte passwd[] = connReq.getPasswd();
+        int minSessionTimeout = getMinSessionTimeout();
+        if(sessionTimeout < minSessionTimeout){
+            sessionTimeout = minSessionTimeout;
+        }
+        int maxSessionTimeout = getMaxSessionTimeout();
+        if(sessionTimeout > maxSessionTimeout){
+            sessionTimeout = maxSessionTimeout;
+        }
+        cnxn.setSessionTimeout(sessionTimeout);
+        /**
+         * We don't want to receive any packets until we are sure that the
+         * session is setup
+         */
+        cnxn.disableRecv();
+        long sessionId = connReq.getSessionId();
+        if(sessionId != 0){
+            long clientSessionId = connReq.getSessionId();
+            LOG.info("Client attempting to renew session 0x"
+                    + Long.toHexString(clientSessionId)
+                    + " at " + cnxn.getRemoteSocketAddress());
+            serverCnxnFactory.closeSession(sessionId);
+            cnxn.setSessionId(sessionId);
+            reopenSession(cnxn, sessionId, passwd, sessionTimeout);
+        }else{
+            LOG.info("Client attempting to establish new session at "
+                + cnxn.getRemoteSocketAddress());
+            createSession(cnxn, passwd, sessionTimeout);
+        }
+    }
+
+    public boolean shouldThrottle(long outStandingCount){
+        if(getGlobalOutstandingLimit() < getInProcess()){
+            return outStandingCount > 0;
+        }
+        return false;
+    }
+
+    public void processPacket(ServerCnxn cnxn, ByteBuffer incomingBuffer)throws Exception{
+        // we have the request, now process and setup for next
+        InputStream bais = new ByteBufferInputStream(incomingBuffer);
+        BinaryInputArchive bia = BinaryInputArchive.getArchive(bais);
+        RequestHeader h = new RequestHeader();
+        h.deserialize(bia, "header");
+        /**
+         * Through the magic of byte buffers, txn will not be
+         * pointing
+         * to the start of the txn
+         */
+        incomingBuffer = incomingBuffer.slice();
+        if(h.getType() == ZooDefs.OpCode.auth){
+            LOG.info("got auth packet " + cnxn.getRemoteSocketAddress());
+            AuthPacket authPacket = new AuthPacket();
+            ByteBufferInputStream.byteBuffer2Record(incomingBuffer, authPacket);
+            String scheme = authPacket.getScheme();
+            AuthenticationProvider ap = ProviderRegistry.getProvider(scheme);
+            KeeperException.Code authReturn = KeeperException.Code.AUTHFAILED;
+            if(ap != null){
+                try{
+                    authReturn = ap.handleAuthentication(cnxn, authPacket.getAuth());
+                }catch (Exception e){
+                    LOG.info("Caught runtime exception from AuthenticationProvider: " + scheme + " due to " + e);
+                    authReturn = KeeperException.Code.AUTHFAILED;
+                }
+            }
+
+            if(authReturn != KeeperException.Code.OK){
+                LOG.info("No authentication provider for scheme: " +
+                scheme + " has "
+                + ProviderRegistry.listProviders());
+                LOG.info("Authentication failed for scheme : " + scheme);
+                ReplyHeader rh = new ReplyHeader(h.getXid(), 0,
+                        KeeperException.Code.AUTHFAILED.intValue());
+                cnxn.sendResponse(rh, null, null);
+                cnxn.sendBuffer(ServerCnxnFactory.closeConn);
+                cnxn.disableRecv();
+            }else{
+                LOG.info("Authentication successed for scheme: " + scheme);
+                LOG.info("auth success " + cnxn.getRemoteSocketAddress());
+                ReplyHeader rh = new ReplyHeader(h.getXid(), 0,
+                        KeeperException.Code.OK.intValue());
+                cnxn.sendResponse(rh, null, null);
+            }
+
+            return;
+        }
+        else{
+            if(h.getType() == ZooDefs.OpCode.sasl){
+                Record rsp = processSasl(incomingBuffer, cnxn);
+                ReplyHeader rh = new ReplyHeader(h.getXid(), 0, KeeperException.Code.OK.intValue());
+                cnxn.sendResponse(rh, rsp, "response"); // not sure about 3rh arg..what is it
+            }else{
+                Request si = new Request(cnxn, cnxn.getSessionId(), h.getXid(),
+                        h.getType(), incomingBuffer, cnxn.getAuthInfo());
+                si.setOwner(ServerCnxn.me);
+                submitRequest(si);
+            }
+        }
+
+        cnxn.incrOutstandingRequests(h);
+    }
+
+    public Record processSasl(ByteBuffer incomingBuffer, ServerCnxn cnxn) throws Exception{
+        LOG.info("Responding to client SASL token");
+        GetSASLRequest clientTokenRecord = new GetSASLRequest();
+        ByteBufferInputStream.byteBuffer2Record(incomingBuffer, clientTokenRecord);
+        byte[] clientToken = clientTokenRecord.getToken();
+        LOG.info("Size of client SASL token:" + clientToken.length);
+        byte[] responseToen = null;
+        try{
+            ZooKeeperSaslServer saslServer = cnxn.zooKeeperSaslServer;
+            try{
+                /**
+                 * note that clientToken might be empty (clientToen.length == 0)
+                 * if using the DIGEST-MD5 mechanism, clientToen will be empty at the begining of the
+                 * SASL negotation process
+                 */
+                responseToen = saslServer.evaluateResponse(clientToken);
+                if(saslServer.isComplete() == true){
+                    String authorizationID = saslServer.getAuthorizationID();
+                    LOG.info("adding SASL authenticate for authenticationID : " + authorizationID);
+                    cnxn.addAuthInfo(new Id("sasl", authorizationID));
+                }
+
+            }catch (Exception e){
+                LOG.info("Client failed to SASL authenticate: " + e);
+                if((System.getProperty("zookeeper.allowSaslFailedClients") != null)
+                        && (System.getProperty("zookeeper.allowSaslFailedClients").equals("true"))){
+                    LOG.info("Maintaining client connection despite SASL authenticate failure");
+                }else{
+                    LOG.warn("Closing client connection due to SASL authenticate failure");
+                    cnxn.close();
+                }
+            }
+        }catch (NullPointerException e){
+            LOG.info("cnxn.saslServer is null: cnxn object did not initialize its saslServer properly");
+        }
+        if(responseToen != null){
+            LOG.info("Size of server SASL response : " + responseToen.length);
+        }
+        // wrap SASL response token to client inside a response object
+        return new SetSASLResponse(responseToen);
+    }
+
+
     public DataTree.ProcessTxnResult processTxn(TxnHeader hdr, Record txn){
         DataTree.ProcessTxnResult rc;
         int opCode = hdr.getType();
@@ -556,20 +851,11 @@ public class ZooKeeperServer implements SessionTracker.SessionExpirer, ServerSta
                 CreateSessionTxn cst = (CreateSessionTxn)txn;
                 sessionTracker.addSession(sessionId, cst.getTimeOut());
             }else{
-                LOG.info(" Got " + txn.getClass() + " " + txn.toString());
+                LOG.warn("Got" + txn.getClass() + " " + txn.toString());
             }
-        }
-        else if(opCode == ZooDefs.OpCode.closeSession){
+        }else if(opCode == ZooDefs.OpCode.closeSession){
             sessionTracker.removeSession(sessionId);
         }
+        return rc;
     }
-
-    /**
-     * get the zookeeper database for this server
-     */
-    public ZKDatabase getZKDatabase(){
-        return this.zkDb;
-    }
-
-
 }

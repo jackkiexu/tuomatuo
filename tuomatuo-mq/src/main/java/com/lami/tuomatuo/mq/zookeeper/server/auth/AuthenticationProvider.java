@@ -18,8 +18,9 @@
 
 package com.lami.tuomatuo.mq.zookeeper.server.auth;
 
+
+import com.lami.tuomatuo.mq.zookeeper.KeeperException;
 import com.lami.tuomatuo.mq.zookeeper.server.ServerCnxn;
-import org.apache.zookeeper.KeeperException;
 
 /**
  * This interface is implemented by authentication providers to add new kinds of

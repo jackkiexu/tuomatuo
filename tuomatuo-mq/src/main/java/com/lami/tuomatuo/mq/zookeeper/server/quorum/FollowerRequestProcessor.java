@@ -72,7 +72,7 @@ public class FollowerRequestProcessor extends Thread implements RequestProcessor
                     case ZooDefs.OpCode.createSession:
                     case ZooDefs.OpCode.closeSession:
                     case ZooDefs.OpCode.multi:{
-                        zks.getFollowe().request(request);
+                        zks.getFollower().request(request);
                         break;
                     }
                 }

@@ -67,13 +67,26 @@ public class FollowerZooKeeperServer extends LearnerZooKeeperServer {
     }
 
     public int getGlobalOutstandingLimit(){
-        return 0;
+        return super.getGlo;
     }
 
 
     @Override
     public void shutdown() {
+        LOG.info("Shutting down");
+        try{
+            super.shutdown();
+        }catch (Exception e){
+            LOG.info("Ignoring unexpected exception during shutdown", e);
+        }
 
+        try{
+            if(syncProcessor != null){
+                syncProcessor.shutdown();
+            }
+        }catch (Exception e){
+            LOG.info("Ignoring unexpected exception in syncprocessor shutdown", e);
+        }
     }
 
     @Override
@@ -83,6 +96,6 @@ public class FollowerZooKeeperServer extends LearnerZooKeeperServer {
 
     @Override
     public Learner getLearner() {
-        return null;
+        return getFollower();
     }
 }
