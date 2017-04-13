@@ -15,22 +15,6 @@ public interface RemotePeerMXBean {
      */
     public String getQuorumAddress();
 
-    /**
-     * the election address
-     * @return
-     */
-    public String getElectionAddress();
 
-    /**
-     * the client address
-     * @return
-     */
-    public String getClientAddress();
-
-    /**
-     * the learner type
-     * @return
-     */
-    public String getLearnerType();
 
 }

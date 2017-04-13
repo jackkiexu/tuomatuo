@@ -71,41 +71,7 @@ public interface LocalPeerMXBean extends ServerMXBean{
      */
     public int getElectionType();
 
-    /**
-     * the election address
-     * @return
-     */
-    public String getElectionAddress();
-
-    /**
-     * the client address
-     * @return
-     */
-    public String getClientAddress();
-
-    /**
-     * the learner type
-     * @return
-     */
-    public String getLearnerType();
-
-    /**
-     * the configuration
-     * @return
-     */
-    public long getConfigVersion();
 
 
-    /**
-     *  the quorum system information
-     * @return
-     */
-    public String getQuorumSystemInfo();
-
-    /**
-     * true if the quorum peer is part of the ensemble, false otherwise
-     * @return
-     */
-    public boolean isPartOfEnsemble();
 
 }

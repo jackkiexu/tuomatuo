@@ -1,6 +1,8 @@
 package com.lami.tuomatuo.mq.zookeeper.server.quorum;
 
 import com.lami.tuomatuo.mq.zookeeper.common.AtomicFileOutputStream;
+import com.lami.tuomatuo.mq.zookeeper.jmx.MBeanRegistry;
+import com.lami.tuomatuo.mq.zookeeper.jmx.ZKMBeanInfo;
 import com.lami.tuomatuo.mq.zookeeper.server.ServerCnxnFactory;
 import com.lami.tuomatuo.mq.zookeeper.server.ZKDatabase;
 import com.lami.tuomatuo.mq.zookeeper.server.ZooKeeperServer;
@@ -422,10 +424,123 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider{
 
     @Override
     public void run() {
+        setName("QuorumPeer " + "[myid = " + getId() + "]"
+            + cnxnFactory.getlocalAddress());
+        LOG.info("Starting quorum peer");
+        try{
+            jmxQuorumBean = new QuorumBean(this);
+            MBeanRegistry.getInstance().register(jmxQuorumBean, null);
+            for(QuorumServer s : getView().values()){
+                ZKMBeanInfo p;
+                if(getId() == s.id){
+                    p = jmxLocakPeerbean = new LocalPeerBean(this);
+                    try{
+                        MBeanRegistry.getInstance().register(p, jmxQuorumBean);
+                    }catch (Exception e){
+                        LOG.info("Failed to register with JMX", e);
+                        jmxLocakPeerbean = null;
+                    }
+                }
+                else{
+                    p = new RemotePeerBean(s);
+                    try{
+                        MBeanRegistry.getInstance().register(p, jmxQuorumBean);
+                    }catch (Exception e){
+                        LOG.info("Failed to register with JMX", e);
+                        jmxLocakPeerbean = null;
+                    }
+                }
+            }
+        }catch (Exception e){
+            LOG.info("Failed to register with JMX", e);
+            jmxQuorumBean = null;
+        }
+
+        try{
+            // main loop
+            while(running){
+                switch (getPeerState()){
+                    case LOOKING:{
+                        LOG.info("LOOKING");
+                        if(Boolean.getBoolean("readonlymode.enabled")){
+
+                        }
+                    }
+                    case OBSERVING:{
+                        try{
+                            LOG.info("Observing");
+                            setObserver(makeObserver(logFactory));
+                            observer.observerLeader();
+                        }catch (Exception e){
+                            LOG.info("Unexpected exception");
+                        }finally {
+                            observer.shutdown();
+                            setObserver(null);
+                            setPeerState(ServerState.LOOKING);
+                        }
+                    }
+                    case FOLLOWING:{
+                        try{
+                            LOG.info("FOLLOWING");
+                            setFollower(makeFollower(logFactory));
+                            follower.followLeader();
+                        }catch (Exception e){
+                            LOG.info("Unexpected exception");
+                        }finally {
+                            follower.shutdown();
+                            setFollower(null);
+                            setPeerState(ServerState.LOOKING);
+                        }
+                        break;
+                    }
+                    case LEADING:{
+                        LOG.info("LEADING");
+                        try{
+                            setLeader(makeLeader(logFactory));
+                            leader.lead();
+                            setLeader(null);
+                        }catch (Exception e){
+                            LOG.info("Unexpected exception", e);
+                        }finally {
+                            if(leader != null){
+                                leader.shutdown("Forcing shutdown");
+                                setLeader(null);
+                            }
+                            setPeerState(ServerState.LOOKING);
+                        }
+                        break;
+                    }
+                }
+            }
+        }finally {
+            LOG.info("QuorumPeer main thread exited");
+            try{
+                MBeanRegistry.getInstance().unregisterAll();
+            }catch (Exception e){
+                LOG.warn("Failed to unregister with JMX", e);
+            }
+            jmxQuorumBean = null;
+            jmxLocakPeerbean = null;
+        }
     }
 
     public void shutdown(){
+        running = false;
+        if(leader != null) leader.shutdown("quorum Peer shutdown");
+        if(follower != null) follower.shutdown();
+        cnxnFactory.shutdown();
+        if(udpSocket != null) udpSocket.close();
 
+        if(getElectionAlg() != null){
+            this.interrupt();
+            getElectionAlg().shutdown();
+        }
+        try{
+            zkDb.close();
+        }
+        catch (Exception e){
+            LOG.info("Error closing logs", e);
+        }
     }
 
     public Map<Long, QuorumPeer.QuorumServer> getView(){
@@ -529,6 +644,15 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider{
             return -1;
         }
         return fac.getMaxClientCnxnsPerHost();
+    }
+
+    // minimum session timeout in milliseconds
+    public int getMinSessionTimeout(){
+        return minSessionTimeout == -1 ? tickTime * 2 : minSessionTimeout;
+    }
+
+    public void setMinSessionTimeout(int min){
+        this.minSessionTimeout = min;
     }
 
     public int getMaxSessionTimeout(){

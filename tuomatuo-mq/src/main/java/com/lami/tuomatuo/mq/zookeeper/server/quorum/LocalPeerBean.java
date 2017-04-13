@@ -5,88 +5,62 @@ package com.lami.tuomatuo.mq.zookeeper.server.quorum;
  * Created by xujiankang on 2017/3/19.
  */
 public class LocalPeerBean extends ServerBean implements LocalPeerMXBean{
-    @Override
-    public int getTickTime() {
-        return 0;
-    }
 
-    @Override
-    public int getMaxClientCnxnPerHost() {
-        return 0;
-    }
+    private final QuorumPeer peer;
 
-    @Override
-    public int getMinSessionTimeout() {
-        return 0;
-    }
-
-    @Override
-    public int getMaxSessionTimeout() {
-        return 0;
-    }
-
-    @Override
-    public int getInitLimit() {
-        return 0;
-    }
-
-    @Override
-    public int getSyncLimit() {
-        return 0;
-    }
-
-    @Override
-    public int getTick() {
-        return 0;
-    }
-
-    @Override
-    public String getState() {
-        return null;
-    }
-
-    @Override
-    public String getQuorumAddress() {
-        return null;
-    }
-
-    @Override
-    public int getElectionType() {
-        return 0;
-    }
-
-    @Override
-    public String getElectionAddress() {
-        return null;
-    }
-
-    @Override
-    public String getClientAddress() {
-        return null;
-    }
-
-    @Override
-    public String getLearnerType() {
-        return null;
-    }
-
-    @Override
-    public long getConfigVersion() {
-        return 0;
-    }
-
-    @Override
-    public String getQuorumSystemInfo() {
-        return null;
-    }
-
-    @Override
-    public boolean isPartOfEnsemble() {
-        return false;
+    public LocalPeerBean(QuorumPeer peer) {
+        this.peer = peer;
     }
 
     @Override
     public String getName() {
-        return null;
+        return "replica." + peer.getId();
     }
+
+    @Override
+    public boolean isHidden() {
+        return false;
+    }
+
+    @Override
+    public int getTickTime() {
+        return peer.getTickTime();
+    }
+
+    @Override
+    public int getMaxClientCnxnPerHost() {
+        return peer.getMaxClientCnxnPerHost();
+    }
+
+    @Override
+    public int getMinSessionTimeout() {
+        return peer.getMinSessionTimeout();
+    }
+
+    @Override
+    public int getMaxSessionTimeout() {
+        return peer.getMaxSessionTimeout();
+    }
+
+    @Override
+    public int getInitLimit() {
+        return peer.getInitLimit();
+    }
+
+    public int getTick(){
+        return peer.getTick();
+    }
+
+    public String getState(){
+        return peer.getState().toString();
+    }
+
+    public String getQuorumAddress(){
+        return peer.getQuorumAddress().toString();
+    }
+
+    public int getElectionType(){
+        return peer.getElectionType();
+    }
+
 }
