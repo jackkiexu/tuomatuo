@@ -112,7 +112,7 @@ public class QuorumCnxManager {
         LOG.info("Opening channel to server " + sid);
 
         Socket sock = new Socket();
-        setSocketOpts(sock);
+        setSockOpts(sock);
         sock.connect(self.getVotingView().get(sid).electionAddr, cnxT0);
         initiateConnection(sock, sid);
     }
@@ -214,7 +214,7 @@ public class QuorumCnxManager {
             // Now we start a new connection
             LOG.info("Create new connection to server : " + sid);
             closeSocket(sock);
-            connecOne(sid);
+            connectOne(sid);
             // Otherwise start worker threads to receive data
         }
         else{
