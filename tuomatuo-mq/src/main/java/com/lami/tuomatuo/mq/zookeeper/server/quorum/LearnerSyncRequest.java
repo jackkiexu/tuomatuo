@@ -11,15 +11,11 @@ import java.util.List;
  * Created by xujiankang on 2017/3/19.
  */
 public class LearnerSyncRequest extends Request {
-    /**
-     * @param cnxn
-     * @param sessionId
-     * @param xid
-     * @param type
-     * @param bb
-     * @param authInfo
-     */
-    public LearnerSyncRequest(ServerCnxn cnxn, long sessionId, int xid, int type, ByteBuffer bb, List<Id> authInfo) {
-        super(cnxn, sessionId, xid, type, bb, authInfo);
+
+    public LearnerHandler fh;
+
+    public LearnerSyncRequest(LearnerHandler fh, long sessionId, int xid, int type, ByteBuffer bb, List<Id> authInfo) {
+        super(null, sessionId, xid, type, bb, authInfo);
+        this.fh = fh;
     }
 }

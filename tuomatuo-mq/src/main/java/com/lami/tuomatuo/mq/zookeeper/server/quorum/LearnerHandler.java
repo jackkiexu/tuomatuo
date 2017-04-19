@@ -351,7 +351,7 @@ public class LearnerHandler extends Thread {
                     traceMask = ZooTrace.SERVER_PING_TRACE_MASK;
                 }
 
-                ZooTrace.logQuorumPacket(LOG, traceMask, "i", qp);
+                ZooTrace.logQuorumPacket(LOG, traceMask, 'i', qp);
                 tickOfNextAckDeadline = leader.self.tick + leader.self.syncLimit;
 
                 ByteBuffer bb;
