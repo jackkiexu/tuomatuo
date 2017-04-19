@@ -58,7 +58,7 @@ public class Leader {
 
     private boolean quorumFormed = false;
 
-    public LearnerCnxnAcceptor cnxnAcceptor;
+    public LearnerCnxAcceptor cnxnAcceptor;
     // list of all the followers
     private final HashSet<LearnerHandler> learners = new HashSet<>();
 
@@ -148,10 +148,16 @@ public class Leader {
         this.self = self;
         try{
             if(self.getQuorumListenOnAllIPs()){
-
+                ss = new ServerSocket(self.getQuorumAddress().getPort());
+            }else{
+                ss = new ServerSocket();
             }
-        }catch (BindException e){
-            if(self.getQuorumListOnAllIPs()){
+            ss.setReuseAddress(true);
+            if(!self.getQuorumListenOnAllIPs()){
+                ss.bind(self.getQuorumAddress());
+            }
+        }catch (Exception e){
+            if(self.getQuorumListenOnAllIPs()){
                 LOG.info("Couldn't bind to port " + self.getQuorumAddress().getPort(), e);
             }else{
                 LOG.info("Couldn't bind to " + self.getQuorumAddress(), e);
@@ -304,7 +310,7 @@ public class Leader {
             leaderStateSummary = new StateSummary(self.getCurrentEpoch(), zk.getLastProcessedZxid());
 
             // Start thread that waits for connection request request from new followers
-            cnxnAcceptor = new LearnerCnxnAcceptor();
+            cnxnAcceptor = new LearnerCnxAcceptor();
             cnxnAcceptor.start();
 
             readyToStart = true;
@@ -486,7 +492,7 @@ public class Leader {
             inform(p);
             zk.commitProcessor.commit(p.request);
             if(pendingSyncs.containsKey(zxid)){
-                for(LearnerSyncRequest r ; pendingSyncs.remove(zxid)){
+                for(LearnerSyncRequest r : pendingSyncs.remove(zxid)){
                     sendSync(r);
                 }
             }

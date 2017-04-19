@@ -11,6 +11,7 @@ import com.lami.tuomatuo.mq.zookeeper.server.persistence.FileTxnSnapLog;
 import com.lami.tuomatuo.mq.zookeeper.server.quorum.flexible.QuorumMaj;
 import com.lami.tuomatuo.mq.zookeeper.server.quorum.flexible.QuorumVerifier;
 import com.lami.tuomatuo.mq.zookeeper.server.util.ZxidUtils;
+import org.apache.zookeeper.server.quorum.AuthFastLeaderElection;
 import org.apache.zookeeper.server.quorum.FastLeaderElection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,7 +136,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider{
     // The server that make up the cluster
     protected Map<Long, QuorumServer> quorumPeers;
     public int getQuorumSize(){
-        return getVotingView().size;
+        return getVotingView().size();
     }
 
     // QuorumVerifier implementation
@@ -381,7 +382,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider{
     @Override
     public synchronized void start() {
         loadDataBase();
-        cnxnFactory.start;
+        cnxnFactory.start();
         startLeaderElection();
         super.start();
     }
