@@ -15,6 +15,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 /**
@@ -27,6 +28,8 @@ import java.util.Map;
 public class Learner {
 
     public static final Logger LOG= LoggerFactory.getLogger(Learner.class);
+
+    static final public boolean nodelay = System.getProperty("follower.nodelay", "true").equals("true");
 
     static {
         LOG.info("TCP NoDelay set to :" + nodelay);
@@ -49,6 +52,10 @@ public class Learner {
 
     public InputArchive leaderIs;
     public OutputArchive leaderOs;
+
+    /** thr protocol version of the leader */
+    protected int leaderProtocolVersion = 0x01;
+
 
     // the protocol version of the leader
     public final ConcurrentHashMap<Long, ServerCnxn> pendingRevalidations = new ConcurrentHashMap<>();
@@ -127,6 +134,7 @@ public class Learner {
                 break;
             }
         }
+
         return addr;
     }
 
@@ -186,10 +194,10 @@ public class Learner {
             leaderProtocolVersion = ByteBuffer.wrap(qp.getData()).getInt();
             byte epochBytes[] = new byte[4];
             final ByteBuffer wrappedEpochBytes = ByteBuffer.wrap(epochBytes);
-            if(newEpoch > self.getAccept){
+            if(newEpoch > self.getAcceptedEpoch()){
                 wrappedEpochBytes.putInt((int)self.getCurrentEpoch());
                 self.setAcceptedEpoch(newEpoch);
-            }else if(newEpoch == self.getAcceptdEpoch()){
+            }else if(newEpoch == self.getAcceptedEpoch()){
                 /**
                  * Since we have already acked an epoch equal to the leaders, we cannot ack
                  * again, but we still need to send our lastZxid to the leader so that we can
@@ -220,7 +228,111 @@ public class Learner {
 
     // Finally, synchronize our history with the Leader
     public void syncWithLeader(long newLeaderZxid) throws Exception{
+        QuorumPacket ack = new QuorumPacket(Leader.ACK, 0, null, null);
+        QuorumPacket qp = new QuorumPacket();
+        long newEpoch = ZxidUtils.getEpochFromZxid(newLeaderZxid);
 
+        readPacket(qp);
+        LinkedList<Long> packetsCommitted = new LinkedList<>();
+        LinkedList<PacketInFlight> packetsNotCommitted = new LinkedList<>();
+        synchronized (zk){
+            if(qp.getType() == Leader.DIFF){
+                LOG.info("Getting a diff from the leader 0x" + Long.toHexString(qp.getZxid()));
+            }
+            else if(qp.getType() == Leader.SNAP){
+                LOG.info("Getting a snapshot from leader");
+                // The leader is going to dump the database
+                // clear our own database and read
+                zk.getZKDatabase().clear();
+                zk.getZKDatabase().deserializeSnapshot(leaderIs);                       // 从数据流中解析出数据
+                String signature = leaderIs.readString("signature");
+                if(!signature.equals("BeanWasHere")){
+                    LOG.info("Missing signature. Got " + signature);
+                    throw new IOException("Missing signature");
+                }
+            }
+            else if(qp.getType() == Leader.TRUNC){
+                // we need to truncate the log to the lastzxid of the leader
+                LOG.info("Truncating log to get in sync with the leader 0x " + Long.toHexString(qp.getZxid()));
+                boolean truncated = zk.getZKDatabase().truncateLog(qp.getZxid());
+                if(!truncated){
+                    // not able to truncate the log
+                    LOG.info("Not able to truncate the log" + Long.toHexString(qp.getZxid()));
+                    System.exit(13);
+                }
+            }
+            else {
+                LOG.info("Got unexpected packet from leader " + qp.getType() + " exiting ...");
+                System.exit(13);
+            }
+
+            zk.getZKDatabase().setlastProcessedZxid(qp.getZxid());
+            zk.createSessionTracker();
+
+            long lastQueued = 0;
+
+            /**
+             * in V1.0 we take a snapshot when we get the NEWLEADer message, but in pre V1.0
+             * we take snapshot at the UPDATE, since V1.0 also gets the UPDATE (after the NEWLEADER)
+             * we need to make sure that we don't take snapshot twice
+             */
+            boolean snapshotTaken = false;
+            // we are now going to start getting transactions to apply followed by an UPTODATE
+            outerLoop:
+            while(self.isRunning()){
+
+            }
+
+            ack.setZxid(ZxidUtils.makeZxid(newEpoch, 0));
+            writePacket(ack, true);
+            sock.setSoTimeout(self.tickTime * self.syncLimit);
+            zk.startup();
+            /**
+             * Update the election vote here to ensure that all members of the
+             * ensemble report the same vote to new servers that start up and
+             * send leader election notification to the ensemble
+             */
+            self.updateElectionVote(newEpoch);
+
+            // we need to log the stuff that came in between the snapshot and the uptodate
+            if(zk instanceof  FollowerZooKeeperServer){
+                FollowerZooKeeperServer fzk = (FollowerZooKeeperServer)zk;
+                for(PacketInFlight p : packetsNotCommitted){
+                    fzk.logRequest(p.hdr, p.rec);
+                }
+                for(Long zxid : packetsCommitted){
+                    fzk.commit(zxid);
+                }
+            }
+            else if(zk instanceof ObserverZooKeeperServer){
+                // Similar to follower, we need to log requests between the snapshot
+                // and UPTODATE
+                ObserverZooKeeperServer ozk = (ObserverZooKeeperServer)zk;
+                for(PacketInFlight p : packetsNotCommitted){
+                    Long zxid = packetsCommitted.peekFirst();
+                    if(p.hdr.getZxid() != zxid){
+                        /**
+                         * log warning message if there is no matching commit
+                         * old leader send oytstanding proposal to observer
+                         */
+                        LOG.info("Committing " + Long.toHexString(zxid)
+                                + ", but next proposal is"
+                                + Long.toHexString(p.hdr.getZxid()));
+                        continue;
+                    }
+                    packetsCommitted.remove();
+                    Request request = new Request(null, p.hdr.getClientId(),
+                            p.hdr.getCxid(), p.hdr.getType(), null, null);
+                    request.txn = p.rec;
+                    request.hdr = p.hdr;
+                    ozk.commitRequest(request);
+                }
+            }
+            else{
+                // NEW server type need to handle in-flight packets
+                throw new UnsupportedOperationException("Unknown server type");
+            }
+        }
     }
 
 
@@ -233,7 +345,9 @@ public class Learner {
         if(cnxn != null){
             zk.finishSessionInit(cnxn, valid);
         }
-
+        else{
+            zk.finishSessionInit(cnxn, valid);
+        }
 
     }
 

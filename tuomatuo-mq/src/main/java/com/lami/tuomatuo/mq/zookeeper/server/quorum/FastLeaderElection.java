@@ -22,9 +22,9 @@ import java.util.concurrent.TimeUnit;
  *
  * Created by xujiankang on 2017/3/19.
  */
-public class FastleaderElection implements Election {
+public class FastLeaderElection implements Election {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FastleaderElection.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FastLeaderElection.class);
 
     /**
      * Determine how much time a process has to wait
@@ -259,7 +259,7 @@ public class FastleaderElection implements Election {
         return logicalclock;
     }
 
-    public FastleaderElection(QuorumPeer self, QuorumCnxManager manager) {
+    public FastLeaderElection(QuorumPeer self, QuorumCnxManager manager) {
         this.stop = false;
         this.manager = manager;
         starter(self, manager);
@@ -587,8 +587,4 @@ public class FastleaderElection implements Election {
         return null;
     }
 
-    @Override
-    public void shutdown() {
-
-    }
 }

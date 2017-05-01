@@ -11,8 +11,6 @@ import com.lami.tuomatuo.mq.zookeeper.server.persistence.FileTxnSnapLog;
 import com.lami.tuomatuo.mq.zookeeper.server.quorum.flexible.QuorumMaj;
 import com.lami.tuomatuo.mq.zookeeper.server.quorum.flexible.QuorumVerifier;
 import com.lami.tuomatuo.mq.zookeeper.server.util.ZxidUtils;
-import org.apache.zookeeper.server.quorum.AuthFastLeaderElection;
-import org.apache.zookeeper.server.quorum.FastLeaderElection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -327,7 +325,6 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider{
 
     public int electionType;
 
-
     public Election electionAlg;
 
     public ServerCnxnFactory cnxnFactory;
@@ -426,6 +423,26 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider{
             if(epochOfZxid > currentEpoch){
                 throw new IOException("The current epoch, " + ZxidUtils.zxidToString(currentEpoch) + " is less than the accepted epoch, " + ZxidUtils.zxidToString(acceptedEpoch));
             }
+
+            try{
+                acceptedEpoch = readLongFromFile(ACCEPTED_EPOCH_FILENAME);
+
+            }catch (Exception e){
+                // pick a reasonable epoch number
+                // this should only happen once when moving to a
+                // new code version
+                acceptedEpoch = epochOfZxid;
+                LOG.info(ACCEPTED_EPOCH_FILENAME +
+                            " not found! Creating with a reasonable default of {}. This should only happen when you are upgrading your installation",
+                        acceptedEpoch);
+                writeLongToFile(ACCEPTED_EPOCH_FILENAME, acceptedEpoch);
+            }
+
+            if(acceptedEpoch < currentEpoch){
+                throw new IOException("The current epch," + ZxidUtils.zxidToString(currentEpoch) +
+                        " is less than the accepted epoch," + ZxidUtils.zxidToString(acceptedEpoch));
+            }
+
         }catch (Exception e){
             throw new RuntimeException("Unable to run quorum server", e);
         }
@@ -440,9 +457,11 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider{
 
     synchronized public void startLeaderElection(){
         try{
-
+            currentVote = new Vote(myid, getLastLoggedZxid(), getCurrentEpoch());
         }catch (Exception e){
-
+            RuntimeException re = new RuntimeException(e.getMessage());
+            re.setStackTrace(e.getStackTrace());
+            throw re;
         }
         for(QuorumServer p : getView().values()){
             if(p.id == myid){
@@ -466,6 +485,11 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider{
         }
     }
 
+    /**
+     * Count the number of nodes in the map that could be followers
+     * @param peers
+     * @return the number of follower in the map
+     */
     public static int countParticipants(Map<Long, QuorumServer> peers){
         int count = 0;
         for(QuorumServer q : peers.values()){
@@ -538,13 +562,13 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider{
         //TODO: use a factory rather than a switch
         switch (electionAlgorithm) {
             case 0:
-                le = new LeaderElection(this);
+//                le = new LeaderElection(this);
                 break;
             case 1:
-                le = new AuthFastLeaderElection(this);
+//                le = new AuthFastLeaderElection(this);
                 break;
             case 2:
-                le = new AuthFastLeaderElection(this, true);
+//                le = new AuthFastLeaderElection(this, true);
                 break;
             case 3:
                 qcm = new QuorumCnxManager(this);
@@ -565,7 +589,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider{
     public Election makeLEStrategy(){
         LOG.info("Initializing leader election protocol...");
         if(getElectionType() == 0){
-            electionAlg = new LeaderElection(this);
+//            electionAlg = new LeaderElection(this);
         }
         return electionAlg;
     }

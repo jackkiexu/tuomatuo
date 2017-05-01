@@ -32,7 +32,7 @@ public class LearnerHandler extends Thread {
 
     public Socket sock;
 
-    public Socket getSock() {
+    public Socket getSocket() {
         return sock;
     }
 

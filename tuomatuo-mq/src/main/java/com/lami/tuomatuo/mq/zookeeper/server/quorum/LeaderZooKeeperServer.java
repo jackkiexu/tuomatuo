@@ -4,6 +4,8 @@ import com.lami.tuomatuo.mq.zookeeper.server.ServerCnxn;
 import com.lami.tuomatuo.mq.zookeeper.server.ZKDatabase;
 import com.lami.tuomatuo.mq.zookeeper.server.persistence.FileTxnSnapLog;
 
+import java.io.IOException;
+
 /**
  * Just like the standard ZooKeeperServer. We just replace the request
  * processors: PrepRqequestProcessor -> ProposalRequestProcessor ->
@@ -16,9 +18,10 @@ public class LeaderZooKeeperServer extends QuorumZooKeeperServer {
 
     public CommitProcessor commitProcessor;
 
-    public LeaderZooKeeperServer(FileTxnSnapLog txnLogFactory, int tickTime,QuorumPeer self,
-                                 DataTreeBuilder treeBuilder, ZKDatabase zkDb) {
-        super(txnLogFactory, tickTime,self. minSessionTimeout,self. maxSessionTimeout, treeBuilder, zkDb, self);
+    LeaderZooKeeperServer(FileTxnSnapLog logFactory, QuorumPeer self,
+                          DataTreeBuilder treeBuilder, ZKDatabase zkDb) throws IOException {
+        super(logFactory, self.tickTime, self.minSessionTimeout,
+                self.maxSessionTimeout, treeBuilder, zkDb, self);
     }
 
     public Leader getLeader(){
