@@ -29,7 +29,7 @@ public abstract class QuorumZooKeeperServer extends ZooKeeperServer {
         pwriter.print("initLimit=");
         pwriter.print(self.getInitLimit());
         pwriter.print("syncLimit=");
-        pwriter.print(self.getSynclimit());
+        pwriter.print(self.getSyncLimit());
         pwriter.print("electionAlg=");
         pwriter.print(self.getElectionType());
         pwriter.print("electionPort=");

@@ -43,7 +43,7 @@ public interface SessionTracker {
 
     void removeSession(long sessionId);
 
-    void checkSession(long sessionId, Object owner) throws KeeperException.SessionExpiredException;
+    void checkSession(long sessionId, Object owner) throws KeeperException.SessionExpiredException,  KeeperException.SessionMovedException;
 
     void setOwner(long id, Object owner) throws KeeperException.SessionExpiredException;
 
@@ -59,8 +59,6 @@ public interface SessionTracker {
      * @param to sessionTimeout
      * @return whether the session was newly added (if false, already existed)
      */
-    boolean addGlobalSession(long id, int to);
-
 
 
 

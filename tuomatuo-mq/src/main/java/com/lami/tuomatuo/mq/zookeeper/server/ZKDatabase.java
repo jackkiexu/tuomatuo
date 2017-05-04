@@ -1,5 +1,6 @@
 package com.lami.tuomatuo.mq.zookeeper.server;
 
+import com.lami.tuomatuo.mq.zookeeper.KeeperException;
 import com.lami.tuomatuo.mq.zookeeper.Watcher;
 import com.lami.tuomatuo.mq.zookeeper.server.persistence.FileTxnSnapLog;
 import com.lami.tuomatuo.mq.zookeeper.server.quorum.Leader;
@@ -325,6 +326,42 @@ public class ZKDatabase {
      */
     public byte[] getData(String path, Stat stat, Watcher watcher) throws Exception{
         return dataTree.getData(path, stat, watcher);
+    }
+
+    /**
+     * Sets watches on the datatree
+     * @param relativeZxid the relative zxid that client has seen
+     * @param dataWatches the data watches the client wants to reset
+     * @param existWatches the exists watches the client wants to reset
+     * @param childWatches the child watches the client wants to reset
+     * @param watcher the watcher function
+     */
+    public void setWatches(long relativeZxid, List<String> dataWatches,
+                           List<String> existWatches, List<String> childWatches, Watcher watcher) {
+        dataTree.setWatches(relativeZxid, dataWatches, existWatches, childWatches, watcher);
+    }
+
+    /**
+     * get acl for a path
+     * @param path the path to query for acl
+     * @param stat the stat for the node
+     * @return the acl list for this path
+     * @throws KeeperException.NoNodeException
+     */
+    public List<ACL> getACL(String path, Stat stat) throws KeeperException.NoNodeException{
+        return dataTree.getACL(path, stat);
+    }
+
+    /**
+     * Get the children list for this path
+     * @param path the path of the node
+     * @param stat the stat of the node
+     * @param watcher the watcher function for this path
+     * @return the list of children for this path
+     * @throws KeeperException.NoNodeException
+     */
+    public List<String> getChildren(String path, Stat stat, Watcher watcher) throws KeeperException.NoNodeException{
+        return dataTree.getChildren(path, stat, watcher);
     }
 
     /**

@@ -9,6 +9,7 @@ import com.lami.tuomatuo.mq.zookeeper.server.auth.ProviderRegistry;
 import com.lami.tuomatuo.mq.zookeeper.server.persistence.FileTxnSnapLog;
 import com.lami.tuomatuo.mq.zookeeper.server.quorum.ReadOnlyZooKeeperServer;
 import org.apache.jute.BinaryInputArchive;
+import org.apache.jute.BinaryOutputArchive;
 import org.apache.jute.Record;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Id;
@@ -19,10 +20,7 @@ import org.apache.zookeeper.txn.TxnHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -244,7 +242,7 @@ public class ZooKeeperServer implements SessionTracker.SessionExpirer, ServerSta
         LOG.info("Closing session 0X:" + Long.toHexString(sessionId));
         // we do not want to wait for a session close, send it as soon as we
         // detect it
-        clone(sessionId);
+        close(sessionId);
     }
 
     public void killSession(long sessionId, long zxid){
@@ -491,20 +489,40 @@ public class ZooKeeperServer implements SessionTracker.SessionExpirer, ServerSta
 
         try{
             ConnectResponse rsp = new ConnectResponse(0, valid? cnxn.getSessionTimeout(): 0, valid?cnxn.getSessionId():0, valid?generatePasswd(cnxn.getSessionId()) : new byte[16]);
-            ByteArrayOutputStream
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            BinaryOutputArchive bos = BinaryOutputArchive.getArchive(baos);
+            bos.writeInt(-1, "len");
+            rsp.serialize(bos, "connect");
+            if(!cnxn.isOldClient){
+                bos.writeBool(this instanceof ReadOnlyZooKeeperServer, "readOnly");
+            }
+            baos.close();
+            ByteBuffer bb = ByteBuffer.wrap(baos.toByteArray());
+            bb.putInt(bb.remaining() - 4).rewind();
+            cnxn.sendBuffer(bb);
+
+            if(!valid){
+                LOG.info("Invalid session 0x"
+                        + Long.toHexString(cnxn.getSessionId())
+                        + " for client"
+                        + cnxn.getRemoteSocketAddress()
+                        + ", probably expired"
+                );
+                cnxn.sendBuffer(ServerCnxnFactory.closeConn);
+            }else{
+                LOG.info(" Established session 0x"
+                        + Long.toHexString(cnxn.getSessionId())
+                        + " with negotiated timeout " + cnxn.getSessionTimeout()
+                        + " for client"
+                        + cnxn.getRemoteSocketAddress()
+                );
+                cnxn.enableRecv();
+            }
         }catch (Exception e){
             LOG.info("Exception while establishing session, closing", e);
             cnxn.close();
         }
     }
-
-
-
-
-
-
-
-
 
 
     @Override
@@ -517,21 +535,11 @@ public class ZooKeeperServer implements SessionTracker.SessionExpirer, ServerSta
         return 0;
     }
 
-    @Override
-    public long getServerId() {
-        return 0;
-    }
+
 
     public enum State {
         INITIAL, RUNNING, SHUTDOWN, ERROR;
     }
-
-
-
-
-
-
-
 
     /**
      * get the zookeeper database for this server
@@ -540,10 +548,35 @@ public class ZooKeeperServer implements SessionTracker.SessionExpirer, ServerSta
         return this.zkDb;
     }
 
+    public void closeSession(ServerCnxn cnxn, RequestHeader requestHeader) {
+        closeSession(cnxn.getSessionId());
+    }
+
+    public long getServerId() {
+        return 0;
+    }
+
+    public void submitRequest(ServerCnxn cnxn, long sessionId, int type, int xid, ByteBuffer bb, List<Id> authInfo){
+        Request si = new Request(cnxn, sessionId, xid, type, bb, authInfo);
+        submitRequest(si);
+    }
 
 
     public void submitRequest(Request si){
-
+        if(firstProcessor == null){
+            synchronized (this){
+                try{
+                    while(!running){
+                        wait(1000);
+                    }
+                }catch (Exception e){
+                    LOG.info("Unexpected interruption", e);
+                }
+                if(firstProcessor == null){
+                    throw new RuntimeException("Not started");
+                }
+            }
+        }
     }
 
     public static int getSnapCount(){
@@ -555,6 +588,7 @@ public class ZooKeeperServer implements SessionTracker.SessionExpirer, ServerSta
                 LOG.info("SnapCount should be 2 or more. Now snapCount is reset to 2");
                 snapCount = 2;
             }
+            return snapCount;
         }catch (Exception e){
             return 100000;
         }

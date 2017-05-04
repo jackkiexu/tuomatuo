@@ -42,12 +42,6 @@ public class SerializeUtils {
             case ZooDefs.OpCode.create2:
                 txn = new CreateTxn();
                 break;
-            case ZooDefs.OpCode.createTTL:
-                txn = new CreateTTLTxn();
-                break;
-            case ZooDefs.OpCode.createContainer:
-                txn = new CreateContainerTxn();
-                break;
             case ZooDefs.OpCode.delete:
             case ZooDefs.OpCode.deleteContainer:
                 txn = new DeleteTxn();

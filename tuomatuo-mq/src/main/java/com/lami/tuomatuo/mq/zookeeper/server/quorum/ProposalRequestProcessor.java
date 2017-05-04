@@ -25,7 +25,7 @@ public class ProposalRequestProcessor implements RequestProcessor {
     public ProposalRequestProcessor(LeaderZooKeeperServer zks, RequestProcessor nextProcessor) {
         this.zks = zks;
         this.nextProcessor = nextProcessor;
-        AckRequestProcessor ackRequestProcessor = new AckRequestProcessor(zks.getLeader);
+        AckRequestProcessor ackRequestProcessor = new AckRequestProcessor(zks.getLeader());
         syncProcessor = new SyncRequestProcessor(zks, ackRequestProcessor);
     }
 
@@ -47,7 +47,7 @@ public class ProposalRequestProcessor implements RequestProcessor {
                 try{
                     zks.getLeader().propose(request);
                 }catch (Exception e){
-                    throw e;
+                    throw new RequestProcessorException(e.getMessage(), e);
                 }
 
                 syncProcessor.processRequest(request);

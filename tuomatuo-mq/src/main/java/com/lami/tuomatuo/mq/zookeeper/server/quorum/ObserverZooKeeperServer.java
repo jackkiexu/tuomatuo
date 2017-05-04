@@ -42,6 +42,9 @@ public class ObserverZooKeeperServer extends LearnerZooKeeperServer {
         return self.observer;
     }
 
+    public Observer getObserver(){
+        return self.observer;
+    }
 
     /**
      *

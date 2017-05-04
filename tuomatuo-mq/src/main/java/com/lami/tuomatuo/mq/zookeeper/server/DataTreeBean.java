@@ -9,33 +9,43 @@ import com.lami.tuomatuo.mq.zookeeper.jmx.ZKMBeanInfo;
  */
 public class DataTreeBean  implements DataTreeMXBean, ZKMBeanInfo{
 
-    @Override
-    public int getNodeCount() {
-        return 0;
+    public DataTree dataTree;
+
+    public DataTreeBean(DataTree dataTree) {
+        this.dataTree = dataTree;
     }
 
     @Override
-    public String getLastZxid() {
-        return null;
+    public int getNodeCount() {
+        return dataTree.getNodeCount();
     }
 
     @Override
     public long approximateDataSize() {
-        return 0;
+        return dataTree.approximateDataSize();
     }
 
     @Override
     public int countEphemerals() {
-        return 0;
+        return dataTree.getEphemeralsCount();
+    }
+
+    public int getWatchCount(){
+        return dataTree.getWatchCount();
     }
 
     @Override
     public String getName() {
-        return null;
+        return "InMemoryDataTree";
     }
 
     @Override
     public boolean isHidden() {
         return false;
+    }
+
+    @Override
+    public String getLastZxid() {
+        return "0x" + Long.toHexString(dataTree.lastProcessedZxid);
     }
 }

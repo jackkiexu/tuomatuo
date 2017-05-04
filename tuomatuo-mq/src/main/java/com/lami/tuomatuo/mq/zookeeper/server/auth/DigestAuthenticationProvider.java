@@ -18,8 +18,8 @@
 
 package com.lami.tuomatuo.mq.zookeeper.server.auth;
 
+import com.lami.tuomatuo.mq.zookeeper.KeeperException;
 import com.lami.tuomatuo.mq.zookeeper.server.ServerCnxn;
-import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Id;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

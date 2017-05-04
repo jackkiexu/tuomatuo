@@ -286,7 +286,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                     List<String> children = zks.getZkDatabase().getChildren(
                     getChildrenRequest.getPath(), null, getChildrenRequest.getWatch()?cnxn:null
                     );
-                    rsp = new GetChildrenRequest(children);
+                    rsp = new GetChildrenResponse(children);
                 }
                 case ZooDefs.OpCode.getChildren2:{
                     lastOp = "GETC";
@@ -301,7 +301,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                     synchronized (n){
                         aclG = n.acl;
                     }
-                    org.apache.zookeeper.server.PrepRequestProcessor.checkACL(zks, zks.getZKDatabase().convertLong(aclG),
+                    PrepRequestProcessor.checkACL(zks, zks.getZKDatabase().convertLong(aclG),
                             ZooDefs.Perms.READ,
                             request.authInfo
                             );

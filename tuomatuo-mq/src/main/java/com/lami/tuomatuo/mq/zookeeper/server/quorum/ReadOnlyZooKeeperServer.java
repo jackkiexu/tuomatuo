@@ -16,6 +16,8 @@ import com.lami.tuomatuo.mq.zookeeper.server.persistence.FileTxnSnapLog;
  */
 public class ReadOnlyZooKeeperServer extends ZooKeeperServer {
 
+    protected QuorumPeer self;
+
     private volatile boolean shutdown = false;
 
     public ReadOnlyZooKeeperServer(FileTxnSnapLog txnLogFactory, QuorumPeer self, DataTreeBuilder treeBuilder, ZKDatabase zkDb) {
@@ -57,7 +59,7 @@ public class ReadOnlyZooKeeperServer extends ZooKeeperServer {
 
     @Override
     public long getServerId() {
-        return self.getid();
+        return self.getId();
     }
 
 

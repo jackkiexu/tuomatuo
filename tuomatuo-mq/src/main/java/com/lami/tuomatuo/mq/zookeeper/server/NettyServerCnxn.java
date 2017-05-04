@@ -15,6 +15,7 @@ import java.security.cert.Certificate;
  * Created by xujiankang on 2017/3/19.
  */
 public class NettyServerCnxn extends ServerCnxn {
+
     @Override
     int getSessionTimeout() {
         return 0;
@@ -36,7 +37,7 @@ public class NettyServerCnxn extends ServerCnxn {
     }
 
     @Override
-    public void process(WatchedEvent event) {
+    public void process(com.lami.tuomatuo.mq.zookeeper.WatchedEvent event) {
 
     }
 
@@ -71,7 +72,7 @@ public class NettyServerCnxn extends ServerCnxn {
     }
 
     @Override
-    protected ServerStats serverStats() {
+    protected com.lami.tuomatuo.mq.zookeeper.server.ServerStats serverStats() {
         return null;
     }
 

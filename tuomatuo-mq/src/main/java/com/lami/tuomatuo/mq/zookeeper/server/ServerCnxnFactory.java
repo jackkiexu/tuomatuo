@@ -1,6 +1,7 @@
 package com.lami.tuomatuo.mq.zookeeper.server;
 
 import com.lami.tuomatuo.mq.zookeeper.Login;
+import com.lami.tuomatuo.mq.zookeeper.jmx.MBeanRegistry;
 import org.apache.zookeeper.server.auth.SaslServerCallbackHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,4 +105,22 @@ public abstract class ServerCnxnFactory {
 
     protected final HashSet<ServerCnxn> cnxns = new HashSet<>();
 
+    public void unregisterConnection(ServerCnxn serverCnxn){
+        ConnectionBean jmxConnectionbean = connectionBeans.remove(serverCnxn);
+        if(jmxConnectionbean != null){
+            MBeanRegistry.getInstance().unregister(jmxConnectionbean);
+        }
+    }
+
+    public void registerConnection(ServerCnxn serverCnxn){
+        if(zkServer != null){
+            ConnectionBean jmxConnectionBean = new ConnectionBean(serverCnxn, zkServer);
+            try{
+                MBeanRegistry.getInstance().register(jmxConnectionBean, zkServer.jmxServerBean);
+                connectionBeans.put(serverCnxn, jmxConnectionBean);
+            }catch (Exception e){
+                LOG.info("Could not register connection", e);
+            }
+        }
+    }
 }

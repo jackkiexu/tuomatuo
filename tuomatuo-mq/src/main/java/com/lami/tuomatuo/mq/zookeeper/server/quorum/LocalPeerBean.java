@@ -47,6 +47,11 @@ public class LocalPeerBean extends ServerBean implements LocalPeerMXBean{
         return peer.getInitLimit();
     }
 
+    @Override
+    public int getSyncLimit() {
+        return peer.getSyncLimit();
+    }
+
     public int getTick(){
         return peer.getTick();
     }

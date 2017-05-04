@@ -52,9 +52,9 @@ public class ZooKeeper {
         return cnxn.zooKeeperSaslClient;
     }
 
-    private final ZKWatchManager watchManager;
+    private  ZKWatchManager watchManager;
 
-    private final ZKClientConfig clientConfig;
+    private ZKClientConfig clientConfig;
 
     public ZKClientConfig getClientConfig() {
         return clientConfig;
@@ -112,7 +112,7 @@ public class ZooKeeper {
 
         public Map<Watcher.Event.EventType, Set<Watcher>> removeWatcher(String clientPath,
                                                                         Watcher watcher, Watcher.WatcherType watcherType, boolean local, int rc)
-        throws KeeperException{
+        throws Exception{
             // Validate the provided znode path contains the given watcher of
             // watcherType
             containsWatcher(clientPath, watcher, watcherType);
