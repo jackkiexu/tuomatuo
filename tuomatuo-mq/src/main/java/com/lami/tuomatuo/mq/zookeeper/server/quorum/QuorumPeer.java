@@ -131,8 +131,13 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider{
                     + " not in QuorumPeers. ");
         }
     }
+
+
     // The server that make up the cluster
     protected Map<Long, QuorumServer> quorumPeers;
+
+
+
     public int getQuorumSize(){
         return getVotingView().size();
     }

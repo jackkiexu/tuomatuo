@@ -1,35 +1,154 @@
 package com.lami.tuomatuo.mq.zookeeper;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.nio.ByteBuffer;
+import java.util.LinkedList;
+import java.util.List;
+
+import com.lami.tuomatuo.mq.zookeeper.server.ByteBufferInputStream;
+import org.apache.jute.BinaryInputArchive;
+import org.apache.zookeeper.proto.ConnectResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A ClientCnxnSocket does the lower level communication with a socket
- * implementation
+ * implementation.
  *
- * This code has been moved out of ClientCnxn so that a Netty implementation can be provided as an alternative to the NIO socket code
+ * This code has been moved out of ClientCnxn so that a Netty implementation can
+ * be provided as an alternative to the NIO socket code.
  *
- * Created by xujiankang on 2017/3/19.
  */
-public abstract class ClientCnxnSocket {
+abstract class ClientCnxnSocket {
+    private static final Logger LOG = LoggerFactory.getLogger(ClientCnxnSocket.class);
 
+    protected boolean initialized;
 
+    /**
+     * This buffer is only used to read the length of the incoming message.
+     */
+    protected final ByteBuffer lenBuffer = ByteBuffer.allocateDirect(4);
+
+    /**
+     * After the length is read, a new incomingBuffer is allocated in
+     * readLength() to receive the full message.
+     */
+    protected ByteBuffer incomingBuffer = lenBuffer;
     protected long sentCount = 0;
     protected long recvCount = 0;
+    protected long lastHeard;
+    protected long lastSend;
+    protected long now;
+    protected ClientCnxn.SendThread sendThread;
 
+    /**
+     * The sessionId is only available here for Log and Exception messages.
+     * Otherwise the socket doesn't need to know it.
+     */
+    protected long sessionId;
 
-    long getSent(){
+    void introduce(ClientCnxn.SendThread sendThread, long sessionId) {
+        this.sendThread = sendThread;
+        this.sessionId = sessionId;
+    }
+
+    void updateNow() {
+        now = System.currentTimeMillis();
+    }
+
+    int getIdleRecv() {
+        return (int) (now - lastHeard);
+    }
+
+    int getIdleSend() {
+        return (int) (now - lastSend);
+    }
+
+    long getSentCount() {
         return sentCount;
     }
 
-    long getRecvCount(){
+    long getRecvCount() {
         return recvCount;
     }
 
-    long getSentCount(){
-        return sentCount;
+    void updateLastHeard() {
+        this.lastHeard = now;
     }
+
+    void updateLastSend() {
+        this.lastSend = now;
+    }
+
+    void updateLastSendAndHeard() {
+        this.lastSend = now;
+        this.lastHeard = now;
+    }
+
+    protected void readLength() throws IOException {
+        int len = incomingBuffer.getInt();
+        if (len < 0 || len >= ClientCnxn.packetLen) {
+            throw new IOException("Packet len" + len + " is out of range!");
+        }
+        incomingBuffer = ByteBuffer.allocate(len);
+    }
+
+    void readConnectResult() throws IOException {
+        if (LOG.isTraceEnabled()) {
+            StringBuilder buf = new StringBuilder("0x[");
+            for (byte b : incomingBuffer.array()) {
+                buf.append(Integer.toHexString(b) + ",");
+            }
+            buf.append("]");
+            LOG.trace("readConnectResult " + incomingBuffer.remaining() + " "
+                    + buf.toString());
+        }
+        ByteBufferInputStream bbis = new ByteBufferInputStream(incomingBuffer);
+        BinaryInputArchive bbia = BinaryInputArchive.getArchive(bbis);
+        ConnectResponse conRsp = new ConnectResponse();
+        conRsp.deserialize(bbia, "connect");
+
+        // read "is read-only" flag
+        boolean isRO = false;
+        try {
+            isRO = bbia.readBool("readOnly");
+        } catch (IOException e) {
+            // this is ok -- just a packet from an old server which
+            // doesn't contain readOnly field
+            LOG.warn("Connected to an old server; r-o mode will be unavailable");
+        }
+
+        this.sessionId = conRsp.getSessionId();
+        sendThread.onConnected(conRsp.getTimeOut(), this.sessionId, conRsp.getPasswd(), isRO);
+    }
+
+    abstract boolean isConnected();
+
+    abstract void connect(InetSocketAddress addr) throws IOException;
+
+    abstract SocketAddress getRemoteSocketAddress();
 
     abstract SocketAddress getLocalSocketAddress();
 
-    abstract SocketAddress getRemoteSocketAddress();
+    abstract void cleanup();
+
+    abstract void close();
+
+    abstract void wakeupCnxn();
+
+    abstract void enableWrite();
+
+    abstract void disableWrite();
+
+    abstract void enableReadWriteOnly();
+
+    abstract void doTransport(int waitTimeOut, List<ClientCnxn.Packet> pendingQueue,
+                              LinkedList<ClientCnxn.Packet> outgoingQueue, ClientCnxn cnxn)
+            throws IOException, InterruptedException;
+
+    abstract void testableCloseSocket() throws IOException;
+
+    abstract void sendPacket(ClientCnxn.Packet p) throws IOException;
 }

@@ -128,7 +128,7 @@ public class Learner {
         InetSocketAddress addr = null;
         // Find the leader by id
         Vote current = self.getCurrentVote();
-        for(QuorumPeer.QuorumServer s : self.getView.values()){
+        for(QuorumPeer.QuorumServer s : self.getView().values()){
             if(s.id == current.getId()){
                 addr = s.addr;
                 break;
@@ -206,7 +206,7 @@ public class Learner {
                  */
                 wrappedEpochBytes.putInt(-1);
             }else{
-                throw new Exception("Leaders epoch, " + newEpoch + " is less than accepted epoch " + self.getAcceptEpoch());
+                throw new Exception("Leaders epoch, " + newEpoch + " is less than accepted epoch " + self.getAcceptedEpoch());
             }
 
             QuorumPacket acknewEpoch = new QuorumPacket(Leader.ACKEPOCH, lastLoggedZxid, epochBytes, null);
