@@ -9,7 +9,7 @@ import org.junit.Test;
  * 2
  * Created by xjk on 2016/9/23.
  */
-public class AsyncConnectionTest extends com.lami.tuomatuo.mq.redis.AbstractCommandTest {
+public class AsyncConnectionTest extends AbstractCommandTest {
 
     private static final Logger logger = Logger.getLogger(AsyncConnectionTest.class);
 
