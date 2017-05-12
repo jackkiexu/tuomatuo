@@ -8,7 +8,7 @@ import org.junit.rules.ExpectedException;
 /**
  * Created by xjk on 2016/9/19.
  */
-public class ClientTest extends AbstractCommandTest{
+public class ClientTest extends com.lami.tuomatuo.mq.redis.AbstractCommandTest {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();

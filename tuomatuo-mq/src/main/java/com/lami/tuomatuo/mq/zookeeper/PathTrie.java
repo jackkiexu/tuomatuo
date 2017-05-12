@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.lami.tuomatuo.mq.zookeeper.common;
+package com.lami.tuomatuo.mq.zookeeper;
 
  import org.slf4j.Logger;
  import org.slf4j.LoggerFactory;
