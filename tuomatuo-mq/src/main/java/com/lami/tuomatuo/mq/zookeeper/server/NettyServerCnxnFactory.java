@@ -6,6 +6,7 @@ import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
+import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.concurrent.Executors;
 
 import static org.jboss.netty.buffer.ChannelBuffers.dynamicBuffer;
 
@@ -138,14 +140,64 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
                             + ChannelBuffers.hexDump(buf));
                 } else {
                     LOG.info("not throttled");
+                    if(cnxn.queuedBuffer != null){
+                        LOG.info(Long.toHexString(cnxn.sessionId) +
+                                " buf 0x"
+                                + ChannelBuffers.hexDump(buf));
+                    }
+                    cnxn.queuedBuffer.writeBytes(buf);
+                    cnxn.receiveMessage(cnxn.queuedBufer);
+                    if(!cnxn.queuedBuffer.readable()){
+                        LOG.debug("Processed queue - no bytes remaining");
+                        cnxn.queuedBuffer = null;
+                    } else {
+                        LOG.info("Processed queue - bytes remaining");
+                    }
 
+                }else{
+                    cnxn.receiveMessage(bug);
+                    if(buf.readable()){
+                        cnxn.queuedBuffer = dynamicBuffer(buf);
 
+                    }
                 }
             }
         }
 
     }
 
+    public CnxnChannelHandler channelHandler = new CnxnChannelHandler();
+
+    public NettyServerCnxnFactory() {
+        bootstrap = new ServerBootstrap(
+                new NioServerSocketChannelFactory(
+                        Executors.newCachedThreadPool(),
+                        Executors.newCachedThreadPool()
+                )
+        );
+        // parent channel
+        bootstrap.setOption("resuseAddress", true);
+        // child channels 关闭将小数据包合并成大数据包的算法
+        bootstrap.setOption("child.tcpNoDelay", true);
+        // set socket linger to off, so that the socket close does not block
+        bootstrap.setOption("child.soLinger", -1);
+
+        bootstrap.getPipeline().addLast("servercnxnfactory", channelHandler);
+
+    }
+
+    @Override
+    public void closeSession(long sessionId) {
+        LOG.info("closeSession sessionId : 0X " + sessionId);
+        NettyServerCnxn[] allCnxns = null;
+        synchronized (cnxns){
+            allCnxns = cnxns.toArray(new NettyServerCnxn[cnxns.size()]);
+        }
+
+        for(){
+
+        }
+    }
 
     @Override
     public int getLocalPort() {
@@ -157,10 +209,7 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
         return null;
     }
 
-    @Override
-    public void closeSession(long sessionId) {
 
-    }
 
     @Override
     public void configure(InetSocketAddress addr, int maxClientCnxns) throws IOException {
