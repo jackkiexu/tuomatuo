@@ -18,7 +18,7 @@ public class ZooKeeperSaslServer {
 
     public SaslServer saslServer;
 
-    public ZooKeeperSaslServer(SaslServer saslServer) {
+    public ZooKeeperSaslServer(final Login login) {
         this.saslServer = saslServer;
     }
 
