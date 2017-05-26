@@ -280,7 +280,6 @@ public class FileTxnSnapLog {
                                     + ((CreateSessionTxn) txn).getTimeOut());
                 }
                 // give dataTree a chance to sync its lastProcessedZxid
-                rc = dt.processTxn(hdr, txn);
                 break;
             case ZooDefs.OpCode.closeSession:
                 sessions.remove(hdr.getClientId());
@@ -289,10 +288,8 @@ public class FileTxnSnapLog {
                             "playLog --- close session in log: 0x"
                                     + Long.toHexString(hdr.getClientId()));
                 }
-                rc = dt.processTxn(hdr, txn);
                 break;
             default:
-                rc = dt.processTxn(hdr, txn);
         }
 
         /**
@@ -301,9 +298,6 @@ public class FileTxnSnapLog {
          * snapshot. Then when the snapshot is restored, NONODE/NODEEXISTS
          * errors could occur. It should be safe to ignore these.
          */
-        if (rc.err != KeeperException.Code.OK.intValue()) {
-
-        }
     }
 
     /**

@@ -669,7 +669,7 @@ public class ClientCnxn {
                         // determine whether we need to send an AuthFailed event
                         if(zooKeeperSaslClient != null){
                             boolean sendAuthEvent = false;
-                            if(zooKeeperSaslClient.getSaslState() == ZooKeeperSaslClient.SaslState.INTIAL){
+                            if(zooKeeperSaslClient.getSaslState() == null){
                                 try{
                                     zooKeeperSaslClient.initialize(ClientCnxn.this);
                                 }catch (Exception e){
@@ -687,9 +687,6 @@ public class ClientCnxn {
                                     state = ZooKeeper.States.AUTH_FAILED;
                                     sendAuthEvent = true;
                                 }else{
-                                    if(authState == KeeperState.SaslAuthenticated){
-                                        sendAuthEvent = true;
-                                    }
                                 }
                             }
 
@@ -760,7 +757,7 @@ public class ClientCnxn {
         private void pingRWServer() throws RWServerFoundException{
             String result = null;
             InetSocketAddress addr = hostProvider.next(0);
-            LOG.info("Checking server " + addr + " for being r/w " + " Timeout " + pingRWTineout);
+            LOG.info("Checking server " + addr + " for being r/w " + " Timeout " );
 
             Socket sock = null;
             BufferedReader br = null;
@@ -794,7 +791,6 @@ public class ClientCnxn {
             }
 
             if("rw".equals(result)){
-                pingTimeout = minPingRwTimeout;
                 // save the found address so that it's used during the next
                 // connection attempt
                 rwServerAddress = addr;
@@ -1309,7 +1305,7 @@ public class ClientCnxn {
             packet.clientPath = clientPath;
             packet.serverPath = serverPath;
             if(!state.isAlive() || closing){
-                conLossPacket(packet);
+                conLossPacket(packet);              // 若 zkClient 与 Server 之间失去连接, 就会产生 CONNECTIONLOSS 异常
             }else{
                 // If the client is asking to close the session then
                 // mark as closing

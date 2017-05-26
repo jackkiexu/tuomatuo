@@ -67,7 +67,7 @@ public class FollowerZooKeeperServer extends LearnerZooKeeperServer {
     }
 
     public int getGlobalOutstandingLimit(){
-        return super.getGlo;
+        return 0;
     }
 
 

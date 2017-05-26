@@ -30,7 +30,7 @@ public class ZooKeeper {
     }
 
 
-    protected final HostProvider hostProvider;
+    protected  HostProvider hostProvider;
 
     public void updateServerList(String connectString) throws IOException{
         ConnectStringParser connectStringParser = new ConnectStringParser(connectString);
@@ -38,7 +38,7 @@ public class ZooKeeper {
         ClientCnxnSocket clientCnxnSocket = cnxn.sendThread.getClientCnxnSocket();
         InetSocketAddress currentHost = (InetSocketAddress)clientCnxnSocket.getRemoteSocketAddress();
 
-        boolean reconfigMode = hostProvider.updateServerList(serverAddresses, currentHost);
+        boolean reconfigMode = false;
         /**
          * cause disconnection - this will cause next to be called
          * which will in turn call nextReconfigMode
@@ -151,8 +151,6 @@ public class ZooKeeper {
                     }
 
                     synchronized (existWatches) {
-                        boolean removeDataWatcher = removeWatcher(existWatches, watcher, clientPath, local, rc, dataWatchersToRem);
-                        removeDataWatcher |= removeDataWatcher;
                     }
                 }
             }
@@ -430,7 +428,6 @@ public class ZooKeeper {
         cnxn = new ClientCnxn(connectStringParser.getChrootPath(),
                 hostProvider, sessionTimeout, this, watchManager,
                 getClientCnxnSocket(), sessionId, sessionPasswd, canBeReadOnly);
-        cnxn.seenRwServerBefore = true; // since user has provided sessionId
         cnxn.start();
     }
 
@@ -626,7 +623,7 @@ public class ZooKeeper {
         for(Op op : ops){
             transaction.add(withRootPrefix(op));
         }
-        return multiInternal(new MultiTransactionRecord(transaction));
+        return multiInternal(new MultiTransactionRecord());
     }
 
 
@@ -654,6 +651,7 @@ public class ZooKeeper {
         List<OpResult> results = response.getResultList();
 
         OpResult.ErrorResult fataError = null;
+        return null;
 
     }
 

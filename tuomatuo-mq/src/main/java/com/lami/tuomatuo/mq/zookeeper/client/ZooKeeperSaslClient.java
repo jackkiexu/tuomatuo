@@ -60,7 +60,7 @@ public class ZooKeeperSaslClient {
 
     public String getLoginContext(){
         if(login != null){
-            return login.getLoginContextName();
+            return null;
         }
         return null;
     }
@@ -184,10 +184,10 @@ public class ZooKeeperSaslClient {
                 }
                 // note that the login object is static: it's shared amongst all zookeeper-related connections.
                 // createSaslClient() must be declared synchronized so that login is initialized only once.
-                login = new Login(loginContext, new ClientCallbackHandler(null));
-                login.startThreadIfNeeded();
+                login = null;
+
             }
-            Subject subject = login.getSubject();
+            Subject subject = null;
             SaslClient saslClient;
             // Use subject.getPrincipals().isEmpty() as an indication of which SASL mechanism to use:
             // if empty, use DIGEST-MD5; otherwise, use GSSAPI.
@@ -258,7 +258,7 @@ public class ZooKeeperSaslClient {
                     return null;
                 }
             }
-        } catch (LoginException e) {
+        } catch (NullPointerException e) {
             // We throw LoginExceptions...
             throw e;
         } catch (Exception e) {
@@ -281,7 +281,7 @@ public class ZooKeeperSaslClient {
             throw new SaslException("Error in authenticating with a Zookeeper Quorum member: the quorum member's saslToken is null.");
         }
 
-        Subject subject = login.getSubject();
+        Subject subject = null;
         if (subject != null) {
             synchronized(login) {
                 try {
@@ -399,7 +399,7 @@ public class ZooKeeperSaslClient {
             if (saslClient.isComplete()) {
                 if (saslState == ZooKeeperSaslClient.SaslState.INTERMEDIATE) {
                     saslState = ZooKeeperSaslClient.SaslState.COMPLETE;
-                    return Watcher.Event.KeeperState.SaslAuthenticated;
+                    return null;
                 }
             }
         }

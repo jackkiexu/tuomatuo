@@ -79,10 +79,6 @@ public class NIOServerCnxn extends ServerCnxn {
             if(LOG.isDebugEnabled()){
                 LOG.debug("close in progress for sessionId:0x" + Long.toHexString(sessionId));
             }
-            synchronized (factory.ipMap){
-                Set<NettyServerCnxn> s = factory.ipMap.get(((InetSocketAddress)channel.getRemoteAddress()).getAddress());
-                s.remove(this);
-            }
         }
 
         if(channel.isOpen()){
@@ -206,7 +202,6 @@ public class NIOServerCnxn extends ServerCnxn {
             close();
             return;
         }
-        channel.write(wrappedBuffer(sendBuffer));
         packetSent();
     }
 
