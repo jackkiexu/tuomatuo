@@ -156,13 +156,13 @@ public class KConcurrentLinkedList<E> extends AbstractQueue<E> implements Queue<
                     // Successful CAS is the linearization point
                     // for e to become an element of the queue,
                     // and for newNode to become "live"
-                    if(p != t){ // 5. 每每经过一次 p = q 操作(向后遍历节点), 则 p != t 成立, 这个也说明 tail 滞后于 head 的体现
+                    if(p != t){ // 5. 每每经过一次 p = q 操作(向后遍历节点), 则 p != t 成立, 这个也是 tail 滞后于队列真实最后的节点 的提现
                         casTail(t, newNode); // Failure is OK
                     }
                     return true;
                 }
             }
-            else if(p == q){  // 6. (p == q) 成立, 则说明p是pool()时调用 "updateHead" 导致的(删除头节点); 此时说明 tail 指针已经 fallen off queue， 所以进行 jump 操作， 若在t没变化, 则 jump 到 head, 若 t 已经改变(jump操作在另外的线程中执行), 则jump到 head 节点, 直到找到 node.next = null 的节点
+            else if(p == q){  // 6. (p == q) 成立, 则说明p是poll()时调用 "updateHead" 导致的(删除头节点); 此时说明 tail 指针已经 fallen off queue， 所以进行 jump 操作， 若在t没变化, 则 jump 到 head, 若 t 已经改变(jump操作在另外的线程中执行), 则jump到 head 节点, 直到找到 node.next = null 的节点
                 /** 1. 大前提 p 是已经被删除的节点
                  *  2. 判断 tail 是否已经改变
                  *      1) tail 已经变化, 则说明 tail 已经重新定位
