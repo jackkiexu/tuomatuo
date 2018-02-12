@@ -25,6 +25,7 @@
         <version.spring>4.3.10.RELEASE</version.spring>
         <jboss.marshalling.version>1.4.11.Final</jboss.marshalling.version>
         <log4j2.version>2.6.2</log4j2.version>
+        <hystrix-version>1.4.22</hystrix-version>
     </properties>
 
     <dependencies>
@@ -318,6 +319,31 @@
             <groupId>com.alibaba</groupId>
             <artifactId>dubbo</artifactId>
             <version>2.5.7</version>
+        </dependency>
+
+        <!-- hystrix -->
+        <dependency>
+            <groupId>com.netflix.hystrix</groupId>
+            <artifactId>hystrix-core</artifactId>
+            <version>${hystrix-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.netflix.hystrix</groupId>
+            <artifactId>hystrix-metrics-event-stream</artifactId>
+            <version>${hystrix-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.netflix.hystrix</groupId>
+            <artifactId>hystrix-javanica</artifactId>
+            <version>${hystrix-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.netflix.hystrix</groupId>
+            <artifactId>hystrix-servo-metrics-publisher</artifactId>
+            <version>${hystrix-version}</version>
         </dependency>
 
     </dependencies>
