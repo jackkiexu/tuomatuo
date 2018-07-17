@@ -617,6 +617,8 @@ public class DateUtils {
 	}
 
 	public static void main(String[] args) {
+
+		System.out.println("2018-07-11 15:27:01:  " + DateUtils.parser("2018-07-11 15:27:01").getTime());
 		System.out.println(longDate(new Date()));
 		System.out.println(longDate(getOffsetMonth(new Date(), -4)));
 		Integer a = null;
